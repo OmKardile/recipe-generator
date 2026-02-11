@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# AI Recipe Generator
+
+A Next.js application that generates creative recipes based on available ingredients and user preferences using **Google's Gemini 2.5 Flash** model.
+
+## Features
+
+-   **Ingredient Input**: Easily add and remove ingredients via tags.
+-   **Dietary Preferences**: Specify restrictions (e.g., Gluten-free, Vegan, timelines).
+-   **AI Generation**: Utilizes Google's **Gemini 2.5 Flash** for high-speed, high-quality recipes.
+-   **Premium UI**:
+    -   **Card Layout**: Clean, modern card design with gradient accents.
+    -   **Dynamic Icons**: Visual indicators for ingredients, instructions, and time.
+    -   **Animations**: smooth fade-in effects for generated content.
+-   **Responsive Design**: Built with Tailwind CSS for mobile and desktop.
+
+## Tech Stack
+
+-   **Frontend**: Next.js 14+ (App Router), React, Tailwind CSS, Lucide React
+-   **Backend**: Next.js API Routes
+-   **AI**: Google Gemini (`@google/generative-ai`)
 
 ## Getting Started
 
-First, run the development server:
+1.  **Clone the repository** (if applicable)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+2.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+
+3.  **Configure Environment Variables**:
+    Create a `.env.local` file in the root directory and add your Gemini API key:
+    ```bash
+    GEMINI_API_KEY=your_gemini_api_key_here
+    ```
+    *See `gemini_guide.md` for instructions on getting an API key.*
+
+4.  **Run the Development Server**:
+    ```bash
+    npm run dev
+    ```
+
+5.  **Open the Application**:
+    Visit [http://localhost:3000](http://localhost:3000) in your browser.
+
+## API Testing (Postman)
+
+You can test the API directly using Postman or cURL.
+
+**Endpoint**: `POST http://localhost:3000/api/generate`
+
+**Headers**:
+-   `Content-Type`: `application/json`
+
+**Body (JSON)**:
+```json
+{
+  "ingredients": ["Chicken", "Rice", "Tomato"],
+  "preferences": "Spicy, Dinner, Under 30 mins"
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Expected Response**:
+```json
+{
+  "recipe": "# Spicy Chicken & Tomato Rice\n\n## Ingredients\n- Chicken..."
+}
+```
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Documentation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+-   [Gemini API Guide](gemini_guide.md): Instructions for setting up Google Gemini.
+-   [Walkthrough](walkthrough.md): Manual verification steps.
