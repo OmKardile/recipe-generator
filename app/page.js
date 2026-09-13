@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import IngredientInput from '@/components/IngredientInput';
 import RecipeDisplay from '@/components/RecipeDisplay';
+import RecipeSelector from '@/components/RecipeSelector';
 import SavedRecipes from '@/components/SavedRecipes';
 import ShoppingList from '@/components/ShoppingList';
 import MealPlanner from '@/components/MealPlanner';
@@ -13,18 +14,20 @@ import { ChefHat, Sparkles, BookOpen, Calendar, ShoppingCart } from 'lucide-reac
 export default function Home() {
   const [ingredients, setIngredients] = useState([]);
   const [preferences, setPreferences] = useState('');
-  const [recipe, setRecipe] = useState(null);
-  const [nutrition, setNutrition] = useState(null);
+  const [recipes, setRecipes] = useState([]);
+  const [selectedRecipeIndex, setSelectedRecipeIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [includeNutrition, setIncludeNutrition] = useState(false);
   const [activeTab, setActiveTab] = useState('generate');
 
+  const selectedRecipe = selectedRecipeIndex !== null ? recipes[selectedRecipeIndex] : null;
+
   const generateRecipe = async () => {
     setLoading(true);
     setError(null);
-    setRecipe(null);
-    setNutrition(null);
+    setRecipes([]);
+    setSelectedRecipeIndex(null);
 
     try {
       const response = await fetch('/api/generate', {
@@ -41,13 +44,16 @@ export default function Home() {
         throw new Error(data.error || 'Failed to generate recipe');
       }
 
-      setRecipe(data.recipe);
-      setNutrition(data.nutrition);
+      setRecipes(data.recipes || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSelectRecipe = (index) => {
+    setSelectedRecipeIndex(index);
   };
 
   return (
@@ -60,10 +66,10 @@ export default function Home() {
             </div>
           </div>
           <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white sm:text-5xl mb-2">
-            AI Recipe Generator
+            Indian Recipe Generator
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            Tell us what you have, and we'll cook up something amazing!
+            From Biryani to Butter Chicken - authentic Indian recipes from your ingredients!
           </p>
         </div>
 
@@ -140,12 +146,32 @@ export default function Home() {
               </div>
             )}
 
-            <RecipeDisplay
-              recipe={recipe}
-              nutrition={nutrition}
-              ingredients={ingredients}
-              preferences={preferences}
-            />
+            {/* Recipe Selection */}
+            {recipes.length > 0 && selectedRecipeIndex === null && (
+              <RecipeSelector
+                recipes={recipes}
+                onSelect={handleSelectRecipe}
+                selectedIndex={selectedRecipeIndex}
+              />
+            )}
+
+            {/* Selected Recipe Display */}
+            {selectedRecipe && (
+              <div className="mt-8">
+                <button
+                  onClick={() => setSelectedRecipeIndex(null)}
+                  className="mb-4 text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                >
+                  ← Back to all options
+                </button>
+                <RecipeDisplay
+                  recipe={selectedRecipe.recipe}
+                  nutrition={selectedRecipe.nutrition}
+                  ingredients={ingredients}
+                  preferences={preferences}
+                />
+              </div>
+            )}
           </>
         )}
 
@@ -154,7 +180,7 @@ export default function Home() {
         {activeTab === 'mealplan' && <MealPlanner />}
 
         {activeTab === 'shopping' && (
-          <ShoppingList currentRecipe={recipe} currentIngredients={ingredients} />
+          <ShoppingList currentRecipe={selectedRecipe?.recipe} currentIngredients={ingredients} />
         )}
       </div>
 

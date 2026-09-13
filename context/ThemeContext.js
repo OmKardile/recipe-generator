@@ -5,13 +5,42 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('system');
+  const [theme, setThemeState] = useState('system');
   const [resolvedTheme, setResolvedTheme] = useState('light');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('recipe-generator-theme');
-    if (saved) setTheme(saved);
+    setMounted(true);
+    loadTheme();
   }, []);
+
+  const loadTheme = async () => {
+    try {
+      const res = await fetch('/api/settings');
+      if (res.ok) {
+        const settings = await res.json();
+        if (settings.theme) setThemeState(settings.theme);
+      }
+    } catch {
+      // Fallback to localStorage
+      const saved = localStorage.getItem('recipe-generator-theme');
+      if (saved) setThemeState(saved);
+    }
+  };
+
+  const setTheme = async (newTheme) => {
+    setThemeState(newTheme);
+    localStorage.setItem('recipe-generator-theme', newTheme);
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: newTheme }),
+      });
+    } catch {
+      // Silently fail
+    }
+  };
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -32,9 +61,10 @@ export function ThemeProvider({ children }) {
   }, [theme]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
-    localStorage.setItem('recipe-generator-theme', theme);
-  }, [theme, resolvedTheme]);
+    if (mounted) {
+      document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+    }
+  }, [resolvedTheme, mounted]);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
