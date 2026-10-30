@@ -1,27 +1,42 @@
 "use client";
 
-import { useState, useMemo } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { useState, useMemo, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import {
-  Clock, Users, Flame, ChefHat, Info, Bookmark, Check, Share2, Link2,
-  Copy, ListChecks, RotateCcw, MapPin, Gauge,
-} from 'lucide-react';
-import { useRecipes } from '@/context/RecipeContext';
-import { ingredientLine, formatAmount } from '@/lib/recipeUtils';
-import ServingAdjuster from './ServingAdjuster';
+  PiMapPinFill,
+  PiGaugeFill,
+  PiClockFill,
+  PiBasketFill,
+  PiFireFill,
+  PiSparkleFill,
+  PiListChecksFill,
+  PiArrowCounterClockwiseFill,
+  PiCopyFill,
+  PiShareFatFill,
+  PiLinkFill,
+  PiBookmarkSimpleFill,
+  PiCheckFill,
+  PiScalesFill,
+  PiInfoFill,
+  PiForkKnifeFill,
+} from "react-icons/pi";
+import { useRecipes } from "@/context/RecipeContext";
+import { ingredientLine, formatAmount } from "@/lib/recipeUtils";
+import ServingAdjuster from "./ServingAdjuster";
+import RecipeMedia from "./RecipeMedia";
 
 const DIFFICULTY_STYLES = {
-  Easy: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-  Medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-  Hard: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  Easy: "bg-herb-100 text-herb-700 border-herb-200 dark:bg-herb-900/60 dark:text-herb-300 dark:border-herb-800",
+  Medium: "bg-saffron/15 text-saffron-deep border-saffron/40 dark:bg-saffron/10 dark:text-saffron dark:border-saffron/30",
+  Hard: "bg-chili/10 text-chili border-chili/30 dark:bg-chili/15 dark:text-chili dark:border-chili/40",
 };
 
 export default function RecipeDisplay({ data, ingredients, preferences }) {
   const { saveRecipe } = useRecipes();
   const [saved, setSaved] = useState(false);
   const [shared, setShared] = useState(false);
-  const [shareUrl, setShareUrl] = useState('');
-  const [shareError, setShareError] = useState('');
+  const [shareUrl, setShareUrl] = useState("");
+  const [shareError, setShareError] = useState("");
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -39,7 +54,14 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
   const scaleFactor = structured ? servings / baseServings : 1;
   const isScaled = Math.abs(scaleFactor - 1) > 0.001;
 
-  const markdown = useMemo(() => recipe || '', [recipe]);
+  const markdown = useMemo(() => recipe || "", [recipe]);
+
+  // Animate macro bars in after mount.
+  const [barsReady, setBarsReady] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setBarsReady(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   if (!recipe && !structured) return null;
 
@@ -85,13 +107,13 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
     }
     // Fallback for non-secure contexts / older browsers.
     try {
-      const textarea = document.createElement('textarea');
+      const textarea = document.createElement("textarea");
       textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
       document.body.appendChild(textarea);
       textarea.select();
-      const ok = document.execCommand('copy');
+      const ok = document.execCommand("copy");
       document.body.removeChild(textarea);
       return ok;
     } catch {
@@ -100,7 +122,7 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
   };
 
   const handleShare = async () => {
-    setShareError('');
+    setShareError("");
     try {
       if (shared) {
         await writeClipboard(shareUrl);
@@ -108,9 +130,9 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
       }
 
       setSharing(true);
-      const response = await fetch('/api/recipes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/recipes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: data.title,
           recipe,
@@ -121,15 +143,15 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
       });
 
       const res = await response.json();
-      if (!response.ok) throw new Error(res.error || 'Sharing failed');
+      if (!response.ok) throw new Error(res.error || "Sharing failed");
 
       const url = `${window.location.origin}${res.url}`;
       setShareUrl(url);
       setShared(true);
       await writeClipboard(url);
     } catch (error) {
-      setShareError('Could not create a share link. Please try again.');
-      console.error('Error sharing recipe:', error);
+      setShareError("Could not create a share link. Please try again.");
+      console.error("Error sharing recipe:", error);
     } finally {
       setSharing(false);
     }
@@ -149,29 +171,38 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
   };
 
   const totalTime = structured?.totalTimeMinutes;
+  const nutrition = data.nutrition;
+
+  const macroMax = nutrition
+    ? Math.max(nutrition.protein, nutrition.carbs, nutrition.fat, 1)
+    : 0;
 
   return (
-    <div className="w-full max-w-3xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 transition-colors">
-        <div className="bg-gradient-to-r from-orange-400 to-red-500 h-3"></div>
+    <div className="animate-fade-up">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+        {/* ── Media column: dish photograph + video tutorial ────────── */}
+        <div className="lg:sticky lg:top-28">
+          <RecipeMedia recipe={data} />
+        </div>
 
-        <div className="p-6 md:p-10">
+        {/* ── Recipe body ───────────────────────────────────────────── */}
+        <article className="overflow-hidden rounded-3xl border border-line bg-elev shadow-card">
           {/* Meta bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-6 py-4 md:px-8">
             <div className="flex flex-wrap items-center gap-2">
               {structured?.cuisine && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
-                  <MapPin size={12} /> {structured.cuisine}
+                <span className="inline-flex items-center gap-1 rounded-full border border-herb-200 bg-herb-100/70 px-3 py-1 text-xs font-semibold text-herb-700 dark:border-herb-800 dark:bg-herb-900/60 dark:text-herb-300">
+                  <PiMapPinFill size={11} aria-hidden /> {structured.cuisine}
                 </span>
               )}
               {structured?.difficulty && (
-                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${DIFFICULTY_STYLES[structured.difficulty] || DIFFICULTY_STYLES.Medium}`}>
-                  <Gauge size={12} /> {structured.difficulty}
+                <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${DIFFICULTY_STYLES[structured.difficulty] || DIFFICULTY_STYLES.Medium}`}>
+                  <PiGaugeFill size={11} aria-hidden /> {structured.difficulty}
                 </span>
               )}
               {totalTime != null && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                  <Clock size={12} /> {totalTime} min total
+                <span className="inline-flex items-center gap-1 rounded-full border border-line bg-elev2 px-3 py-1 text-xs font-semibold text-body dark:bg-herb-950/60">
+                  <PiClockFill size={11} aria-hidden /> {totalTime} min total
                 </span>
               )}
             </div>
@@ -182,289 +213,315 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
             />
           </div>
 
-          {/* Title + description */}
-          <div className="mb-8 border-b border-gray-100 dark:border-gray-700 pb-6 px-1">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">
+          <div className="px-6 py-7 md:px-8">
+            {/* Title + description */}
+            <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
               {data.title}
             </h1>
             {structured?.description && (
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">
+              <p className="mt-3 text-base leading-relaxed text-body md:text-lg">
                 {structured.description}
               </p>
             )}
+
+            {/* Nutrition — calories + animated macro bars */}
+            {nutrition && (
+              <section
+                className="mt-7 rounded-2xl border border-herb-200/70 bg-gradient-to-br from-herb-50 to-herb-100/50 p-5 dark:border-herb-800 dark:from-herb-900/40 dark:to-herb-950/60"
+                aria-label="Nutrition per serving"
+              >
+                <div className="mb-4 flex items-center gap-2 text-herb-700 dark:text-herb-300">
+                  <PiScalesFill size={16} aria-hidden />
+                  <h2 className="text-sm font-bold uppercase tracking-[0.16em]">
+                    Nutrition · per serving
+                  </h2>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-center">
+                  <div className="flex items-baseline gap-1.5 justify-center sm:justify-start">
+                    <span className="font-display text-5xl font-semibold text-herb-700 dark:text-herb-200">
+                      {nutrition.calories}
+                    </span>
+                    <span className="text-xs font-bold uppercase tracking-widest text-body">
+                      kcal
+                    </span>
+                  </div>
+                  <div className="space-y-2.5">
+                    {[
+                      ["Protein", nutrition.protein, "bg-herb-500"],
+                      ["Carbs", nutrition.carbs, "bg-zest-deep"],
+                      ["Fat", nutrition.fat, "bg-saffron"],
+                    ].map(([label, grams, barColor]) => (
+                      <div key={label} className="flex items-center gap-3">
+                        <span className="w-14 text-[11px] font-bold uppercase tracking-[0.12em] text-body">
+                          {label}
+                        </span>
+                        <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-herb-950/10 dark:bg-herb-100/10" aria-hidden>
+                          <span
+                            className={`block h-full rounded-full ${barColor} transition-all duration-700 ease-out`}
+                            style={{ width: barsReady ? `${(grams / macroMax) * 100}%` : "0%" }}
+                          />
+                        </span>
+                        <span className="w-14 text-right text-xs font-semibold tabular-nums text-ink">
+                          {grams} g
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p className="mt-3 text-[11px] text-body/80">
+                  Estimated per serving — unaffected by serving scaling.
+                </p>
+              </section>
+            )}
+
+            {structured ? (
+              <>
+                {/* Ingredients — with REAL scaling */}
+                <div className="mb-4 mt-8 flex items-center gap-3">
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-herb-100 text-herb-600 dark:bg-herb-900/70 dark:text-herb-300">
+                    <PiBasketFill size={18} aria-hidden />
+                  </span>
+                  <h2 className="font-display text-xl font-semibold">Ingredients</h2>
+                  {isScaled && (
+                    <span className="rounded-full bg-zest/25 px-2.5 py-0.5 text-xs font-bold text-herb-800 dark:bg-zest/15 dark:text-zest">
+                      scaled ×{formatAmount(scaleFactor)}
+                    </span>
+                  )}
+                </div>
+
+                <ul className="mb-3 space-y-1 rounded-2xl border border-line bg-elev2/60 p-3 dark:bg-herb-950/40">
+                  {structured.ingredients.map((ing, index) => {
+                    const line = ingredientLine(ing, scaleFactor);
+                    const checked = checkedIngredients.has(index);
+                    return (
+                      <li key={`${ing.name}-${index}`}>
+                        <button
+                          onClick={() =>
+                            cookMode && toggleItem(checkedIngredients, setCheckedIngredients, index)
+                          }
+                          className={`flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left transition-all ${
+                            cookMode ? "cursor-pointer hover:bg-herb-100/50 dark:hover:bg-herb-900/40" : "cursor-default"
+                          } ${checked ? "opacity-45" : ""}`}
+                          aria-pressed={cookMode ? checked : undefined}
+                        >
+                          {cookMode && (
+                            <span
+                              className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition-colors ${
+                                checked
+                                  ? "border-herb-600 bg-herb-600 text-white"
+                                  : "border-line"
+                              }`}
+                              aria-hidden
+                            >
+                              {checked && <PiCheckFill size={11} />}
+                            </span>
+                          )}
+                          <span className={`leading-relaxed text-body ${checked ? "line-through" : ""}`}>
+                            {line}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {isScaled && (
+                  <p className="mb-6 px-1 text-xs text-body/80">
+                    Amounts auto-scaled from the base recipe of {baseServings} servings.
+                    Spices scale non-linearly — taste and adjust.
+                  </p>
+                )}
+
+                {/* Instructions — timeline */}
+                <div className="mb-4 mt-8 flex items-center gap-3">
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-herb-100 text-herb-600 dark:bg-herb-900/70 dark:text-herb-300">
+                    <PiFireFill size={18} aria-hidden />
+                  </span>
+                  <h2 className="font-display text-xl font-semibold">Method</h2>
+                  {cookMode && doneSteps.size > 0 && (
+                    <span className="rounded-full bg-herb-100 px-2.5 py-0.5 text-xs font-bold text-herb-700 dark:bg-herb-900/70 dark:text-herb-300">
+                      {doneSteps.size}/{structured.instructions.length} done
+                    </span>
+                  )}
+                </div>
+
+                <ol className="relative mb-8 space-y-1 before:absolute before:bottom-4 before:left-[19px] before:top-4 before:w-0.5 before:bg-gradient-to-b before:from-herb-300 before:to-herb-200 dark:before:from-herb-800 dark:before:to-herb-900">
+                  {structured.instructions.map((step, index) => {
+                    const done = doneSteps.has(index);
+                    return (
+                      <li key={index} className="relative">
+                        <button
+                          onClick={() => cookMode && toggleItem(doneSteps, setDoneSteps, index)}
+                          className={`flex w-full items-start gap-4 rounded-2xl p-3.5 text-left transition-all ${
+                            cookMode ? "cursor-pointer hover:bg-herb-100/50 dark:hover:bg-herb-900/40" : "cursor-default"
+                          } ${done ? "bg-herb-100/40 dark:bg-herb-900/30" : ""}`}
+                          aria-pressed={cookMode ? done : undefined}
+                        >
+                          <span
+                            className={`relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 font-display text-sm font-bold transition-all duration-300 ${
+                              done
+                                ? "border-herb-600 bg-herb-600 text-white scale-95"
+                                : "border-herb-200 bg-elev text-herb-700 dark:border-herb-800 dark:bg-herb-950 dark:text-herb-300"
+                            }`}
+                            aria-hidden
+                          >
+                            {done ? <PiCheckFill size={15} /> : index + 1}
+                          </span>
+                          <span className={`pt-1.5 leading-relaxed text-body ${done ? "line-through opacity-60" : ""}`}>
+                            {step}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ol>
+
+                {/* Tips */}
+                {structured.tips?.length > 0 && (
+                  <section className="mb-2 rounded-2xl border border-zest/40 bg-zest/10 p-5 dark:border-zest/20 dark:bg-zest/5">
+                    <div className="mb-3 flex items-center gap-2 text-herb-800 dark:text-zest">
+                      <PiSparkleFill size={15} className="animate-wiggle" aria-hidden />
+                      <h2 className="text-sm font-bold uppercase tracking-[0.16em]">
+                        Chef&rsquo;s secrets
+                      </h2>
+                    </div>
+                    <ul className="space-y-2">
+                      {structured.tips.map((tip, index) => (
+                        <li key={index} className="flex gap-3 leading-relaxed text-body">
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-zest-deep" aria-hidden />
+                          <span>{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+              </>
+            ) : (
+              /* Legacy markdown fallback (non-structured recipes) */
+              <ReactMarkdown
+                components={{
+                  h1: ({ node, ...props }) => (
+                    <h1 className="mb-6 border-b border-line pb-4 font-display text-3xl font-semibold tracking-tight md:text-4xl" {...props} />
+                  ),
+                  h2: ({ node, ...props }) => {
+                    const text = String(props.children ?? "").toLowerCase();
+                    let Icon = PiForkKnifeFill;
+                    if (text.includes("ingredient")) Icon = PiBasketFill;
+                    if (text.includes("instruction") || text.includes("step")) Icon = PiFireFill;
+                    if (text.includes("time") || text.includes("serving")) Icon = PiClockFill;
+                    if (text.includes("nutrition")) Icon = PiInfoFill;
+                    return (
+                      <div className="mb-4 mt-8 flex items-center gap-3">
+                        <span className="grid h-9 w-9 place-items-center rounded-xl bg-herb-100 text-herb-600 dark:bg-herb-900/70 dark:text-herb-300">
+                          <Icon size={18} aria-hidden />
+                        </span>
+                        <h2 className="font-display text-xl font-semibold" {...props} />
+                      </div>
+                    );
+                  },
+                  p: ({ node, ...props }) => (
+                    <p className="mb-4 leading-relaxed text-body" {...props} />
+                  ),
+                  ul: ({ node, ...props }) => (
+                    <ul className="mb-6 list-none space-y-1 rounded-2xl border border-line bg-elev2/60 p-3 dark:bg-herb-950/40" {...props} />
+                  ),
+                  ol: ({ node, ...props }) => (
+                    <ol className="mb-6 list-decimal space-y-3 pl-6 marker:font-bold marker:text-herb-600 dark:marker:text-herb-400" {...props} />
+                  ),
+                  li: ({ node, ...props }) => (
+                    <li className="leading-relaxed text-body" {...props} />
+                  ),
+                  strong: ({ node, ...props }) => (
+                    <strong className="font-semibold text-ink" {...props} />
+                  ),
+                }}
+              >
+                {markdown}
+              </ReactMarkdown>
+            )}
           </div>
 
-          {structured ? (
-            <>
-              {/* Ingredients — with REAL scaling */}
-              <div className="flex items-center gap-3 mb-4 px-1">
-                <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg text-orange-600 dark:text-orange-400">
-                  <ChefHat size={22} />
-                </div>
-                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                  Ingredients
-                </h2>
-                {isScaled && (
-                  <span className="ml-1 text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-2 py-0.5 rounded-full">
-                    scaled ×{formatAmount(scaleFactor)}
-                  </span>
-                )}
-              </div>
-
-              <ul className="space-y-2.5 mb-8 bg-gray-50 dark:bg-gray-900/60 p-5 rounded-xl border border-gray-100 dark:border-gray-700">
-                {structured.ingredients.map((ing, index) => {
-                  const line = ingredientLine(ing, scaleFactor);
-                  const checked = checkedIngredients.has(index);
-                  return (
-                    <li key={`${ing.name}-${index}`}>
-                      <button
-                        onClick={() => cookMode && toggleItem(checkedIngredients, setCheckedIngredients, index)}
-                        className={`w-full text-left flex gap-3 items-start transition-opacity ${cookMode ? 'cursor-pointer' : 'cursor-default'} ${checked ? 'opacity-50' : ''}`}
-                        aria-pressed={cookMode ? checked : undefined}
-                      >
-                        {cookMode && (
-                          <span
-                            className={`mt-1 h-5 w-5 shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
-                              checked
-                                ? 'bg-orange-500 border-orange-500'
-                                : 'border-gray-300 dark:border-gray-600'
-                            }`}
-                            aria-hidden="true"
-                          >
-                            {checked && <Check size={12} className="text-white" />}
-                          </span>
-                        )}
-                        <span
-                          className={`text-gray-700 dark:text-gray-200 leading-relaxed ${checked ? 'line-through' : ''}`}
-                        >
-                          {line}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-              {isScaled && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 -mt-6 mb-8 px-1">
-                  Amounts auto-scaled from the base recipe of {baseServings} servings. Spices scale non-linearly — taste and adjust.
-                </p>
+          {/* Footer actions */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-elev2/50 px-6 py-4 md:px-8">
+            <span className="text-xs uppercase tracking-[0.2em] text-body/80">
+              Generated by Gemini AI
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              {structured && (
+                <button
+                  onClick={() => setCookMode((v) => !v)}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                    cookMode
+                      ? "bg-herb-600 text-white shadow-glow"
+                      : "border border-line bg-elev text-body hover:border-herb-400 hover:text-herb-700 dark:hover:text-herb-300"
+                  }`}
+                  aria-pressed={cookMode}
+                >
+                  <PiListChecksFill size={15} aria-hidden />
+                  {cookMode ? "Cook mode on" : "Cook mode"}
+                </button>
               )}
-
-              {/* Instructions — numbered, tappable in cook mode */}
-              <div className="flex items-center gap-3 mb-4 px-1">
-                <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg text-orange-600 dark:text-orange-400">
-                  <Flame size={22} />
-                </div>
-                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                  Instructions
-                </h2>
-                {cookMode && doneSteps.size > 0 && (
-                  <span className="text-xs font-semibold text-green-600 dark:text-green-400">
-                    {doneSteps.size}/{structured.instructions.length} done
-                  </span>
-                )}
-              </div>
-
-              <ol className="space-y-3 mb-8">
-                {structured.instructions.map((step, index) => {
-                  const done = doneSteps.has(index);
-                  return (
-                    <li key={index}>
-                      <button
-                        onClick={() => cookMode && toggleItem(doneSteps, setDoneSteps, index)}
-                        className={`w-full text-left flex gap-4 items-start p-3.5 rounded-xl transition-all ${
-                          cookMode ? 'hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer' : 'cursor-default'
-                        } ${done ? 'bg-green-50 dark:bg-green-900/20' : ''}`}
-                        aria-pressed={cookMode ? done : undefined}
-                      >
-                        <span
-                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors ${
-                            done
-                              ? 'bg-green-500 text-white'
-                              : 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400'
-                          }`}
-                          aria-hidden="true"
-                        >
-                          {done ? <Check size={14} /> : index + 1}
-                        </span>
-                        <span
-                          className={`text-gray-700 dark:text-gray-200 leading-relaxed pt-0.5 ${done ? 'line-through opacity-60' : ''}`}
-                        >
-                          {step}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ol>
-
-              {/* Tips */}
-              {structured.tips?.length > 0 && (
-                <>
-                  <div className="flex items-center gap-3 mb-4 px-1">
-                    <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg text-orange-600 dark:text-orange-400">
-                      <Info size={22} />
-                    </div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                      Chef&apos;s Tips
-                    </h2>
-                  </div>
-                  <ul className="space-y-2 mb-8 px-1">
-                    {structured.tips.map((tip, index) => (
-                      <li key={index} className="flex gap-3 text-gray-600 dark:text-gray-300 leading-relaxed">
-                        <span className="mt-2 h-1.5 w-1.5 rounded-full bg-orange-400 shrink-0" />
-                        <span>{tip}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </>
+              {cookMode && (doneSteps.size > 0 || checkedIngredients.size > 0) && (
+                <button
+                  onClick={resetCookMode}
+                  className="rounded-full border border-line bg-elev p-2.5 text-body transition-colors hover:border-herb-400 hover:text-herb-700 dark:hover:text-herb-300"
+                  title="Reset progress"
+                  aria-label="Reset cook mode progress"
+                >
+                  <PiArrowCounterClockwiseFill size={15} aria-hidden />
+                </button>
               )}
-            </>
-          ) : (
-            /* Legacy markdown fallback (non-structured recipes) */
-            <ReactMarkdown
-              components={{
-                h1: ({ node, ...props }) => (
-                  <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight border-b border-gray-100 dark:border-gray-700 pb-4" {...props} />
-                ),
-                h2: ({ node, ...props }) => {
-                  const text = String(props.children ?? '').toLowerCase();
-                  let Icon = ChefHat;
-                  if (text.includes('ingredient')) Icon = Users;
-                  if (text.includes('instruction') || text.includes('step')) Icon = Flame;
-                  if (text.includes('time') || text.includes('serving')) Icon = Clock;
-                  if (text.includes('nutrition')) Icon = Info;
-                  return (
-                    <div className="flex items-center gap-3 mt-8 mb-4 px-1">
-                      <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg text-orange-600 dark:text-orange-400">
-                        <Icon size={22} />
-                      </div>
-                      <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100" {...props} />
-                    </div>
-                  );
-                },
-                p: ({ node, ...props }) => (
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-4 px-1" {...props} />
-                ),
-                ul: ({ node, ...props }) => (
-                  <ul className="space-y-3 mb-6 bg-gray-50 dark:bg-gray-900/60 p-5 rounded-xl border border-gray-100 dark:border-gray-700 list-none" {...props} />
-                ),
-                ol: ({ node, ...props }) => (
-                  <ol className="list-decimal marker:text-orange-600 dark:marker:text-orange-400 marker:font-bold space-y-3 mb-6 pl-6" {...props} />
-                ),
-                li: ({ node, ...props }) => (
-                  <li className="text-gray-700 dark:text-gray-200 leading-relaxed" {...props} />
-                ),
-                strong: ({ node, ...props }) => (
-                  <strong className="font-bold text-gray-900 dark:text-white" {...props} />
-                ),
-              }}
-            >
-              {markdown}
-            </ReactMarkdown>
-          )}
-        </div>
-
-        {data.nutrition && (
-          <div className="px-6 md:px-10 pb-6">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl p-6 border border-green-100 dark:border-green-800">
-              <div className="flex items-center gap-2 mb-4">
-                <Flame className="text-green-600 dark:text-green-400" size={20} />
-                <h3 className="text-lg font-bold text-green-800 dark:text-green-300">
-                  Nutrition per Serving
-                </h3>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  ['Calories', data.nutrition.calories, ''],
-                  ['Protein', data.nutrition.protein, 'g'],
-                  ['Carbs', data.nutrition.carbs, 'g'],
-                  ['Fat', data.nutrition.fat, 'g'],
-                ].map(([label, value, unit]) => (
-                  <div key={label} className="text-center">
-                    <div className="text-2xl font-bold text-green-700 dark:text-green-400">
-                      {value}
-                      {unit}
-                    </div>
-                    <div className="text-sm text-green-600 dark:text-green-500">{label}</div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-green-600/70 dark:text-green-500/70 mt-3 text-center">
-                Estimated per serving — unaffected by serving scaling.
-              </p>
+              <button
+                onClick={handleCopyRecipe}
+                className="flex items-center gap-2 rounded-full border border-line bg-elev px-4 py-2 text-sm font-semibold text-body transition-colors hover:border-herb-400 hover:text-herb-700 dark:hover:text-herb-300"
+              >
+                {copied ? (
+                  <PiCheckFill size={15} className="text-herb-600 dark:text-herb-400" aria-hidden />
+                ) : (
+                  <PiCopyFill size={15} aria-hidden />
+                )}
+                {copied ? "Copied!" : "Copy"}
+              </button>
+              <button
+                onClick={handleShare}
+                disabled={sharing}
+                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                  shared
+                    ? "bg-herb-100 text-herb-700 dark:bg-herb-900/70 dark:text-herb-300"
+                    : "border border-line bg-elev text-body hover:border-herb-400 hover:text-herb-700 dark:hover:text-herb-300"
+                } disabled:opacity-60`}
+              >
+                {shared ? (
+                  <PiLinkFill size={15} aria-hidden />
+                ) : (
+                  <PiShareFatFill size={15} aria-hidden />
+                )}
+                {shared ? "Link copied!" : sharing ? "Sharing…" : "Share"}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saved}
+                className={`btn-shine flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition-all ${
+                  saved
+                    ? "bg-herb-400 dark:bg-herb-800"
+                    : "bg-gradient-to-r from-herb-600 to-herb-500 shadow-glow hover:scale-[1.03] active:scale-95"
+                } disabled:cursor-default`}
+              >
+                {saved ? (
+                  <PiCheckFill size={15} aria-hidden />
+                ) : (
+                  <PiBookmarkSimpleFill size={15} aria-hidden />
+                )}
+                {saved ? "Saved" : "Save recipe"}
+              </button>
             </div>
           </div>
-        )}
 
-        {/* Footer actions */}
-        <div className="bg-gray-50 dark:bg-gray-900/60 p-4 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-700">
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            Generated by Gemini AI
-          </span>
-          <div className="flex flex-wrap items-center gap-2">
-            {structured && (
-              <button
-                onClick={() => setCookMode((v) => !v)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  cookMode
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-                aria-pressed={cookMode}
-              >
-                <ListChecks size={16} />
-                {cookMode ? 'Cook Mode On' : 'Cook Mode'}
-              </button>
-            )}
-            {cookMode && (doneSteps.size > 0 || checkedIngredients.size > 0) && (
-              <button
-                onClick={resetCookMode}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                title="Reset progress"
-              >
-                <RotateCcw size={16} />
-              </button>
-            )}
-            <button
-              onClick={handleCopyRecipe}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            >
-              {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-            <button
-              onClick={handleShare}
-              disabled={sharing}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                shared
-                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-              } disabled:opacity-60`}
-            >
-              {shared ? <Link2 size={16} /> : <Share2 size={16} />}
-              {shared ? 'Link Copied!' : sharing ? 'Sharing…' : 'Share'}
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saved}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                saved
-                  ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
-                  : 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/60'
-              } disabled:cursor-default`}
-            >
-              {saved ? <Check size={16} /> : <Bookmark size={16} />}
-              {saved ? 'Saved' : 'Save Recipe'}
-            </button>
-          </div>
-        </div>
-
-        {shareError && (
-          <p className="px-6 pb-4 text-sm text-red-600 dark:text-red-400" role="alert">
-            {shareError}
-          </p>
-        )}
+          {shareError && (
+            <p className="px-6 pb-5 text-sm text-chili md:px-8" role="alert">
+              {shareError}
+            </p>
+          )}
+        </article>
       </div>
     </div>
   );

@@ -1,33 +1,43 @@
-'use client';
+"use client";
 
-import { useTheme } from '@/context/ThemeContext';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { useTheme } from "@/context/ThemeContext";
+import { PiSunFill, PiMoonStarsFill, PiMonitor } from "react-icons/pi";
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
   const options = [
-    { value: 'light', icon: Sun, label: 'Light' },
-    { value: 'dark', icon: Moon, label: 'Dark' },
-    { value: 'system', icon: Monitor, label: 'System' },
+    { value: "light", icon: PiSunFill, label: "Light" },
+    { value: "dark", icon: PiMoonStarsFill, label: "Dark" },
+    { value: "system", icon: PiMonitor, label: "System" },
   ];
 
   return (
-    <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-      {options.map(({ value, icon: Icon, label }) => (
-        <button
-          key={value}
-          onClick={() => setTheme(value)}
-          title={label}
-          className={`p-2 rounded-md transition-colors ${
-            theme === value
-              ? 'bg-white dark:bg-gray-600 shadow-sm text-gray-900 dark:text-white'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-          }`}
-        >
-          <Icon size={16} />
-        </button>
-      ))}
+    <div
+      className="flex items-center gap-0.5 rounded-full border border-line bg-elev/70 p-1 shadow-card"
+      role="radiogroup"
+      aria-label="Theme"
+    >
+      {options.map(({ value, icon: Icon, label }) => {
+        const active = theme === value;
+        return (
+          <button
+            key={value}
+            onClick={() => setTheme(value)}
+            title={label}
+            aria-label={`${label} theme`}
+            role="radio"
+            aria-checked={active}
+            className={`grid h-8 w-8 place-items-center rounded-full transition-all duration-300 ${
+              active
+                ? "animate-pop bg-herb-600 text-white shadow-glow"
+                : "text-body hover:bg-herb-100/70 hover:text-herb-700 dark:hover:bg-herb-900/60 dark:hover:text-herb-300"
+            }`}
+          >
+            <Icon size={15} aria-hidden />
+          </button>
+        );
+      })}
     </div>
   );
 }

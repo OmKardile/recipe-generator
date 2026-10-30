@@ -1,16 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRecipes } from '@/context/RecipeContext';
-import { Calendar, Plus, X, ChefHat, Trash2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from "react";
+import { useRecipes } from "@/context/RecipeContext";
+import {
+  PiCalendarFill,
+  PiPlus,
+  PiX,
+  PiTrashSimpleFill,
+  PiFireFill,
+} from "react-icons/pi";
+import { GiChefToque } from "react-icons/gi";
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const MEALS = ["breakfast", "lunch", "dinner", "snack"];
+
 const MEAL_COLORS = {
-  breakfast: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
-  lunch: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
-  dinner: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700',
-  snack: 'bg-pink-100 text-pink-800 border-pink-300 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-700',
+  breakfast: "bg-saffron/15 text-saffron-deep border-saffron/40 dark:bg-saffron/10 dark:text-saffron dark:border-saffron/30",
+  lunch: "bg-zest/20 text-herb-800 border-zest-deep/50 dark:bg-zest/10 dark:text-zest dark:border-zest/25",
+  dinner: "bg-herb-100 text-herb-800 border-herb-300 dark:bg-herb-900/60 dark:text-herb-200 dark:border-herb-700",
+  snack: "bg-chili/10 text-chili border-chili/30 dark:bg-chili/15 dark:text-chili dark:border-chili/40",
+};
+
+const MEAL_DOTS = {
+  breakfast: "bg-saffron",
+  lunch: "bg-zest-deep",
+  dinner: "bg-herb-500",
+  snack: "bg-chili",
 };
 
 export default function MealPlanner() {
@@ -23,13 +38,13 @@ export default function MealPlanner() {
   // Escape closes modals — basic keyboard accessibility.
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         closePicker();
         setConfirmClear(false);
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [closePicker]);
 
   if (!mounted) return null;
@@ -59,56 +74,62 @@ export default function MealPlanner() {
   );
 
   return (
-    <div className="w-full max-w-5xl mx-auto mt-8">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Weekly Meal Plan</h2>
-        <div className="flex items-center gap-2">
-          {totalCalories > 0 && (
-            <div className="text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
-              ~{totalCalories.toLocaleString()} cal/week
-            </div>
-          )}
-          {mealPlan.length > 0 && (
-            <button
-              onClick={() => setConfirmClear(true)}
-              className="flex items-center gap-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              <Trash2 size={14} />
-              Clear week
-            </button>
-          )}
-        </div>
+    <div className="mx-auto w-full max-w-5xl">
+      <div className="mb-8 text-center">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.28em] text-herb-600 dark:text-herb-400">
+          The week ahead
+        </p>
+        <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
+          Weekly <span className="display-accent text-herb-600 dark:text-herb-300">meal plan</span>
+        </h2>
+      </div>
+
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        {totalCalories > 0 && (
+          <div className="flex items-center gap-2 rounded-full border border-line bg-elev px-4 py-2 text-sm font-semibold text-body shadow-card">
+            <PiFireFill size={14} className="text-herb-600 dark:text-herb-400" aria-hidden />
+            ~{totalCalories.toLocaleString()} kcal planned
+          </div>
+        )}
+        {mealPlan.length > 0 && (
+          <button
+            onClick={() => setConfirmClear(true)}
+            className="flex items-center gap-1.5 rounded-full border border-line bg-elev px-4 py-2 text-sm font-semibold text-body transition-colors hover:border-chili/50 hover:text-chili"
+          >
+            <PiTrashSimpleFill size={13} aria-hidden />
+            Clear week
+          </button>
+        )}
       </div>
 
       {savedRecipes.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-full inline-block mb-4">
-            <Calendar className="h-10 w-10 text-gray-400" />
+        <div className="py-20 text-center">
+          <div className="mx-auto mb-5 grid h-20 w-20 animate-float place-items-center rounded-3xl border border-line bg-elev shadow-card">
+            <PiCalendarFill className="text-3xl text-herb-400" aria-hidden />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            No recipes to plan with
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400">
+          <h3 className="mb-2 font-display text-2xl font-semibold">No recipes to plan with</h3>
+          <p className="text-body">
             Save some recipes first, then come back to plan your meals.
           </p>
         </div>
       ) : (
         <div className="overflow-x-auto pb-2">
-          {/* grid-cols-5 = day label column + 4 meal columns (was cols-8 → misaligned) */}
-          <div className="grid grid-cols-5 gap-2 min-w-[680px]">
-            <div className="p-2"></div>
+          {/* grid-cols-5 = day label column + 4 meal columns */}
+          <div className="grid min-w-[680px] grid-cols-5 gap-2">
+            <div className="p-2" />
             {MEALS.map((meal) => (
               <div
                 key={meal}
-                className="p-2 text-center font-semibold text-gray-600 dark:text-gray-300 capitalize text-sm"
+                className="flex items-center justify-center gap-1.5 p-2 text-center text-xs font-bold uppercase tracking-[0.14em] text-body"
               >
+                <span className={`h-1.5 w-1.5 rounded-full ${MEAL_DOTS[meal]}`} aria-hidden />
                 {meal}
               </div>
             ))}
 
-            {DAYS.map((day) => (
+            {DAYS.map((day, dayIndex) => (
               <div key={day} className="contents">
-                <div className="p-2 font-semibold text-gray-700 dark:text-gray-200 text-sm flex items-center">
+                <div className="flex items-center p-2 font-display text-sm font-semibold text-ink">
                   {day.slice(0, 3)}
                 </div>
                 {MEALS.map((meal) => {
@@ -116,17 +137,18 @@ export default function MealPlanner() {
                   return (
                     <div
                       key={`${day}-${meal}`}
-                      className={`p-2 min-h-[80px] rounded-lg border-2 transition-all ${
+                      style={{ animationDelay: `${(dayIndex * 4) * 30}ms` }}
+                      className={`animate-fade-in group min-h-[80px] cursor-pointer rounded-2xl border-2 p-2 transition-all ${
                         entry
-                          ? `${MEAL_COLORS[meal]} border-solid cursor-pointer hover:shadow-md`
-                          : 'border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 cursor-pointer'
+                          ? `${MEAL_COLORS[meal]} border-solid hover:shadow-card`
+                          : "border-dashed border-line hover:border-herb-400 hover:bg-herb-50/50 dark:hover:border-herb-700 dark:hover:bg-herb-900/20"
                       }`}
                       onClick={() => handleSlotClick(day, meal)}
                       role="button"
                       tabIndex={0}
-                      aria-label={`${day} ${meal}: ${entry?.recipe?.title || 'empty'}`}
+                      aria-label={`${day} ${meal}: ${entry?.recipe?.title || "empty"}`}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
+                        if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
                           handleSlotClick(day, meal);
                         }
@@ -139,23 +161,28 @@ export default function MealPlanner() {
                               e.stopPropagation();
                               removeFromMealPlan(day, meal);
                             }}
-                            className="absolute -top-1.5 -right-1.5 p-0.5 bg-white dark:bg-gray-800 rounded-full shadow-sm hover:bg-red-50 dark:hover:bg-red-900 transition-colors z-10"
-                            aria-label={`Remove ${entry.recipe?.title || 'recipe'} from ${day} ${meal}`}
+                            className="absolute -right-1.5 -top-1.5 z-10 grid h-5 w-5 place-items-center rounded-full border border-line bg-elev text-body opacity-0 shadow-card transition-all hover:bg-chili hover:text-white group-hover:opacity-100"
+                            aria-label={`Remove ${entry.recipe?.title || "recipe"} from ${day} ${meal}`}
                           >
-                            <X size={12} className="text-red-500" />
+                            <PiX size={10} aria-hidden />
                           </button>
-                          <div className="text-xs font-medium truncate pr-4">
-                            {entry.recipe?.title || 'Recipe'}
+                          <div className="pr-3 text-xs font-semibold leading-snug">
+                            {entry.recipe?.title || "Recipe"}
                           </div>
                           {entry.recipe?.nutrition?.calories > 0 && (
-                            <div className="text-[10px] opacity-75 mt-1">
+                            <div className="mt-1 flex items-center gap-1 text-[10px] font-semibold opacity-75">
+                              <PiFireFill size={9} aria-hidden />
                               {entry.recipe.nutrition.calories} cal
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="h-full flex items-center justify-center">
-                          <Plus size={16} className="text-gray-300 dark:text-gray-600" />
+                        <div className="flex h-full items-center justify-center">
+                          <PiPlus
+                            size={15}
+                            className="text-body/40 transition-all duration-300 group-hover:scale-125 group-hover:text-herb-500"
+                            aria-hidden
+                          />
                         </div>
                       )}
                     </div>
@@ -170,56 +197,54 @@ export default function MealPlanner() {
       {/* Recipe Picker Modal */}
       {pickerSlot && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-herb-950/60 p-4 backdrop-blur-sm animate-fade-in"
           onClick={closePicker}
           role="dialog"
           aria-modal="true"
           aria-label={`Select a recipe for ${pickerSlot.day} ${pickerSlot.meal}`}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden"
+            className="w-full max-w-md overflow-hidden rounded-3xl border border-line bg-elev shadow-lift animate-pop"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <div className="flex items-center justify-between border-b border-line p-5">
               <div>
-                <h3 className="font-bold text-gray-900 dark:text-white">
-                  {pickerSlot.replacing ? 'Replace Recipe' : 'Select Recipe'}
+                <h3 className="font-display text-lg font-semibold">
+                  {pickerSlot.replacing ? "Replace recipe" : "Select recipe"}
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                <p className="text-sm capitalize text-body">
                   {pickerSlot.day} — {pickerSlot.meal}
-                  {pickerSlot.replacing ? ' (current meal will be replaced)' : ''}
+                  {pickerSlot.replacing ? " (current meal will be replaced)" : ""}
                 </p>
               </div>
               <button
                 onClick={closePicker}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="grid h-9 w-9 place-items-center rounded-xl text-body transition-colors hover:bg-herb-100 hover:text-herb-700 dark:hover:bg-herb-900 dark:hover:text-herb-300"
                 aria-label="Close picker"
               >
-                <X size={20} className="text-gray-500 dark:text-gray-400" />
+                <PiX size={18} aria-hidden />
               </button>
             </div>
-            <div className="p-4 overflow-y-auto max-h-[60vh] space-y-2">
+            <div className="max-h-[60vh] space-y-2 overflow-y-auto p-4">
               {savedRecipes.map((recipe) => (
                 <button
                   key={recipe.id}
                   onClick={() => handleSelectRecipe(recipe)}
-                  className="w-full text-left p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-100 dark:border-gray-700 transition-colors"
+                  className="tilt-card flex w-full items-center gap-3 rounded-2xl border border-line bg-elev p-3 text-left transition-all hover:border-herb-400 hover:shadow-card"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg">
-                      <ChefHat size={18} className="text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                        {recipe.title}
-                      </div>
-                      {recipe.nutrition?.calories > 0 && (
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {recipe.nutrition.calories} cal
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-herb-100 text-herb-600 dark:bg-herb-900/70 dark:text-herb-300">
+                    <GiChefToque size={20} aria-hidden />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-ink">
+                      {recipe.title}
+                    </span>
+                    {recipe.nutrition?.calories > 0 && (
+                      <span className="block text-sm text-body">
+                        {recipe.nutrition.calories} cal
+                      </span>
+                    )}
+                  </span>
                 </button>
               ))}
             </div>
@@ -230,30 +255,30 @@ export default function MealPlanner() {
       {/* Clear-week confirmation */}
       {confirmClear && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-herb-950/60 p-4 backdrop-blur-sm animate-fade-in"
           onClick={() => setConfirmClear(false)}
           role="dialog"
           aria-modal="true"
           aria-label="Confirm clearing the meal plan"
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full p-6 text-center"
+            className="w-full max-w-sm rounded-3xl border border-line bg-elev p-6 text-center shadow-lift animate-pop"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Clear the whole week?</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            <h3 className="mb-2 font-display text-xl font-semibold">Clear the whole week?</h3>
+            <p className="mb-6 text-sm text-body">
               This removes all {mealPlan.length} planned meals. Saved recipes are not affected.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmClear(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex-1 rounded-full border border-line py-2.5 text-sm font-semibold text-body transition-colors hover:bg-herb-100/50 dark:hover:bg-herb-900/40"
               >
                 Cancel
               </button>
               <button
                 onClick={handleClearWeek}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="flex-1 rounded-full bg-chili py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] active:scale-95"
               >
                 Clear week
               </button>

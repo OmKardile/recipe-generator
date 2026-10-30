@@ -1,48 +1,54 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRecipes } from '@/context/RecipeContext';
+import { useState } from "react";
+import { useRecipes } from "@/context/RecipeContext";
 import {
-  ShoppingCart, Copy, Check, Printer, Calendar, Apple, Milk, Wheat,
-  FlaskConical, Package, RotateCcw,
-} from 'lucide-react';
+  PiShoppingCartSimpleFill,
+  PiCopyFill,
+  PiCheckFill,
+  PiPrinterFill,
+  PiCalendarFill,
+  PiArrowCounterClockwiseFill,
+} from "react-icons/pi";
+import { GiChiliPepper } from "react-icons/gi";
+import { PiCarrotFill, PiEggFill, PiGrainsFill, PiBasketFill } from "react-icons/pi";
 import {
   ingredientLine, categorizeIngredient, SHOPPING_CATEGORIES, escapeHtml,
-} from '@/lib/recipeUtils';
+} from "@/lib/recipeUtils";
 
 const CATEGORY_ICONS = {
-  produce: Apple,
-  protein: Milk,
-  pantry: Wheat,
-  spices: FlaskConical,
-  other: Package,
+  produce: PiCarrotFill,
+  protein: PiEggFill,
+  pantry: PiGrainsFill,
+  spices: GiChiliPepper,
+  other: PiBasketFill,
 };
 
 export default function ShoppingList({ currentRecipe, currentIngredients }) {
   const { savedRecipes, mealPlan, mounted } = useRecipes();
-  const [selectedRecipeId, setSelectedRecipeId] = useState('');
+  const [selectedRecipeId, setSelectedRecipeId] = useState("");
   // Checks are keyed per list ("<listKey>#<index>") so switching recipes or
   // modes naturally shows a clean list without effect-driven state resets.
   const [checkedKeys, setCheckedKeys] = useState(new Set());
   const [copied, setCopied] = useState(false);
-  const [viewMode, setViewMode] = useState('single'); // 'single' | 'weekly'
+  const [viewMode, setViewMode] = useState("single"); // 'single' | 'weekly'
 
   if (!mounted) return null;
 
   const extractIngredientsFromMarkdown = (markdown) => {
     if (!markdown) return [];
-    const lines = markdown.split('\n');
+    const lines = markdown.split("\n");
     const ingredients = [];
     let inIngredients = false;
 
     for (const line of lines) {
       const lower = line.toLowerCase();
-      if (lower.startsWith('## ingredients') || lower.startsWith('### ingredients')) {
+      if (lower.startsWith("## ingredients") || lower.startsWith("### ingredients")) {
         inIngredients = true;
         continue;
       }
-      if (inIngredients && (lower.startsWith('## ') || lower.startsWith('### '))) break;
-      if (inIngredients && line.trim().startsWith('- ')) {
+      if (inIngredients && (lower.startsWith("## ") || lower.startsWith("### "))) break;
+      if (inIngredients && line.trim().startsWith("- ")) {
         ingredients.push(line.trim().slice(2));
       }
     }
@@ -55,7 +61,7 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
       return recipeEntry.structured.ingredients.map((ing) => ingredientLine(ing));
     }
     if (recipeEntry?.ingredients?.length) return recipeEntry.ingredients;
-    return extractIngredientsFromMarkdown(recipeEntry?.recipe || '');
+    return extractIngredientsFromMarkdown(recipeEntry?.recipe || "");
   };
 
   /** Weekly mode: aggregate, summing structured amounts by name+unit. */
@@ -67,7 +73,7 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
       const recipe = entry.recipe;
       if (recipe?.structured?.ingredients?.length) {
         recipe.structured.ingredients.forEach((ing) => {
-          const key = `${(ing.name || '').toLowerCase().trim()}|${(ing.unit || '').toLowerCase()}`;
+          const key = `${(ing.name || "").toLowerCase().trim()}|${(ing.unit || "").toLowerCase()}`;
           if (structuredMap.has(key)) {
             structuredMap.get(key).amount += ing.amount || 0;
           } else {
@@ -106,7 +112,7 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
 
   const allRecipes = currentRecipe
     ? [
-        { id: '__current', title: 'Current Recipe', recipe: currentRecipe, ingredients: currentIngredients },
+        { id: "__current", title: "Current Recipe", recipe: currentRecipe, ingredients: currentIngredients },
         ...savedRecipes,
       ]
     : savedRecipes;
@@ -114,10 +120,10 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
   const selectedRecipe = allRecipes.find((r) => r.id === selectedRecipeId) || allRecipes[0];
 
   const listKey =
-    viewMode === 'weekly' ? 'weekly' : selectedRecipe?.id || 'none';
+    viewMode === "weekly" ? "weekly" : selectedRecipe?.id || "none";
 
   const items =
-    viewMode === 'weekly'
+    viewMode === "weekly"
       ? weeklyIngredients.map((i) => ({ text: i.text, name: i.name, count: i.count }))
       : getIngredientsFromRecipe(selectedRecipe).map((line) => ({
           text: line,
@@ -157,7 +163,7 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
   };
 
   const copyToClipboard = async () => {
-    const text = items.map((item) => `☐ ${item.text}`).join('\n');
+    const text = items.map((item) => `☐ ${item.text}`).join("\n");
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -168,34 +174,34 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
   };
 
   const printList = () => {
-    const printWindow = window.open('', '_blank', 'width=420,height=640');
+    const printWindow = window.open("", "_blank", "width=420,height=640");
     if (!printWindow) return; // popup blocked — don't crash
     printWindow.document.write(`
       <html>
         <head>
           <title>Shopping List</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
-            h1 { font-size: 20px; border-bottom: 2px solid #333; padding-bottom: 8px; }
-            h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #555; margin: 16px 0 6px; }
+            body { font-family: Georgia, serif; padding: 24px; color: #1c2a20; }
+            h1 { font-size: 22px; border-bottom: 2px solid #3b7a4d; padding-bottom: 8px; }
+            h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: #55645a; margin: 16px 0 6px; }
             ul { padding-left: 0; list-style: none; }
             li { padding: 4px 0 4px 26px; position: relative; }
-            li::before { content: ''; position: absolute; left: 0; top: 7px; width: 12px; height: 12px; border: 1.5px solid #333; }
-            .meta { color: #666; font-size: 12px; margin-top: 16px; }
+            li::before { content: ''; position: absolute; left: 0; top: 7px; width: 12px; height: 12px; border: 1.5px solid #3b7a4d; border-radius: 3px; }
+            .meta { color: #5a6b4f; font-size: 12px; margin-top: 16px; }
           </style>
         </head>
         <body>
-          <h1>${viewMode === 'weekly' ? 'Weekly Shopping List' : 'Shopping List'}</h1>
+          <h1>${viewMode === "weekly" ? "Weekly Shopping List" : "Shopping List"}</h1>
           ${grouped
             .map(
               (group) => `
             <h2>${escapeHtml(group.label)}</h2>
             <ul>
-              ${group.items.map((item) => `<li>${escapeHtml(item.text)}</li>`).join('')}
+              ${group.items.map((item) => `<li>${escapeHtml(item.text)}</li>`).join("")}
             </ul>`
             )
-            .join('')}
-          <p class="meta">${items.length} items · AI Recipe Generator</p>
+            .join("")}
+          <p class="meta">${items.length} items · Rasoi AI Recipe Studio</p>
         </body>
       </html>
     `);
@@ -204,28 +210,28 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
     printWindow.print();
   };
 
-  if (viewMode === 'weekly' && mealPlan.length === 0) {
+  if (viewMode === "weekly" && mealPlan.length === 0) {
     return (
-      <div className="w-full max-w-3xl mx-auto mt-12 text-center py-16">
-        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-full inline-block mb-4">
-          <Calendar className="h-10 w-10 text-gray-400" />
+      <div className="mx-auto w-full max-w-2xl py-20 text-center">
+        <div className="mx-auto mb-5 grid h-20 w-20 animate-float place-items-center rounded-3xl border border-line bg-elev shadow-card">
+          <PiCalendarFill className="text-3xl text-herb-400" aria-hidden />
         </div>
-        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No meals planned</h3>
-        <p className="text-gray-500 dark:text-gray-400">
+        <h3 className="mb-2 font-display text-2xl font-semibold">No meals planned</h3>
+        <p className="text-body">
           Add recipes to your meal plan to generate a weekly shopping list.
         </p>
       </div>
     );
   }
 
-  if (viewMode === 'single' && !selectedRecipe?.recipe) {
+  if (viewMode === "single" && !selectedRecipe?.recipe) {
     return (
-      <div className="w-full max-w-3xl mx-auto mt-12 text-center py-16">
-        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-full inline-block mb-4">
-          <ShoppingCart className="h-10 w-10 text-gray-400" />
+      <div className="mx-auto w-full max-w-2xl py-20 text-center">
+        <div className="mx-auto mb-5 grid h-20 w-20 animate-float place-items-center rounded-3xl border border-line bg-elev shadow-card">
+          <PiShoppingCartSimpleFill className="text-3xl text-herb-400" aria-hidden />
         </div>
-        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No recipe selected</h3>
-        <p className="text-gray-500 dark:text-gray-400">
+        <h3 className="mb-2 font-display text-2xl font-semibold">No recipe selected</h3>
+        <p className="text-body">
           Generate a recipe or select a saved recipe to view its shopping list.
         </p>
       </div>
@@ -233,122 +239,143 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto mt-12">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
-        <div className="bg-gradient-to-r from-green-400 to-emerald-500 h-3"></div>
+    <div className="mx-auto w-full max-w-2xl">
+      <div className="mb-8 text-center">
+        <p className="mb-2 text-xs font-bold uppercase tracking-[0.28em] text-herb-600 dark:text-herb-400">
+          The market run
+        </p>
+        <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
+          {viewMode === "weekly" ? "Weekly" : ""} Shopping{" "}
+          <span className="display-accent text-herb-600 dark:text-herb-300">list</span>
+        </h2>
+      </div>
 
-        <div className="p-6">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {viewMode === 'weekly' ? 'Weekly Shopping List' : 'Shopping List'}
-            </h2>
+      <div className="relative overflow-hidden rounded-3xl border border-line bg-elev shadow-card">
+
+        <div className="p-6 sm:p-8">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-herb-100 text-herb-600 dark:bg-herb-900/70 dark:text-herb-300">
+                <PiShoppingCartSimpleFill size={20} aria-hidden />
+              </span>
+              <h2 className="font-display text-xl font-semibold">
+                {viewMode === "weekly" ? "Weekly Shopping List" : "Shopping List"}
+              </h2>
+            </div>
             <div className="flex gap-2">
               {checkedCount > 0 && (
                 <button
                   onClick={uncheckAll}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="grid h-10 w-10 place-items-center rounded-full border border-line text-body transition-all hover:rotate-[-120deg] hover:border-herb-400 hover:text-herb-700 dark:hover:text-herb-300"
                   title="Uncheck all"
+                  aria-label="Uncheck all items"
                 >
-                  <RotateCcw size={15} />
+                  <PiArrowCounterClockwiseFill size={15} aria-hidden />
                 </button>
               )}
               <button
                 onClick={copyToClipboard}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-body transition-colors hover:border-herb-400 hover:text-herb-700 dark:hover:text-herb-300"
               >
-                {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-                {copied ? 'Copied!' : 'Copy'}
+                {copied ? (
+                  <PiCheckFill size={15} className="text-herb-600 dark:text-herb-400" aria-hidden />
+                ) : (
+                  <PiCopyFill size={15} aria-hidden />
+                )}
+                {copied ? "Copied!" : "Copy"}
               </button>
               <button
                 onClick={printList}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-body transition-colors hover:border-herb-400 hover:text-herb-700 dark:hover:text-herb-300"
               >
-                <Printer size={16} />
+                <PiPrinterFill size={15} aria-hidden />
                 Print
               </button>
             </div>
           </div>
 
           {/* View Mode Toggle */}
-          <div className="flex gap-2 mb-6" role="tablist" aria-label="Shopping list mode">
+          <div className="mb-6 flex gap-1 rounded-full border border-line bg-elev2 p-1 dark:bg-herb-950/40" role="tablist" aria-label="Shopping list mode">
             <button
-              onClick={() => setViewMode('single')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                viewMode === 'single'
-                  ? 'bg-orange-600 text-white shadow-sm'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              onClick={() => setViewMode("single")}
+              className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+                viewMode === "single"
+                  ? "bg-herb-600 text-white shadow-glow"
+                  : "text-body hover:text-herb-700 dark:hover:text-herb-300"
               }`}
               role="tab"
-              aria-selected={viewMode === 'single'}
+              aria-selected={viewMode === "single"}
             >
-              Single Recipe
+              Single recipe
             </button>
             <button
-              onClick={() => setViewMode('weekly')}
+              onClick={() => setViewMode("weekly")}
               disabled={mealPlan.length === 0}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                viewMode === 'weekly'
-                  ? 'bg-orange-600 text-white shadow-sm'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                viewMode === "weekly"
+                  ? "bg-herb-600 text-white shadow-glow"
+                  : "text-body hover:text-herb-700 dark:hover:text-herb-300"
               }`}
               role="tab"
-              aria-selected={viewMode === 'weekly'}
+              aria-selected={viewMode === "weekly"}
             >
               Weekly ({mealPlan.length} meals)
             </button>
           </div>
 
-          {viewMode === 'single' && allRecipes.length > 1 && (
+          {viewMode === "single" && allRecipes.length > 1 && (
             <select
               value={selectedRecipeId}
               onChange={(e) => setSelectedRecipeId(e.target.value)}
               aria-label="Choose recipe for shopping list"
-              className="w-full mb-6 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition"
+              className="mb-6 w-full rounded-2xl border border-line bg-paper px-4 py-3 text-sm text-ink outline-none transition-all focus:border-herb-400 focus:ring-2 focus:ring-herb-400/30 dark:bg-herb-950/40"
             >
               {allRecipes.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.title || 'Untitled Recipe'}
+                  {r.title || "Untitled Recipe"}
                 </option>
               ))}
             </select>
           )}
 
-          {grouped.map(({ key, label, items: groupItems }) => {
-            const GroupIcon = CATEGORY_ICONS[key] || Package;
+          {grouped.map(({ key, label, items: groupItems }, groupIndex) => {
+            const GroupIcon = CATEGORY_ICONS[key] || PiBasketFill;
             return (
-              <div key={key} className="mb-5">
-                <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
-                  <GroupIcon size={13} />
+              <div key={key} className="mb-6">
+                <h3 className="mb-2.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-herb-600 dark:text-herb-400">
+                  <GroupIcon size={14} aria-hidden />
                   {label}
+                  <span className="ml-1 font-normal text-body/60">({groupItems.length})</span>
                 </h3>
                 <ul className="space-y-1">
                   {groupItems.map((item) => (
                     <li
                       key={`${item.index}-${item.text}`}
-                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                      style={{ animationDelay: `${Math.min(groupIndex + item.index, 12) * 40}ms` }}
+                      className="animate-fade-in flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-herb-100/40 dark:hover:bg-herb-900/30"
                       onClick={() => toggleItem(item.index)}
                     >
-                      <div
-                        className={`w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors ${
-                          checkedKeys.has(keyOf(item.index))
-                            ? 'bg-green-500 border-green-500'
-                            : 'border-gray-300 dark:border-gray-500'
-                        }`}
-                        aria-hidden="true"
-                      >
-                        {checkedKeys.has(keyOf(item.index)) && <Check size={12} className="text-white" />}
-                      </div>
                       <span
-                        className={`flex-1 text-gray-700 dark:text-gray-300 text-sm ${
+                        className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition-all ${
                           checkedKeys.has(keyOf(item.index))
-                            ? 'line-through text-gray-400 dark:text-gray-500'
-                            : ''
+                            ? "animate-pop border-herb-600 bg-herb-600 text-white"
+                            : "border-line"
+                        }`}
+                        aria-hidden
+                      >
+                        {checkedKeys.has(keyOf(item.index)) && <PiCheckFill size={11} />}
+                      </span>
+                      <span
+                        className={`flex-1 text-sm text-body transition-all ${
+                          checkedKeys.has(keyOf(item.index))
+                            ? "text-body/50 line-through"
+                            : ""
                         }`}
                       >
                         {item.text}
                       </span>
                       {item.count > 1 && (
-                        <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
+                        <span className="shrink-0 rounded-full bg-herb-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-herb-700 dark:bg-herb-900/70 dark:text-herb-300">
                           ×{item.count}
                         </span>
                       )}
@@ -359,8 +386,20 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
             );
           })}
 
-          <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 text-center">
-            {checkedCount} of {items.length} items checked
+          {/* Progress footer */}
+          <div className="mt-2 border-t border-line pt-5">
+            <div className="mb-2 flex items-center justify-between text-xs font-semibold text-body">
+              <span>{checkedCount} of {items.length} gathered</span>
+              <span className="tabular-nums">
+                {Math.round((checkedCount / Math.max(items.length, 1)) * 100)}%
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-herb-950/10 dark:bg-herb-100/10" aria-hidden>
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-herb-500 to-zest-deep transition-all duration-500"
+                style={{ width: `${(checkedCount / Math.max(items.length, 1)) * 100}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>

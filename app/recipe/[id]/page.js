@@ -1,25 +1,35 @@
-import ReactMarkdown from 'react-markdown';
-import { Clock, Users, Flame, ChefHat, Info, ArrowLeft, MapPin, Gauge } from 'lucide-react';
-import Link from 'next/link';
-import { getRecipe } from '@/lib/sharedStore';
+import ReactMarkdown from "react-markdown";
+import {
+  PiClockFill,
+  PiUsersThreeFill,
+  PiFireFill,
+  PiForkKnifeFill,
+  PiBasketFill,
+  PiInfoFill,
+  PiArrowLeftFill,
+  PiMapPinFill,
+  PiGaugeFill,
+} from "react-icons/pi";
+import Link from "next/link";
+import { getRecipe } from "@/lib/sharedStore";
+import { foodArtDataUri } from "@/lib/foodArt";
 
 /**
- * Reads the in-memory shared store DIRECTLY on the server.
- * The old version HTTP-fetched `http://localhost:3000/api/recipes/[id]`,
- * which only ever worked on a local dev machine and broke on any real deploy
- * (and made generateMetadata fire a pointless self-request per render).
+ * Reads the in-memory shared store DIRECTLY on the server — no self-fetch to
+ * localhost (which only ever worked on a dev machine). Shows a deterministic
+ * artwork hero so shared recipes always look intentional, never broken.
  */
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const recipe = getRecipe(id);
   if (!recipe) {
-    return { title: 'Recipe Not Found — AI Recipe Generator' };
+    return { title: "Recipe Not Found — Rasoi · AI Recipe Studio" };
   }
   return {
-    title: `${recipe.title} | AI Recipe Generator`,
+    title: `${recipe.title} | Rasoi · AI Recipe Studio`,
     description:
       recipe.structured?.description ||
       `Check out this shared recipe: ${recipe.title}`,
@@ -32,19 +42,19 @@ export default async function SharedRecipePage({ params }) {
 
   if (!recipe) {
     return (
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
-        <div className="max-w-4xl mx-auto text-center py-20">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Recipe Not Found</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-8">
-            This share link has expired (shared recipes are stored in memory and reset when the
-            server restarts).
+      <main className="min-h-screen bg-paper px-4 py-12 sm:px-6">
+        <div className="mx-auto max-w-2xl py-20 text-center">
+          <h1 className="mb-4 font-display text-4xl font-semibold">Recipe not found</h1>
+          <p className="mx-auto mb-8 max-w-md text-body">
+            This share link has expired (shared recipes are stored in memory and
+            reset when the server restarts).
           </p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 dark:text-orange-400 font-medium"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-herb-600 to-herb-500 px-6 py-3 text-sm font-semibold text-white shadow-glow transition-transform hover:scale-[1.03]"
           >
-            <ArrowLeft size={20} />
-            Back to Recipe Generator
+            <PiArrowLeftFill size={15} aria-hidden />
+            Back to the studio
           </Link>
         </div>
       </main>
@@ -52,42 +62,53 @@ export default async function SharedRecipePage({ params }) {
   }
 
   const structured = recipe.structured;
+  const cuisine = structured?.cuisine || recipe.cuisine || "";
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors">
-      <div className="max-w-4xl mx-auto">
+    <main className="min-h-screen bg-paper px-4 py-10 sm:px-6">
+      <div className="mx-auto max-w-3xl">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 dark:text-orange-400 font-medium mb-8"
+          className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-herb-700 transition-colors hover:text-herb-600 dark:text-herb-300"
         >
-          <ArrowLeft size={20} />
-          Back to Recipe Generator
+          <PiArrowLeftFill size={14} aria-hidden />
+          Back to the studio
         </Link>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 transition-colors">
-          <div className="bg-gradient-to-r from-orange-400 to-red-500 h-3"></div>
+        <article className="overflow-hidden rounded-3xl border border-line bg-elev shadow-card">
+          {/* Deterministic artwork hero */}
+          <div className="relative aspect-[16/7] w-full overflow-hidden" aria-hidden>
+            {/* Deterministic SVG data-URI artwork — plain img is the right loader for it. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={foodArtDataUri(recipe.title, cuisine)}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-herb-950/60 to-transparent" />
+          </div>
 
-          <div className="p-8 md:p-10">
+          <div className="p-6 md:p-10">
             {structured && (
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="mb-6 flex flex-wrap gap-2">
                 {structured.cuisine && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
-                    <MapPin size={12} /> {structured.cuisine}
+                  <span className="inline-flex items-center gap-1 rounded-full border border-herb-200 bg-herb-100/70 px-3 py-1 text-xs font-semibold text-herb-700 dark:border-herb-800 dark:bg-herb-900/60 dark:text-herb-300">
+                    <PiMapPinFill size={11} aria-hidden /> {structured.cuisine}
                   </span>
                 )}
                 {structured.difficulty && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                    <Gauge size={12} /> {structured.difficulty}
+                  <span className="inline-flex items-center gap-1 rounded-full border border-line bg-elev2 px-3 py-1 text-xs font-semibold text-body dark:bg-herb-950/60">
+                    <PiGaugeFill size={11} aria-hidden /> {structured.difficulty}
                   </span>
                 )}
                 {structured.totalTimeMinutes != null && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                    <Clock size={12} /> {structured.totalTimeMinutes} min
+                  <span className="inline-flex items-center gap-1 rounded-full border border-line bg-elev2 px-3 py-1 text-xs font-semibold text-body dark:bg-herb-950/60">
+                    <PiClockFill size={11} aria-hidden /> {structured.totalTimeMinutes} min
                   </span>
                 )}
                 {structured.servings != null && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                    <Users size={12} /> {structured.servings} servings
+                  <span className="inline-flex items-center gap-1 rounded-full border border-line bg-elev2 px-3 py-1 text-xs font-semibold text-body dark:bg-herb-950/60">
+                    <PiUsersThreeFill size={11} aria-hidden /> {structured.servings} servings
                   </span>
                 )}
               </div>
@@ -96,38 +117,38 @@ export default async function SharedRecipePage({ params }) {
             <ReactMarkdown
               components={{
                 h1: ({ node, ...props }) => (
-                  <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight border-b border-gray-100 dark:border-gray-700 pb-4" {...props} />
+                  <h1 className="mb-6 border-b border-line pb-4 font-display text-3xl font-semibold tracking-tight md:text-4xl" {...props} />
                 ),
                 h2: ({ node, ...props }) => {
-                  const text = String(props.children ?? '').toLowerCase();
-                  let Icon = ChefHat;
-                  if (text.includes('ingredient')) Icon = Users;
-                  if (text.includes('instruction') || text.includes('step')) Icon = Flame;
-                  if (text.includes('time') || text.includes('serving')) Icon = Clock;
-                  if (text.includes('nutrition')) Icon = Info;
+                  const text = String(props.children ?? "").toLowerCase();
+                  let Icon = PiForkKnifeFill;
+                  if (text.includes("ingredient")) Icon = PiBasketFill;
+                  if (text.includes("instruction") || text.includes("step")) Icon = PiFireFill;
+                  if (text.includes("time") || text.includes("serving")) Icon = PiClockFill;
+                  if (text.includes("nutrition")) Icon = PiInfoFill;
                   return (
-                    <div className="flex items-center gap-3 mt-8 mb-4 px-1">
-                      <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg text-orange-600 dark:text-orange-400">
-                        <Icon size={22} />
-                      </div>
-                      <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100" {...props} />
+                    <div className="mb-4 mt-8 flex items-center gap-3">
+                      <span className="grid h-9 w-9 place-items-center rounded-xl bg-herb-100 text-herb-600 dark:bg-herb-900/70 dark:text-herb-300">
+                        <Icon size={18} aria-hidden />
+                      </span>
+                      <h2 className="font-display text-xl font-semibold" {...props} />
                     </div>
                   );
                 },
                 p: ({ node, ...props }) => (
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-4 px-1" {...props} />
+                  <p className="mb-4 leading-relaxed text-body" {...props} />
                 ),
                 ul: ({ node, ...props }) => (
-                  <ul className="space-y-3 mb-6 bg-gray-50 dark:bg-gray-900/60 p-5 rounded-xl border border-gray-100 dark:border-gray-700 list-none" {...props} />
+                  <ul className="mb-6 list-none space-y-1 rounded-2xl border border-line bg-elev2/60 p-3 dark:bg-herb-950/40" {...props} />
                 ),
                 ol: ({ node, ...props }) => (
-                  <ol className="list-decimal marker:text-orange-600 dark:marker:text-orange-400 marker:font-bold space-y-3 mb-6 pl-6" {...props} />
+                  <ol className="mb-6 list-decimal space-y-3 pl-6 marker:font-bold marker:text-herb-600 dark:marker:text-herb-400" {...props} />
                 ),
                 li: ({ node, ...props }) => (
-                  <li className="text-gray-700 dark:text-gray-200 leading-relaxed" {...props} />
+                  <li className="leading-relaxed text-body" {...props} />
                 ),
                 strong: ({ node, ...props }) => (
-                  <strong className="font-bold text-gray-900 dark:text-white" {...props} />
+                  <strong className="font-semibold text-ink" {...props} />
                 ),
               }}
             >
@@ -136,27 +157,27 @@ export default async function SharedRecipePage({ params }) {
           </div>
 
           {recipe.nutrition && (
-            <div className="px-8 md:px-10 pb-6">
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl p-6 border border-green-100 dark:border-green-800">
-                <div className="flex items-center gap-2 mb-4">
-                  <Flame className="text-green-600 dark:text-green-400" size={20} />
-                  <h3 className="text-lg font-bold text-green-800 dark:text-green-300">
-                    Nutrition per Serving
+            <div className="px-6 pb-6 md:px-10">
+              <div className="rounded-2xl border border-herb-200/70 bg-gradient-to-br from-herb-50 to-herb-100/50 p-6 dark:border-herb-800 dark:from-herb-900/40 dark:to-herb-950/60">
+                <div className="mb-4 flex items-center gap-2 text-herb-700 dark:text-herb-300">
+                  <PiFireFill size={16} aria-hidden />
+                  <h3 className="text-sm font-bold uppercase tracking-[0.16em]">
+                    Nutrition · per serving
                   </h3>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-4 text-center md:grid-cols-4">
                   {[
-                    ['Calories', recipe.nutrition.calories, ''],
-                    ['Protein', recipe.nutrition.protein, 'g'],
-                    ['Carbs', recipe.nutrition.carbs, 'g'],
-                    ['Fat', recipe.nutrition.fat, 'g'],
+                    ["Calories", recipe.nutrition.calories, ""],
+                    ["Protein", recipe.nutrition.protein, "g"],
+                    ["Carbs", recipe.nutrition.carbs, "g"],
+                    ["Fat", recipe.nutrition.fat, "g"],
                   ].map(([label, value, unit]) => (
-                    <div key={label} className="text-center">
-                      <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+                    <div key={label}>
+                      <div className="font-display text-2xl font-semibold text-herb-700 dark:text-herb-300">
                         {value}
                         {unit}
                       </div>
-                      <div className="text-sm text-green-600 dark:text-green-500">{label}</div>
+                      <div className="text-[11px] uppercase tracking-[0.12em] text-body">{label}</div>
                     </div>
                   ))}
                 </div>
@@ -164,10 +185,10 @@ export default async function SharedRecipePage({ params }) {
             </div>
           )}
 
-          <div className="bg-gray-50 dark:bg-gray-900/60 p-4 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700">
-            Shared via AI Recipe Generator
+          <div className="border-t border-line bg-elev2/50 p-4 text-center text-xs uppercase tracking-[0.22em] text-body">
+            Shared via Rasoi · AI Recipe Studio
           </div>
-        </div>
+        </article>
       </div>
     </main>
   );
