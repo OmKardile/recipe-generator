@@ -1,120 +1,164 @@
-import { NextResponse } from 'next/server';
-import model from '@/lib/gemini';
+import { NextResponse } from "next/server";
+import { getModel, recipeGenerationConfig, MODEL_NAME } from "@/lib/gemini";
+import { buildRecipePrompt } from "@/lib/prompts";
+import {
+  parseStructuredResponse,
+  parseLegacyMarkdown,
+  renderRecipeMarkdown,
+} from "@/lib/recipeUtils";
+
+export const maxDuration = 60;
+
+const MAX_INGREDIENTS = 25;
+const MAX_INGREDIENT_LENGTH = 60;
+const MAX_PREFERENCES_LENGTH = 500;
+const GENERATION_TIMEOUT_MS = 90_000;
+
+/** Validate + sanitize the request body. Returns {error} or normalized input. */
+function validateInput(body) {
+  if (!body || typeof body !== "object") {
+    return { error: "Request body must be a JSON object." };
+  }
+
+  const raw = Array.isArray(body.ingredients) ? body.ingredients : [];
+  const seen = new Set();
+  const ingredients = [];
+
+  for (const item of raw) {
+    if (typeof item !== "string") continue;
+    const cleaned = item.trim().replace(/\s+/g, " ").slice(0, MAX_INGREDIENT_LENGTH);
+    if (!cleaned) continue;
+    const key = cleaned.toLowerCase();
+    if (seen.has(key)) continue; // de-dupe "Chicken" vs "chicken"
+    seen.add(key);
+    ingredients.push(cleaned);
+    if (ingredients.length >= MAX_INGREDIENTS) break;
+  }
+
+  if (ingredients.length === 0) {
+    return { error: "Please add at least one ingredient before generating." };
+  }
+
+  const preferences =
+    typeof body.preferences === "string"
+      ? body.preferences.trim().slice(0, MAX_PREFERENCES_LENGTH)
+      : "";
+
+  return {
+    ingredients,
+    preferences,
+    includeNutrition: Boolean(body.includeNutrition),
+  };
+}
+
+function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error("GENERATION_TIMEOUT")), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+function friendlyError(error) {
+  const message = `${error?.message || ""}`;
+
+  if (error?.code === "MISSING_GEMINI_API_KEY") {
+    return {
+      status: 500,
+      message:
+        "The server has no GEMINI_API_KEY configured. Add it to .env.local and restart the dev server.",
+    };
+  }
+  if (message.includes("GENERATION_TIMEOUT")) {
+    return { status: 504, message: "The AI took too long to respond. Please try again." };
+  }
+  if (error?.status === 429 || message.includes("429") || message.toLowerCase().includes("quota")) {
+    return {
+      status: 429,
+      message: "Gemini API quota exceeded. Please wait a minute and try again.",
+    };
+  }
+  if (
+    error?.status === 503 ||
+    message.includes("503") ||
+    message.toLowerCase().includes("overloaded")
+  ) {
+    return {
+      status: 503,
+      message: "Gemini is overloaded right now. Please try again in a few seconds.",
+    };
+  }
+  return { status: 500, message: "Failed to generate recipes. Please try again." };
+}
 
 export async function POST(request) {
   try {
-    if (!model) {
-      throw new Error("Missing GEMINI_API_KEY environment variable");
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
 
-    const { ingredients, preferences, includeNutrition } = await request.json();
-
-    if (!ingredients || ingredients.length === 0) {
-      return NextResponse.json(
-        { error: 'Ingredients are required' },
-        { status: 400 }
-      );
+    const validated = validateInput(body);
+    if (validated.error) {
+      return NextResponse.json({ error: validated.error }, { status: 400 });
     }
+    const { ingredients, preferences, includeNutrition } = validated;
 
-    const nutritionSection = includeNutrition
-      ? `- Nutritional Info (estimated per serving: calories, protein in grams, carbs in grams, fat in grams)`
-      : '';
+    const model = getModel(); // throws MissingApiKeyError when unconfigured
+    const prompt = buildRecipePrompt({ ingredients, preferences, includeNutrition });
 
-    const prompt = `
-      You are an expert Indian chef. Generate 3 DIFFERENT recipe options using the available ingredients.
-      
-      Available Ingredients: ${ingredients.join(', ')}
-      Preferences: ${preferences || 'None'}
-      
-      IMPORTANT: Prioritize Indian cuisine. Include classic Indian dishes like Biryani, Curry, Dal, Paneer dishes, Samosa, etc. when ingredients allow.
-      
-      Return EXACTLY 3 recipes, each separated by ===RECIPE_SEPARATOR===
-      
-      For EACH recipe, format in Markdown with these sections:
-      ## [Recipe Title]
-      [Brief 1-2 line description]
-      
-      ### Ingredients
-      - [ingredient with measurement]
-      
-      ### Instructions
-      1. [Step by step instructions]
-      
-      ### Time & Servings
-      - Prep: [time]
-      - Cook: [time]  
-      - Servings: [number]
-      ${includeNutrition ? '- Calories: [number] per serving' : ''}
-      
-      Make each recipe unique - one could be a biryani, another a curry, another a dry dish. Be creative and authentic!
-    `;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    // Split recipes by separator
-    const recipeTexts = text.split(/===RECIPE_SEPARATOR===/).map(r => r.trim()).filter(r => r.length > 0);
-
-    // If we got fewer than 3, try splitting by ## headers
-    let recipes = recipeTexts;
-    if (recipes.length < 3) {
-      recipes = text.split(/(?=^## )/m).map(r => r.trim()).filter(r => r.length > 0 && r.startsWith('##'));
-    }
-
-    // Take first 3 recipes
-    recipes = recipes.slice(0, 3);
-
-    // Parse each recipe
-    const parsedRecipes = recipes.map((recipeText, index) => {
-      let nutrition = null;
-      let cleanRecipe = recipeText;
-
-      if (includeNutrition) {
-        const calMatch = recipeText.match(/(?:Calories|calories)[:\s]*(\d+)/);
-        if (calMatch) {
-          nutrition = {
-            calories: parseInt(calMatch[1]),
-            protein: 0,
-            carbs: 0,
-            fat: 0,
-          };
-          // Try to extract other macros if present
-          const proteinMatch = recipeText.match(/Protein[:\s]*(\d+)/);
-          const carbsMatch = recipeText.match(/Carbs[:\s]*(\d+)/);
-          const fatMatch = recipeText.match(/Fat[:\s]*(\d+)/);
-          if (proteinMatch) nutrition.protein = parseInt(proteinMatch[1]);
-          if (carbsMatch) nutrition.carbs = parseInt(carbsMatch[1]);
-          if (fatMatch) nutrition.fat = parseInt(fatMatch[1]);
-        }
-      }
-
-      // Extract title from ## header
-      const titleMatch = recipeText.match(/^##\s+(.+)/m);
-      const title = titleMatch ? titleMatch[1].replace(/[\[\]]/g, '').trim() : `Recipe Option ${index + 1}`;
-
-      return {
-        id: index,
-        title,
-        recipe: cleanRecipe,
-        nutrition,
-      };
-    });
-
-    return NextResponse.json({ recipes: parsedRecipes });
-  } catch (error) {
-    console.error('Error generating recipe:', error);
-    
-    if (error.status === 429 || error.message?.includes('429')) {
-      return NextResponse.json(
-        { error: 'Gemini API Quota Exceeded. Please try again later.' },
-        { status: 429 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to generate recipe' },
-      { status: 500 }
+    const result = await withTimeout(
+      model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: recipeGenerationConfig(),
+      }),
+      GENERATION_TIMEOUT_MS
     );
+
+    const text = (await result.response).text();
+
+    // Primary path: strict structured JSON.
+    let recipes = parseStructuredResponse(text);
+
+    // Fallback: legacy free-form markdown → best-effort structured extraction.
+    if (recipes.length === 0) {
+      console.warn(
+        `[generate] structured JSON parse failed for ${MODEL_NAME}; falling back to markdown parsing.`
+      );
+      const chunks = text
+        .split(/===RECIPE_SEPARATOR===/)
+        .map((r) => r.trim())
+        .filter(Boolean);
+      const parts = chunks.length > 1 ? chunks : text.split(/(?=^##\s)/m).filter((r) => r.startsWith("##"));
+      recipes = parts
+        .slice(0, 3)
+        .map((chunk, i) => parseLegacyMarkdown(chunk, i))
+        .filter(Boolean);
+    }
+
+    if (recipes.length === 0) {
+      console.error("[generate] AI returned an unusable response.");
+      return NextResponse.json(
+        {
+          error:
+            "The AI response could not be understood. This is usually temporary — please try again.",
+        },
+        { status: 502 }
+      );
+    }
+
+    // Attach the deterministic display markdown every consumer relies on.
+    const payload = recipes.map((recipe) => ({
+      ...recipe,
+      recipe: recipe.rawMarkdown || renderRecipeMarkdown(recipe),
+    }));
+
+    return NextResponse.json({ recipes: payload, model: MODEL_NAME });
+  } catch (error) {
+    console.error("Error generating recipe:", error?.message || error);
+    const { status, message } = friendlyError(error);
+    return NextResponse.json({ error: message }, { status });
   }
 }
