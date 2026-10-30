@@ -14,6 +14,7 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 - **Smart validation** — inputs are sanitized (duplicates removed, length caps, type checks) before reaching the model.
 
 ### Kitchen Tools
+- **Real recipe media** — every dish is paired with a **real YouTube video of a proven cook making the same canonical dish**, and the image shown is that video's actual thumbnail — a real photograph of real food. **No AI-generated imagery, ever.** The server verifies each video exists (CDN HEAD check) before the recipe reaches the browser, so a hallucinated link is impossible to display; dishes without a known video get a branded placeholder plus a YouTube search link.
 - **Real serving scaling** — ingredient amounts rescale live (with pretty fractions) when you change servings.
 - **Cook Mode** — tap ingredients and steps to check them off as you cook.
 - **Meal Planner** — drag-free weekly grid (breakfast / lunch / dinner / snack), with per-week calorie totals.
@@ -23,11 +24,18 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 - **Share links** — one-click shareable recipe URLs.
 - **Dark mode** — per-browser, flash-free (theme applies before first paint), follows system preference.
 
+### Design
+- **Emerald “Fresh Basil” palette** — deep emerald / forest / lime across light & dark modes.
+- **Editorial typography** — Fraunces display serif for headlines, Geist for UI.
+- **Motion everywhere** — spring physics (framer-motion): sliding tab pill, staggered card entrances with 3D tilt, scroll-triggered section reveals, animated ingredient stagger, shine sweeps, ambient aurora background with film grain — all respecting `prefers-reduced-motion`.
+- **Distinctive icon language** — Lucide (CookingPot, Carrot, Activity, BadgeCheck…) plus Phosphor meal icons (sunrise breakfast, fork-and-knife lunch, moon dinner, cookie snack).
+
 ## Tech Stack
 
-- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS 4, Lucide icons
+- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS 4, framer-motion, Lucide + Phosphor icons
 - **Backend**: Next.js API Routes
 - **AI**: Google Gemini (`@google/generative-ai`) — `gemini-2.5-flash`
+- **Media**: real YouTube video thumbnails (verified server-side via YouTube's CDN)
 - **Storage**: JSON files on disk (`data/`) for personal recipes & meal plans; in-memory store for share links
 
 ## Getting Started

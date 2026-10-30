@@ -4,9 +4,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRecipes } from '@/context/RecipeContext';
 import { Calendar, Plus, X, UtensilsCrossed, Trash2 } from 'lucide-react';
+import { PiSunHorizon, PiForkKnife, PiMoonStars, PiCookie } from 'react-icons/pi';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
+const MEAL_ICONS = {
+  breakfast: PiSunHorizon,
+  lunch: PiForkKnife,
+  dinner: PiMoonStars,
+  snack: PiCookie,
+};
 const MEAL_COLORS = {
   breakfast: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
   lunch: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
@@ -98,14 +105,18 @@ export default function MealPlanner() {
           {/* grid-cols-5 = day label column + 4 meal columns (was cols-8 → misaligned) */}
           <div className="grid grid-cols-5 gap-2 min-w-[680px]">
             <div className="p-2"></div>
-            {MEALS.map((meal) => (
-              <div
-                key={meal}
-                className="p-2 text-center font-semibold text-gray-600 dark:text-gray-300 capitalize text-sm"
-              >
-                {meal}
-              </div>
-            ))}
+            {MEALS.map((meal) => {
+              const MealIcon = MEAL_ICONS[meal];
+              return (
+                <div
+                  key={meal}
+                  className="p-2 text-center font-semibold text-gray-600 dark:text-gray-300 capitalize text-sm flex flex-col items-center gap-1"
+                >
+                  <MealIcon size={18} className="text-emerald-500/70" />
+                  {meal}
+                </div>
+              );
+            })}
 
             {DAYS.map((day) => (
               <div key={day} className="contents">
