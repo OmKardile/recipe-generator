@@ -14,9 +14,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "AI Recipe Generator",
-  description: "Generate creative recipes from your ingredients using AI",
+  title: "AI Recipe Generator — Authentic Indian Recipes from Your Ingredients",
+  description:
+    "Enter the ingredients in your kitchen and get three chef-quality Indian recipes — with smart serving scaling, meal planning, shopping lists and a cooking timer.",
+  keywords: [
+    "recipe generator", "AI recipes", "Indian recipes", "what to cook today",
+    "meal planner", "cooking assistant", "Gemini AI",
+  ],
+  openGraph: {
+    title: "AI Recipe Generator",
+    description:
+      "Three chef-crafted Indian recipes from whatever is in your kitchen right now.",
+    type: "website",
+  },
 };
+
+/**
+ * Runs before first paint to apply the saved theme — eliminates the
+ * light-theme flash (FOUC) dark-mode users used to see.
+ */
+const themeInitScript = `(function(){try{var t=localStorage.getItem('recipe-generator-theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`;
 
 export default function RootLayout({ children }) {
   return (
@@ -24,6 +41,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <ThemeProvider>
           <RecipeProvider>{children}</RecipeProvider>
         </ThemeProvider>

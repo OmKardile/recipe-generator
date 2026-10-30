@@ -42,10 +42,13 @@ export function RecipeProvider({ children }) {
         body: JSON.stringify(recipe),
       });
       const newRecipe = await res.json();
+      // Never inject an error payload into the saved list.
+      if (!res.ok || !newRecipe?.id) throw new Error(newRecipe?.error || 'Save failed');
       setSavedRecipes((prev) => [newRecipe, ...prev]);
       return newRecipe;
     } catch (error) {
       console.error('Error saving recipe:', error);
+      return null;
     }
   };
 
@@ -65,8 +68,11 @@ export function RecipeProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tags: recipeTags }),
       });
+      if (!res.ok) throw new Error('Tag update failed');
       const updated = await res.json();
-      setSavedRecipes((prev) => prev.map((r) => (r.id === id ? updated : r)));
+      if (updated?.id) {
+        setSavedRecipes((prev) => prev.map((r) => (r.id === id ? updated : r)));
+      }
     } catch (error) {
       console.error('Error updating recipe tags:', error);
     }
