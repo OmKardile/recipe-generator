@@ -2,14 +2,30 @@
 
 import { useState } from 'react';
 import { useRecipes } from '@/context/RecipeContext';
-import { ShoppingCart, Copy, Check, Printer, Calendar } from 'lucide-react';
+import {
+  ShoppingCart, Copy, Check, Printer, Calendar, Apple, Milk, Wheat,
+  FlaskConical, Package, RotateCcw,
+} from 'lucide-react';
+import {
+  ingredientLine, categorizeIngredient, SHOPPING_CATEGORIES, escapeHtml,
+} from '@/lib/recipeUtils';
+
+const CATEGORY_ICONS = {
+  produce: Apple,
+  protein: Milk,
+  pantry: Wheat,
+  spices: FlaskConical,
+  other: Package,
+};
 
 export default function ShoppingList({ currentRecipe, currentIngredients }) {
   const { savedRecipes, mealPlan, mounted } = useRecipes();
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
-  const [checkedItems, setCheckedItems] = useState(new Set());
+  // Checks are keyed per list ("<listKey>#<index>") so switching recipes or
+  // modes naturally shows a clean list without effect-driven state resets.
+  const [checkedKeys, setCheckedKeys] = useState(new Set());
   const [copied, setCopied] = useState(false);
-  const [viewMode, setViewMode] = useState('single'); // 'single' or 'weekly'
+  const [viewMode, setViewMode] = useState('single'); // 'single' | 'weekly'
 
   if (!mounted) return null;
 
@@ -21,13 +37,11 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
 
     for (const line of lines) {
       const lower = line.toLowerCase();
-      if (lower.includes('## ingredients') || lower.includes('### ingredients')) {
+      if (lower.startsWith('## ingredients') || lower.startsWith('### ingredients')) {
         inIngredients = true;
         continue;
       }
-      if (inIngredients && (lower.startsWith('## ') || lower.startsWith('### '))) {
-        break;
-      }
+      if (inIngredients && (lower.startsWith('## ') || lower.startsWith('### '))) break;
       if (inIngredients && line.trim().startsWith('- ')) {
         ingredients.push(line.trim().slice(2));
       }
@@ -35,76 +49,158 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
     return ingredients;
   };
 
+  /** Prefer structured ingredients; fall back to markdown scraping. */
   const getIngredientsFromRecipe = (recipeEntry) => {
-    if (recipeEntry?.ingredients?.length > 0) return recipeEntry.ingredients;
+    if (recipeEntry?.structured?.ingredients?.length) {
+      return recipeEntry.structured.ingredients.map((ing) => ingredientLine(ing));
+    }
+    if (recipeEntry?.ingredients?.length) return recipeEntry.ingredients;
     return extractIngredientsFromMarkdown(recipeEntry?.recipe || '');
   };
 
-  // Weekly shopping list - aggregate from meal plan
+  /** Weekly mode: aggregate, summing structured amounts by name+unit. */
   const getWeeklyIngredients = () => {
-    const ingredientMap = new Map();
-    
+    const textMap = new Map();
+    const structuredMap = new Map();
+
     mealPlan.forEach((entry) => {
-      const ingredients = getIngredientsFromRecipe(entry.recipe);
-      ingredients.forEach((ing) => {
-        const key = ing.toLowerCase().trim();
-        if (ingredientMap.has(key)) {
-          ingredientMap.set(key, {
-            text: ing,
-            count: ingredientMap.get(key).count + 1,
-          });
-        } else {
-          ingredientMap.set(key, { text: ing, count: 1 });
-        }
-      });
+      const recipe = entry.recipe;
+      if (recipe?.structured?.ingredients?.length) {
+        recipe.structured.ingredients.forEach((ing) => {
+          const key = `${(ing.name || '').toLowerCase().trim()}|${(ing.unit || '').toLowerCase()}`;
+          if (structuredMap.has(key)) {
+            structuredMap.get(key).amount += ing.amount || 0;
+          } else {
+            structuredMap.set(key, {
+              name: ing.name,
+              unit: ing.unit,
+              amount: ing.amount || 0,
+              note: ing.note,
+            });
+          }
+        });
+      } else {
+        const lines = getIngredientsFromRecipe(recipe);
+        lines.forEach((line) => {
+          const key = line.toLowerCase().trim();
+          textMap.set(key, (textMap.get(key) || 0) + 1);
+        });
+      }
     });
 
-    return Array.from(ingredientMap.values());
+    const structuredItems = Array.from(structuredMap.values()).map((ing) => ({
+      text: ingredientLine(ing),
+      name: ing.name,
+      count: null,
+    }));
+    const textItems = Array.from(textMap.entries()).map(([text, count]) => ({
+      text,
+      name: text,
+      count,
+    }));
+
+    return [...structuredItems, ...textItems];
   };
 
   const weeklyIngredients = getWeeklyIngredients();
 
-  // Single recipe mode
   const allRecipes = currentRecipe
-    ? [{ id: '__current', title: 'Current Recipe', recipe: currentRecipe, ingredients: currentIngredients }, ...savedRecipes]
+    ? [
+        { id: '__current', title: 'Current Recipe', recipe: currentRecipe, ingredients: currentIngredients },
+        ...savedRecipes,
+      ]
     : savedRecipes;
 
   const selectedRecipe = allRecipes.find((r) => r.id === selectedRecipeId) || allRecipes[0];
-  const singleIngredients = getIngredientsFromRecipe(selectedRecipe);
 
-  const ingredients = viewMode === 'weekly' ? weeklyIngredients.map((i) => i.text) : singleIngredients;
+  const listKey =
+    viewMode === 'weekly' ? 'weekly' : selectedRecipe?.id || 'none';
+
+  const items =
+    viewMode === 'weekly'
+      ? weeklyIngredients.map((i) => ({ text: i.text, name: i.name, count: i.count }))
+      : getIngredientsFromRecipe(selectedRecipe).map((line) => ({
+          text: line,
+          name: line,
+          count: null,
+        }));
+
+  const keyOf = (index) => `${listKey}#${index}`;
+  const checkedCount = items.reduce(
+    (sum, _, index) => sum + (checkedKeys.has(keyOf(index)) ? 1 : 0),
+    0
+  );
+
+  // Group items by category for a supermarket-friendly layout.
+  const grouped = SHOPPING_CATEGORIES.map(({ key, label }) => ({
+    key,
+    label,
+    items: items
+      .map((item, index) => ({ ...item, index }))
+      .filter((item) => categorizeIngredient(item.name) === key),
+  })).filter((group) => group.items.length > 0);
 
   const toggleItem = (index) => {
-    const newChecked = new Set(checkedItems);
-    if (newChecked.has(index)) {
-      newChecked.delete(index);
-    } else {
-      newChecked.add(index);
-    }
-    setCheckedItems(newChecked);
+    const key = keyOf(index);
+    const newChecked = new Set(checkedKeys);
+    if (newChecked.has(key)) newChecked.delete(key);
+    else newChecked.add(key);
+    setCheckedKeys(newChecked);
+  };
+
+  const uncheckAll = () => {
+    setCheckedKeys((prev) => {
+      const next = new Set(prev);
+      [...next].filter((k) => k.startsWith(`${listKey}#`)).forEach((k) => next.delete(k));
+      return next;
+    });
   };
 
   const copyToClipboard = async () => {
-    const text = ingredients.map((ing) => `☐ ${ing}`).join('\n');
-    await navigator.clipboard.writeText(text);
+    const text = items.map((item) => `☐ ${item.text}`).join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // clipboard unavailable — still show feedback, list remains on screen
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const printList = () => {
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open('', '_blank', 'width=420,height=640');
+    if (!printWindow) return; // popup blocked — don't crash
     printWindow.document.write(`
       <html>
-        <head><title>Shopping List</title></head>
+        <head>
+          <title>Shopping List</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+            h1 { font-size: 20px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+            h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #555; margin: 16px 0 6px; }
+            ul { padding-left: 0; list-style: none; }
+            li { padding: 4px 0 4px 26px; position: relative; }
+            li::before { content: ''; position: absolute; left: 0; top: 7px; width: 12px; height: 12px; border: 1.5px solid #333; }
+            .meta { color: #666; font-size: 12px; margin-top: 16px; }
+          </style>
+        </head>
         <body>
           <h1>${viewMode === 'weekly' ? 'Weekly Shopping List' : 'Shopping List'}</h1>
-          <ul>
-            ${ingredients.map((ing) => `<li>${ing}</li>`).join('')}
-          </ul>
+          ${grouped
+            .map(
+              (group) => `
+            <h2>${escapeHtml(group.label)}</h2>
+            <ul>
+              ${group.items.map((item) => `<li>${escapeHtml(item.text)}</li>`).join('')}
+            </ul>`
+            )
+            .join('')}
+          <p class="meta">${items.length} items · AI Recipe Generator</p>
         </body>
       </html>
     `);
     printWindow.document.close();
+    printWindow.focus();
     printWindow.print();
   };
 
@@ -138,15 +234,24 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-12">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
         <div className="bg-gradient-to-r from-green-400 to-emerald-500 h-3"></div>
-        
+
         <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               {viewMode === 'weekly' ? 'Weekly Shopping List' : 'Shopping List'}
             </h2>
             <div className="flex gap-2">
+              {checkedCount > 0 && (
+                <button
+                  onClick={uncheckAll}
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  title="Uncheck all"
+                >
+                  <RotateCcw size={15} />
+                </button>
+              )}
               <button
                 onClick={copyToClipboard}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -165,25 +270,29 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
           </div>
 
           {/* View Mode Toggle */}
-          <div className="flex gap-2 mb-6">
+          <div className="flex gap-2 mb-6" role="tablist" aria-label="Shopping list mode">
             <button
               onClick={() => setViewMode('single')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 viewMode === 'single'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-orange-600 text-white shadow-sm'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
+              role="tab"
+              aria-selected={viewMode === 'single'}
             >
               Single Recipe
             </button>
             <button
               onClick={() => setViewMode('weekly')}
               disabled={mealPlan.length === 0}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 viewMode === 'weekly'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed'
+                  ? 'bg-orange-600 text-white shadow-sm'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
+              role="tab"
+              aria-selected={viewMode === 'weekly'}
             >
               Weekly ({mealPlan.length} meals)
             </button>
@@ -193,7 +302,8 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
             <select
               value={selectedRecipeId}
               onChange={(e) => setSelectedRecipeId(e.target.value)}
-              className="w-full mb-6 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black dark:text-white dark:bg-gray-700"
+              aria-label="Choose recipe for shopping list"
+              className="w-full mb-6 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition"
             >
               {allRecipes.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -203,42 +313,54 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
             </select>
           )}
 
-          <ul className="space-y-2">
-            {ingredients.map((ingredient, index) => (
-              <li
-                key={index}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-                onClick={() => toggleItem(index)}
-              >
-                <div
-                  className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                    checkedItems.has(index)
-                      ? 'bg-green-500 border-green-500'
-                      : 'border-gray-300 dark:border-gray-500'
-                  }`}
-                >
-                  {checkedItems.has(index) && (
-                    <Check size={12} className="text-white" />
-                  )}
-                </div>
-                <span
-                  className={`flex-1 text-gray-700 dark:text-gray-300 ${
-                    checkedItems.has(index) ? 'line-through text-gray-400 dark:text-gray-500' : ''
-                  }`}
-                >
-                  {ingredient}
-                </span>
-                {viewMode === 'weekly' && weeklyIngredients[index]?.count > 1 && (
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
-                    x{weeklyIngredients[index].count}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
+          {grouped.map(({ key, label, items: groupItems }) => {
+            const GroupIcon = CATEGORY_ICONS[key] || Package;
+            return (
+              <div key={key} className="mb-5">
+                <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                  <GroupIcon size={13} />
+                  {label}
+                </h3>
+                <ul className="space-y-1">
+                  {groupItems.map((item) => (
+                    <li
+                      key={`${item.index}-${item.text}`}
+                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                      onClick={() => toggleItem(item.index)}
+                    >
+                      <div
+                        className={`w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors ${
+                          checkedKeys.has(keyOf(item.index))
+                            ? 'bg-green-500 border-green-500'
+                            : 'border-gray-300 dark:border-gray-500'
+                        }`}
+                        aria-hidden="true"
+                      >
+                        {checkedKeys.has(keyOf(item.index)) && <Check size={12} className="text-white" />}
+                      </div>
+                      <span
+                        className={`flex-1 text-gray-700 dark:text-gray-300 text-sm ${
+                          checkedKeys.has(keyOf(item.index))
+                            ? 'line-through text-gray-400 dark:text-gray-500'
+                            : ''
+                        }`}
+                      >
+                        {item.text}
+                      </span>
+                      {item.count > 1 && (
+                        <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
+                          ×{item.count}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
 
           <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 text-center">
-            {checkedItems.size} of {ingredients.length} items checked
+            {checkedCount} of {items.length} items checked
           </div>
         </div>
       </div>

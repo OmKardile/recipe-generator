@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRecipes } from '@/context/RecipeContext';
-import { Trash2, ExternalLink, Clock, Bookmark, Tag, X, Plus, Search } from 'lucide-react';
+import { Trash2, ExternalLink, Clock, Bookmark, Tag, X, Search, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 export default function SavedRecipes({ onViewRecipe }) {
@@ -40,7 +40,7 @@ export default function SavedRecipes({ onViewRecipe }) {
         </div>
         <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No saved recipes yet</h3>
         <p className="text-gray-500 dark:text-gray-400">
-          Generate a recipe and click "Save Recipe" to add it to your collection.
+          Generate a recipe and click &quot;Save Recipe&quot; to add it to your collection.
         </p>
       </div>
     );
@@ -70,7 +70,7 @@ export default function SavedRecipes({ onViewRecipe }) {
             onClick={() => setFilterTag('')}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               !filterTag
-                ? 'bg-blue-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
@@ -80,9 +80,10 @@ export default function SavedRecipes({ onViewRecipe }) {
             <button
               key={tag}
               onClick={() => setFilterTag(filterTag === tag ? '' : tag)}
+              aria-pressed={filterTag === tag}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 filterTag === tag
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-orange-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
@@ -162,13 +163,14 @@ export default function SavedRecipes({ onViewRecipe }) {
                       <button
                         key={tag}
                         onClick={() => toggleTag(recipe.id, tag)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                        aria-pressed={recipe.tags?.includes(tag)}
+                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                           recipe.tags?.includes(tag)
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-orange-600 text-white'
                             : 'bg-white dark:bg-gray-600 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-500'
                         }`}
                       >
-                        {recipe.tags?.includes(tag) && <span className="mr-1">✓</span>}
+                        {recipe.tags?.includes(tag) && <Check size={12} />}
                         {tag}
                       </button>
                     ))}
@@ -178,8 +180,34 @@ export default function SavedRecipes({ onViewRecipe }) {
 
               {expandedId === recipe.id && (
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                  <div className="prose prose-orange dark:prose-invert max-w-none">
-                    <ReactMarkdown>{recipe.recipe}</ReactMarkdown>
+                  <div className="max-w-none">
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ node, ...props }) => (
+                          <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight border-b border-gray-100 dark:border-gray-700 pb-3" {...props} />
+                        ),
+                        h2: ({ node, ...props }) => (
+                          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mt-6 mb-3" {...props} />
+                        ),
+                        p: ({ node, ...props }) => (
+                          <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-3" {...props} />
+                        ),
+                        ul: ({ node, ...props }) => (
+                          <ul className="space-y-2 mb-4 bg-gray-50 dark:bg-gray-900/60 p-4 rounded-xl border border-gray-100 dark:border-gray-700 list-none" {...props} />
+                        ),
+                        ol: ({ node, ...props }) => (
+                          <ol className="list-decimal marker:text-orange-600 dark:marker:text-orange-400 marker:font-bold space-y-2 mb-4 pl-5" {...props} />
+                        ),
+                        li: ({ node, ...props }) => (
+                          <li className="text-gray-700 dark:text-gray-200 leading-relaxed text-sm" {...props} />
+                        ),
+                        strong: ({ node, ...props }) => (
+                          <strong className="font-bold text-gray-900 dark:text-white" {...props} />
+                        ),
+                      }}
+                    >
+                      {recipe.recipe}
+                    </ReactMarkdown>
                   </div>
                   {recipe.nutrition && (
                     <div className="mt-4 bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
