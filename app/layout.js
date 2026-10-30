@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { RecipeProvider } from "@/context/RecipeContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -13,20 +13,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/** Editorial display serif — the food-magazine voice of the headings. */
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+});
+
 export const metadata = {
   title: "AI Recipe Generator — Authentic Indian Recipes from Your Ingredients",
   description:
-    "Enter the ingredients in your kitchen and get three chef-quality Indian recipes — with smart serving scaling, meal planning, shopping lists and a cooking timer.",
+    "Enter the ingredients in your kitchen and get three chef-quality Indian recipes — with real photos from proven YouTube cooking videos, smart serving scaling, meal planning, shopping lists and a cooking timer.",
   keywords: [
     "recipe generator", "AI recipes", "Indian recipes", "what to cook today",
-    "meal planner", "cooking assistant", "Gemini AI",
+    "meal planner", "cooking assistant", "Gemini AI", "recipe videos",
   ],
   openGraph: {
     title: "AI Recipe Generator",
     description:
-      "Three chef-crafted Indian recipes from whatever is in your kitchen right now.",
+      "Three chef-crafted Indian recipes from whatever is in your kitchen right now — each paired with a real video of a proven cook making it.",
     type: "website",
   },
+};
+
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#059669" },
+    { media: "(prefers-color-scheme: dark)", color: "#07130d" },
+  ],
 };
 
 /**
@@ -39,7 +53,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} antialiased`}
       >
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <ThemeProvider>

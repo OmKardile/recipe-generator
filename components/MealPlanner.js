@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRecipes } from '@/context/RecipeContext';
-import { Calendar, Plus, X, ChefHat, Trash2 } from 'lucide-react';
+import { Calendar, Plus, X, UtensilsCrossed, Trash2 } from 'lucide-react';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -119,7 +120,7 @@ export default function MealPlanner() {
                       className={`p-2 min-h-[80px] rounded-lg border-2 transition-all ${
                         entry
                           ? `${MEAL_COLORS[meal]} border-solid cursor-pointer hover:shadow-md`
-                          : 'border-dashed border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-600 cursor-pointer'
+                          : 'border-dashed border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-600 cursor-pointer'
                       }`}
                       onClick={() => handleSlotClick(day, meal)}
                       role="button"
@@ -168,15 +169,23 @@ export default function MealPlanner() {
       )}
 
       {/* Recipe Picker Modal */}
+      <AnimatePresence>
       {pickerSlot && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
           onClick={closePicker}
           role="dialog"
           aria-modal="true"
           aria-label={`Select a recipe for ${pickerSlot.day} ${pickerSlot.meal}`}
         >
-          <div
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 18 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
@@ -206,8 +215,8 @@ export default function MealPlanner() {
                   className="w-full text-left p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-100 dark:border-gray-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg">
-                      <ChefHat size={18} className="text-orange-600 dark:text-orange-400" />
+                    <div className="bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-lg">
+                      <UtensilsCrossed size={18} className="text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
@@ -223,20 +232,29 @@ export default function MealPlanner() {
                 </button>
               ))}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Clear-week confirmation */}
+      <AnimatePresence>
       {confirmClear && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
           onClick={() => setConfirmClear(false)}
           role="dialog"
           aria-modal="true"
           aria-label="Confirm clearing the meal plan"
         >
-          <div
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 18 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full p-6 text-center"
             onClick={(e) => e.stopPropagation()}
           >
@@ -258,9 +276,10 @@ export default function MealPlanner() {
                 Clear week
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

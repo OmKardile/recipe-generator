@@ -3,7 +3,10 @@ import { storeRecipe } from '@/lib/sharedStore';
 
 export async function POST(request) {
   try {
-    const { title, recipe, nutrition, ingredients, preferences } = await request.json();
+    const {
+      title, recipe, nutrition, ingredients, preferences,
+      canonicalDish, youtubeVideoId, youtubeChannel, videoVerified,
+    } = await request.json();
 
     if (!recipe) {
       return NextResponse.json(
@@ -12,7 +15,10 @@ export async function POST(request) {
       );
     }
 
-    const stored = storeRecipe({ title, recipe, nutrition, ingredients, preferences });
+    const stored = storeRecipe({
+      title, recipe, nutrition, ingredients, preferences,
+      canonicalDish, youtubeVideoId, youtubeChannel, videoVerified,
+    });
 
     return NextResponse.json({
       id: stored.id,

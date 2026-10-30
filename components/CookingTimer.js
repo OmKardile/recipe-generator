@@ -125,7 +125,7 @@ export default function CookingTimer() {
       {timers.length === 0 && (
         <button
           onClick={() => setShowAdd(true)}
-          className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-4 rounded-full shadow-lg shadow-orange-600/30 hover:scale-105 active:scale-95 transition-transform"
+          className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-4 rounded-full shadow-lg shadow-emerald-600/30 hover:scale-105 active:scale-95 transition-transform"
           title="Add Cooking Timer"
           aria-label="Add cooking timer"
         >
@@ -140,14 +140,14 @@ export default function CookingTimer() {
               key={timer.id}
               className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border ${
                 timer.remainingSeconds === 0
-                  ? 'border-green-500 animate-pulse'
+                  ? 'border-emerald-500 animate-pulse'
                   : 'border-gray-200 dark:border-gray-700'
               } p-3 min-w-[210px] transition-colors`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate flex items-center gap-1.5">
                   {timer.remainingSeconds === 0 && (
-                    <Volume2 size={13} className="text-green-600 dark:text-green-400 shrink-0" />
+                    <Volume2 size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
                   )}
                   {timer.label}
                 </span>
@@ -163,9 +163,9 @@ export default function CookingTimer() {
                 <span
                   className={`text-2xl font-mono font-bold tabular-nums ${
                     timer.remainingSeconds === 0
-                      ? 'text-green-600 dark:text-green-400'
+                      ? 'text-emerald-600 dark:text-emerald-400'
                       : timer.remainingSeconds <= 60
-                        ? 'text-orange-500 dark:text-orange-400'
+                        ? 'text-amber-500 dark:text-amber-400'
                         : 'text-gray-900 dark:text-white'
                   }`}
                 >
@@ -176,7 +176,7 @@ export default function CookingTimer() {
                 <button
                   onClick={() => toggleTimer(timer.id)}
                   disabled={timer.remainingSeconds === 0}
-                  className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors disabled:opacity-50"
+                  className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 transition-colors disabled:opacity-50"
                   aria-label={timer.isRunning ? 'Pause timer' : 'Start timer'}
                 >
                   {timer.isRunning ? <Pause size={16} /> : <Play size={16} />}
@@ -194,7 +194,7 @@ export default function CookingTimer() {
 
           <button
             onClick={() => setShowAdd(true)}
-            className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-3 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform"
+            className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-3 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform"
             title="Add Timer"
             aria-label="Add another timer"
           >
@@ -234,7 +234,7 @@ export default function CookingTimer() {
                   onKeyDown={(e) => e.key === 'Enter' && addTimer()}
                   placeholder="e.g., Boil rice"
                   maxLength={40}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
                 />
               </div>
               <div>
@@ -253,7 +253,7 @@ export default function CookingTimer() {
                   placeholder="10"
                   min="1"
                   max="600"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
                 />
                 <div className="flex gap-1.5 mt-2">
                   {PRESETS.map((preset) => (
@@ -261,7 +261,7 @@ export default function CookingTimer() {
                       key={preset}
                       type="button"
                       onClick={() => setNewTimerMinutes(String(preset))}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-900/40 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+                      className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
                     >
                       {preset} min
                     </button>
@@ -278,7 +278,7 @@ export default function CookingTimer() {
                 <button
                   onClick={addTimer}
                   disabled={!newTimerMinutes}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-lg hover:from-orange-700 hover:to-red-700 disabled:opacity-50 transition"
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 transition"
                 >
                   Add
                 </button>

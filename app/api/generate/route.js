@@ -6,6 +6,7 @@ import {
   parseLegacyMarkdown,
   renderRecipeMarkdown,
 } from "@/lib/recipeUtils";
+import { verifyVideoExists, thumbnailUrl } from "@/lib/video";
 
 export const maxDuration = 60;
 
@@ -148,6 +149,28 @@ export async function POST(request) {
         { status: 502 }
       );
     }
+
+    // ══════════════════════════════════════════════════════════════════
+    // REAL-MEDIA VERIFICATION (no AI imagery, ever)
+    // Each recipe may carry a YouTube video id of a REAL cooking video of
+    // the same dish. We prove the video exists by checking YouTube's CDN
+    // for its thumbnail — a 200 means the id is real and the thumbnail is
+    // a genuine photograph of the dish we can safely display. Hallucinated
+    // ids are silently dropped and the client falls back to a search link.
+    // ══════════════════════════════════════════════════════════════════
+    await Promise.all(
+      recipes.map(async (recipe) => {
+        if (!recipe.youtubeVideoId) return;
+        const exists = await verifyVideoExists(recipe.youtubeVideoId);
+        if (!exists) {
+          recipe.youtubeVideoId = null;
+          recipe.youtubeChannel = null;
+          return;
+        }
+        recipe.videoVerified = true;
+        recipe.imageUrl = thumbnailUrl(recipe.youtubeVideoId);
+      })
+    );
 
     // Attach the deterministic display markdown every consumer relies on.
     const payload = recipes.map((recipe) => ({

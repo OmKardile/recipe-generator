@@ -1,19 +1,41 @@
-"use client";
+'use client';
 
 import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import {
-  Clock, Users, Flame, ChefHat, Info, Bookmark, Check, Share2, Link2,
-  Copy, ListChecks, RotateCcw, MapPin, Gauge,
+  Clock, Flame, Lightbulb, Info, Bookmark, Check, Share2, Link2,
+  Copy, ListChecks, RotateCcw, MapPin, Gauge, Carrot, Activity, Youtube,
 } from 'lucide-react';
 import { useRecipes } from '@/context/RecipeContext';
 import { ingredientLine, formatAmount } from '@/lib/recipeUtils';
+import { videoHref } from '@/lib/video';
 import ServingAdjuster from './ServingAdjuster';
+import RecipeMedia from './RecipeMedia';
 
 const DIFFICULTY_STYLES = {
-  Easy: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  Easy: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
   Medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-  Hard: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+  Hard: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+};
+
+const EASE = [0.22, 1, 0.36, 1];
+
+/** Section reveal — fires once when the block scrolls into view. */
+const reveal = (delay = 0) => ({
+  initial: { opacity: 0, y: 28 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-32px' },
+  transition: { duration: 0.6, delay, ease: EASE },
+});
+
+const ingredientStagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.045 } },
+};
+const ingredientItem = {
+  hidden: { opacity: 0, x: -18 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.4, ease: EASE } },
 };
 
 export default function RecipeDisplay({ data, ingredients, preferences }) {
@@ -43,6 +65,12 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
 
   if (!recipe && !structured) return null;
 
+  const hasVideo = Boolean(data?.youtubeVideoId);
+  const watchHref = videoHref({
+    youtubeVideoId: data?.youtubeVideoId,
+    title: data?.canonicalDish || data?.title,
+  });
+
   const toggleItem = (set, setter, index) => {
     const next = new Set(set);
     if (next.has(index)) next.delete(index);
@@ -60,6 +88,10 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
       preferences,
       servings: baseServings,
       baseServings,
+      canonicalDish: data.canonicalDish || data.title,
+      youtubeVideoId: data.youtubeVideoId || null,
+      youtubeChannel: data.youtubeChannel || null,
+      videoVerified: Boolean(data.videoVerified),
       structured: structured
         ? {
             description: data.description,
@@ -117,6 +149,10 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
           nutrition: data.nutrition,
           ingredients: ingredients || [],
           preferences,
+          canonicalDish: data.canonicalDish || data.title,
+          youtubeVideoId: data.youtubeVideoId || null,
+          youtubeChannel: data.youtubeChannel || null,
+          videoVerified: Boolean(data.videoVerified),
         }),
       });
 
@@ -151,82 +187,116 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
   const totalTime = structured?.totalTimeMinutes;
 
   return (
-    <div className="w-full max-w-3xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 transition-colors">
-        <div className="bg-gradient-to-r from-orange-400 to-red-500 h-3"></div>
+    <motion.div
+      initial={{ opacity: 0, y: 34 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, ease: EASE }}
+      className="w-full max-w-3xl mx-auto mt-8"
+    >
+      <div className="bg-white/85 dark:bg-gray-800/85 backdrop-blur-md rounded-3xl shadow-2xl shadow-emerald-900/10 overflow-hidden border border-emerald-900/10 dark:border-gray-700/80 transition-colors">
+        <div className="bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600 h-2.5"></div>
 
         <div className="p-6 md:p-10">
-          {/* Meta bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <div className="flex flex-wrap items-center gap-2">
-              {structured?.cuisine && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
-                  <MapPin size={12} /> {structured.cuisine}
-                </span>
-              )}
-              {structured?.difficulty && (
-                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${DIFFICULTY_STYLES[structured.difficulty] || DIFFICULTY_STYLES.Medium}`}>
-                  <Gauge size={12} /> {structured.difficulty}
-                </span>
-              )}
-              {totalTime != null && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                  <Clock size={12} /> {totalTime} min total
-                </span>
-              )}
-            </div>
-            <ServingAdjuster
-              servings={servings}
-              baseServings={baseServings}
-              onServingsChange={setServings}
-            />
-          </div>
+          {/* ── Real photo alongside the recipe ────────────────────────── */}
+          <div className="grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] gap-6 md:gap-8 items-center mb-8">
+            <RecipeMedia recipe={data} variant="hero" />
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {structured?.cuisine && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    <MapPin size={12} /> {structured.cuisine}
+                  </span>
+                )}
+                {structured?.difficulty && (
+                  <span
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                      DIFFICULTY_STYLES[structured.difficulty] || DIFFICULTY_STYLES.Medium
+                    }`}
+                  >
+                    <Gauge size={12} /> {structured.difficulty}
+                  </span>
+                )}
+                {totalTime != null && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
+                    <Clock size={12} /> {totalTime} min total
+                  </span>
+                )}
+              </div>
 
-          {/* Title + description */}
-          <div className="mb-8 border-b border-gray-100 dark:border-gray-700 pb-6 px-1">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">
-              {data.title}
-            </h1>
-            {structured?.description && (
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">
-                {structured.description}
-              </p>
-            )}
+              <h1 className="font-display text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-3 tracking-tight leading-tight">
+                {data.title}
+              </h1>
+              {structured?.description && (
+                <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">
+                  {structured.description}
+                </p>
+              )}
+
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <a
+                  href={watchHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-4 py-2 text-sm font-semibold shadow-md shadow-emerald-600/25 transition-all"
+                >
+                  <Youtube size={16} className="text-red-300" />
+                  {hasVideo ? 'Watch the real video' : 'Find videos'}
+                </a>
+                <ServingAdjuster
+                  servings={servings}
+                  baseServings={baseServings}
+                  onServingsChange={setServings}
+                />
+              </div>
+            </div>
           </div>
 
           {structured ? (
             <>
-              {/* Ingredients — with REAL scaling */}
-              <div className="flex items-center gap-3 mb-4 px-1">
-                <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg text-orange-600 dark:text-orange-400">
-                  <ChefHat size={22} />
+              {/* ── Ingredients — with REAL scaling ─────────────────────── */}
+              <motion.div {...reveal()} className="flex items-center gap-3 mb-4 px-1">
+                <div className="bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-lg text-emerald-600 dark:text-emerald-400">
+                  <Carrot size={22} />
                 </div>
                 <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                   Ingredients
                 </h2>
                 {isScaled && (
-                  <span className="ml-1 text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-2 py-0.5 rounded-full">
+                  <span className="ml-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
                     scaled ×{formatAmount(scaleFactor)}
                   </span>
                 )}
-              </div>
+              </motion.div>
 
-              <ul className="space-y-2.5 mb-8 bg-gray-50 dark:bg-gray-900/60 p-5 rounded-xl border border-gray-100 dark:border-gray-700">
+              <motion.ul
+                variants={ingredientStagger}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: '-32px' }}
+                className="space-y-2.5 mb-8 bg-emerald-50/60 dark:bg-gray-900/60 p-5 rounded-xl border border-emerald-100 dark:border-gray-700"
+              >
                 {structured.ingredients.map((ing, index) => {
                   const line = ingredientLine(ing, scaleFactor);
                   const checked = checkedIngredients.has(index);
                   return (
-                    <li key={`${ing.name}-${index}`}>
+                    <motion.li
+                      key={`${ing.name}-${index}`}
+                      variants={ingredientItem}
+                    >
                       <button
-                        onClick={() => cookMode && toggleItem(checkedIngredients, setCheckedIngredients, index)}
-                        className={`w-full text-left flex gap-3 items-start transition-opacity ${cookMode ? 'cursor-pointer' : 'cursor-default'} ${checked ? 'opacity-50' : ''}`}
+                        onClick={() =>
+                          cookMode && toggleItem(checkedIngredients, setCheckedIngredients, index)
+                        }
+                        className={`w-full text-left flex gap-3 items-start transition-opacity ${
+                          cookMode ? 'cursor-pointer' : 'cursor-default'
+                        } ${checked ? 'opacity-50' : ''}`}
                         aria-pressed={cookMode ? checked : undefined}
                       >
                         {cookMode && (
                           <span
                             className={`mt-1 h-5 w-5 shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
                               checked
-                                ? 'bg-orange-500 border-orange-500'
+                                ? 'bg-emerald-500 border-emerald-500'
                                 : 'border-gray-300 dark:border-gray-600'
                             }`}
                             aria-hidden="true"
@@ -235,84 +305,100 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                           </span>
                         )}
                         <span
-                          className={`text-gray-700 dark:text-gray-200 leading-relaxed ${checked ? 'line-through' : ''}`}
+                          className={`text-gray-700 dark:text-gray-200 leading-relaxed ${
+                            checked ? 'line-through' : ''
+                          }`}
                         >
                           {line}
                         </span>
                       </button>
-                    </li>
+                    </motion.li>
                   );
                 })}
-              </ul>
+              </motion.ul>
               {isScaled && (
                 <p className="text-xs text-gray-400 dark:text-gray-500 -mt-6 mb-8 px-1">
-                  Amounts auto-scaled from the base recipe of {baseServings} servings. Spices scale non-linearly — taste and adjust.
+                  Amounts auto-scaled from the base recipe of {baseServings} servings. Spices
+                  scale non-linearly — taste and adjust.
                 </p>
               )}
 
-              {/* Instructions — numbered, tappable in cook mode */}
-              <div className="flex items-center gap-3 mb-4 px-1">
-                <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg text-orange-600 dark:text-orange-400">
+              {/* ── Instructions — numbered, tappable in cook mode ───────── */}
+              <motion.div {...reveal()} className="flex items-center gap-3 mb-4 px-1">
+                <div className="bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-lg text-emerald-600 dark:text-emerald-400">
                   <Flame size={22} />
                 </div>
                 <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                   Instructions
                 </h2>
                 {cookMode && doneSteps.size > 0 && (
-                  <span className="text-xs font-semibold text-green-600 dark:text-green-400">
+                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                     {doneSteps.size}/{structured.instructions.length} done
                   </span>
                 )}
-              </div>
+              </motion.div>
 
               <ol className="space-y-3 mb-8">
                 {structured.instructions.map((step, index) => {
                   const done = doneSteps.has(index);
                   return (
-                    <li key={index}>
+                    <motion.li
+                      key={index}
+                      initial={{ opacity: 0, y: 16 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-24px' }}
+                      transition={{ duration: 0.45, delay: Math.min(index * 0.05, 0.4), ease: EASE }}
+                    >
                       <button
                         onClick={() => cookMode && toggleItem(doneSteps, setDoneSteps, index)}
                         className={`w-full text-left flex gap-4 items-start p-3.5 rounded-xl transition-all ${
-                          cookMode ? 'hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer' : 'cursor-default'
-                        } ${done ? 'bg-green-50 dark:bg-green-900/20' : ''}`}
+                          cookMode
+                            ? 'hover:bg-emerald-50/70 dark:hover:bg-gray-700/50 cursor-pointer'
+                            : 'cursor-default'
+                        } ${done ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''}`}
                         aria-pressed={cookMode ? done : undefined}
                       >
                         <span
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-colors ${
                             done
-                              ? 'bg-green-500 text-white'
-                              : 'bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400'
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
                           }`}
                           aria-hidden="true"
                         >
                           {done ? <Check size={14} /> : index + 1}
                         </span>
                         <span
-                          className={`text-gray-700 dark:text-gray-200 leading-relaxed pt-0.5 ${done ? 'line-through opacity-60' : ''}`}
+                          className={`text-gray-700 dark:text-gray-200 leading-relaxed pt-0.5 ${
+                            done ? 'line-through opacity-60' : ''
+                          }`}
                         >
                           {step}
                         </span>
                       </button>
-                    </li>
+                    </motion.li>
                   );
                 })}
               </ol>
 
-              {/* Tips */}
+              {/* ── Tips ─────────────────────────────────────────────────── */}
               {structured.tips?.length > 0 && (
                 <>
-                  <div className="flex items-center gap-3 mb-4 px-1">
-                    <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg text-orange-600 dark:text-orange-400">
-                      <Info size={22} />
+                  <motion.div {...reveal()} className="flex items-center gap-3 mb-4 px-1">
+                    <div className="bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-lg text-emerald-600 dark:text-emerald-400">
+                      <Lightbulb size={22} />
                     </div>
                     <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                       Chef&apos;s Tips
                     </h2>
-                  </div>
+                  </motion.div>
                   <ul className="space-y-2 mb-8 px-1">
                     {structured.tips.map((tip, index) => (
-                      <li key={index} className="flex gap-3 text-gray-600 dark:text-gray-300 leading-relaxed">
-                        <span className="mt-2 h-1.5 w-1.5 rounded-full bg-orange-400 shrink-0" />
+                      <li
+                        key={index}
+                        className="flex gap-3 text-gray-600 dark:text-gray-300 leading-relaxed"
+                      >
+                        <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
                         <span>{tip}</span>
                       </li>
                     ))}
@@ -325,18 +411,20 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
             <ReactMarkdown
               components={{
                 h1: ({ node, ...props }) => (
-                  <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white mb-6 tracking-tight border-b border-gray-100 dark:border-gray-700 pb-4" {...props} />
+                  <h1
+                    className="font-display text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-6 tracking-tight border-b border-emerald-100 dark:border-gray-700 pb-4"
+                    {...props}
+                  />
                 ),
                 h2: ({ node, ...props }) => {
                   const text = String(props.children ?? '').toLowerCase();
-                  let Icon = ChefHat;
-                  if (text.includes('ingredient')) Icon = Users;
+                  let Icon = Carrot;
                   if (text.includes('instruction') || text.includes('step')) Icon = Flame;
                   if (text.includes('time') || text.includes('serving')) Icon = Clock;
-                  if (text.includes('nutrition')) Icon = Info;
+                  if (text.includes('nutrition')) Icon = Activity;
                   return (
                     <div className="flex items-center gap-3 mt-8 mb-4 px-1">
-                      <div className="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg text-orange-600 dark:text-orange-400">
+                      <div className="bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-lg text-emerald-600 dark:text-emerald-400">
                         <Icon size={22} />
                       </div>
                       <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100" {...props} />
@@ -347,10 +435,16 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                   <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-4 px-1" {...props} />
                 ),
                 ul: ({ node, ...props }) => (
-                  <ul className="space-y-3 mb-6 bg-gray-50 dark:bg-gray-900/60 p-5 rounded-xl border border-gray-100 dark:border-gray-700 list-none" {...props} />
+                  <ul
+                    className="space-y-3 mb-6 bg-emerald-50/60 dark:bg-gray-900/60 p-5 rounded-xl border border-emerald-100 dark:border-gray-700 list-none"
+                    {...props}
+                  />
                 ),
                 ol: ({ node, ...props }) => (
-                  <ol className="list-decimal marker:text-orange-600 dark:marker:text-orange-400 marker:font-bold space-y-3 mb-6 pl-6" {...props} />
+                  <ol
+                    className="list-decimal marker:text-emerald-600 dark:marker:text-emerald-400 marker:font-bold space-y-3 mb-6 pl-6"
+                    {...props}
+                  />
                 ),
                 li: ({ node, ...props }) => (
                   <li className="text-gray-700 dark:text-gray-200 leading-relaxed" {...props} />
@@ -367,10 +461,10 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
 
         {data.nutrition && (
           <div className="px-6 md:px-10 pb-6">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-xl p-6 border border-green-100 dark:border-green-800">
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-xl p-6 border border-emerald-100 dark:border-emerald-800">
               <div className="flex items-center gap-2 mb-4">
-                <Flame className="text-green-600 dark:text-green-400" size={20} />
-                <h3 className="text-lg font-bold text-green-800 dark:text-green-300">
+                <Activity className="text-emerald-600 dark:text-emerald-400" size={20} />
+                <h3 className="text-lg font-bold text-emerald-800 dark:text-emerald-300">
                   Nutrition per Serving
                 </h3>
               </div>
@@ -382,33 +476,33 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                   ['Fat', data.nutrition.fat, 'g'],
                 ].map(([label, value, unit]) => (
                   <div key={label} className="text-center">
-                    <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+                    <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
                       {value}
                       {unit}
                     </div>
-                    <div className="text-sm text-green-600 dark:text-green-500">{label}</div>
+                    <div className="text-sm text-emerald-600 dark:text-emerald-500">{label}</div>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-green-600/70 dark:text-green-500/70 mt-3 text-center">
+              <p className="text-xs text-emerald-600/70 dark:text-emerald-500/70 mt-3 text-center">
                 Estimated per serving — unaffected by serving scaling.
               </p>
             </div>
           </div>
         )}
 
-        {/* Footer actions */}
-        <div className="bg-gray-50 dark:bg-gray-900/60 p-4 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-700">
+        {/* ── Footer actions ──────────────────────────────────────────── */}
+        <div className="bg-emerald-50/50 dark:bg-gray-900/60 p-4 flex flex-wrap items-center justify-between gap-2 border-t border-emerald-100 dark:border-gray-700">
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            Generated by Gemini AI
+            Generated by Gemini AI · Photo from a real cooking video
           </span>
           <div className="flex flex-wrap items-center gap-2">
             {structured && (
               <button
                 onClick={() => setCookMode((v) => !v)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all active:scale-95 ${
                   cookMode
-                    ? 'bg-orange-600 text-white'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
                 aria-pressed={cookMode}
@@ -420,7 +514,7 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
             {cookMode && (doneSteps.size > 0 || checkedIngredients.size > 0) && (
               <button
                 onClick={resetCookMode}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95"
                 title="Reset progress"
               >
                 <RotateCcw size={16} />
@@ -428,19 +522,19 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
             )}
             <button
               onClick={handleCopyRecipe}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95"
             >
-              {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+              {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
               {copied ? 'Copied!' : 'Copy'}
             </button>
             <button
               onClick={handleShare}
               disabled={sharing}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all active:scale-95 disabled:opacity-60 ${
                 shared
-                  ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                  ? 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-              } disabled:opacity-60`}
+              }`}
             >
               {shared ? <Link2 size={16} /> : <Share2 size={16} />}
               {shared ? 'Link Copied!' : sharing ? 'Sharing…' : 'Share'}
@@ -448,10 +542,10 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
             <button
               onClick={handleSave}
               disabled={saved}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all active:scale-95 ${
                 saved
-                  ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
-                  : 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/60'
+                  ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/25'
               } disabled:cursor-default`}
             >
               {saved ? <Check size={16} /> : <Bookmark size={16} />}
@@ -466,6 +560,6 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
           </p>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
