@@ -14,7 +14,7 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 - **Smart validation** — inputs are sanitized (duplicates removed, length caps, type checks) before reaching the model.
 
 ### Kitchen Tools
-- **Real recipe media** — every dish is paired with a **real YouTube video of a proven cook making the same canonical dish**, and the image shown is that video's actual thumbnail — a real photograph of real food. **No AI-generated imagery, ever.** The server verifies each video exists (CDN HEAD check) before the recipe reaches the browser, so a hallucinated link is impossible to display; dishes without a known video get a branded placeholder plus a YouTube search link.
+- **Real recipe media — real photos only, never AI-generated** — every recipe is a real, established dish carrying its canonical name. The server then resolves a **real photograph of that exact dish** (Wikipedia / Wikimedia Commons first, then TheMealDB's open recipe-photo database), falling back to the thumbnail of a **server-verified real YouTube cooking video** of the same dish. The video layer only ever shows a link that passed a CDN existence check (hallucinated ids are silently dropped); dishes with no verified video get a YouTube *search* link for the canonical name — a link that can never break. When no real photo exists at all, a branded emerald placeholder is shown instead — never a fabricated image.
 - **Real serving scaling** — ingredient amounts rescale live (with pretty fractions) when you change servings.
 - **Cook Mode** — tap ingredients and steps to check them off as you cook.
 - **Meal Planner** — drag-free weekly grid (breakfast / lunch / dinner / snack), with per-week calorie totals.
@@ -26,16 +26,16 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 
 ### Design
 - **Emerald “Fresh Basil” palette** — deep emerald / forest / lime across light & dark modes.
-- **Editorial typography** — Fraunces display serif for headlines, Geist for UI.
-- **Motion everywhere** — spring physics (framer-motion): sliding tab pill, staggered card entrances with 3D tilt, scroll-triggered section reveals, animated ingredient stagger, shine sweeps, ambient aurora background with film grain — all respecting `prefers-reduced-motion`.
-- **Distinctive icon language** — Lucide (CookingPot, Carrot, Activity, BadgeCheck…) plus Phosphor meal icons (sunrise breakfast, fork-and-knife lunch, moon dinner, cookie snack).
+- **Editorial typography** — Geist Sans for UI, Geist Mono for timers.
+- **Motion everywhere** — spring physics (framer-motion): a sliding tab pill, staggered card entrances, hover lifts, button micro-interactions, floating garnish icons, and an ambient aurora background with film grain — all respecting `prefers-reduced-motion`.
+- **Distinctive icon language** — Lucide's food set (CookingPot, Carrot, Lightbulb, Activity, Citrus, ShoppingBasket, CalendarDays…).
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS 4, framer-motion, Lucide + Phosphor icons
+- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS 4, framer-motion, Lucide icons
 - **Backend**: Next.js API Routes
 - **AI**: Google Gemini (`@google/generative-ai`) — `gemini-2.5-flash`
-- **Media**: real YouTube video thumbnails (verified server-side via YouTube's CDN)
+- **Media**: real photographs resolved server-side (Wikipedia/Wikimedia Commons → TheMealDB → verified YouTube video thumbnails); YouTube video ids verified against the CDN before display
 - **Storage**: JSON files on disk (`data/`) for personal recipes & meal plans; in-memory store for share links
 
 ## Getting Started
@@ -94,6 +94,7 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
   "recipes": [
     {
       "title": "15-Minute Chicken Tomato Pulao",
+      "dishName": "Chicken pulao",
       "description": "A quick one-pot…",
       "cuisine": "North Indian",
       "difficulty": "Easy",
@@ -125,13 +126,16 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 | `GET/POST/DELETE` | `/api/meal-plan` | Weekly meal plan |
 | `GET/POST` | `/api/tags` | Tag library |
 | `GET/POST` | `/api/settings` | Misc settings |
+| `GET` | `/api/recipe-media` | Resolve a REAL photo of a dish (`?dish=…&title=…`) — Wikipedia → TheMealDB, cached |
 | `POST` | `/api/recipes` | Create a share link |
 | `GET` | `/api/recipes/[id]` | Fetch a shared recipe |
 
 ## Architecture Notes
 
-- **`lib/prompts.js`** — the prompt-engineering system: role anchoring, XML-delimited sections, a diversity matrix, anti-hallucination ingredient rules, food-safety constraints, and a strict JSON output contract.
-- **`lib/recipeUtils.js`** — response normalization, serving scaling (with vulgar-fraction formatting), deterministic markdown synthesis, legacy parsing, and shopping categorization.
+- **`lib/prompts.js`** — the prompt-engineering system: role anchoring, XML-delimited sections, a diversity matrix, anti-hallucination ingredient rules, food-safety constraints, a strict JSON output contract, and the authenticity contract (real established dishes, canonical `dishName`, YouTube ids only when certain).
+- **`lib/recipeUtils.js`** — response normalization (incl. `dishName` / `youtubeVideoId`), serving scaling (with vulgar-fraction formatting), deterministic markdown synthesis, legacy parsing, and shopping categorization.
+- **`lib/video.js`** — YouTube integrity: server-side video verification (thumbnail CDN HEAD check, 24h cache), watch/search URL helpers, thumbnail candidates.
+- **`lib/dishImage.js`** — the real-photo resolver: Wikipedia/Wikimedia Commons summary API (paced, non-food-article guard, allowed-width snapping) → TheMealDB search with word-overlap matching; 24h cache.
 - **`lib/gemini.js`** — lazy model initialization (the app boots fine without an API key; only generation reports a clean error).
 - **Storage caveat**: `data/*.json` works locally and on single-instance hosts. On serverless (Vercel), the filesystem is read-only and share links live in per-instance memory — for production durability, swap `lib/dataStore.js` / `lib/sharedStore.js` for [Vercel KV](https://vercel.com/storage/kv) (the `@vercel/kv` dependency is already declared).
 

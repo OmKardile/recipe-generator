@@ -1,25 +1,31 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import {
-  Clock, Users, Flame, Check, MapPin, Gauge, Zap, Heart, Crown, Youtube,
-} from 'lucide-react';
-import RecipeMedia from './RecipeMedia';
-import { videoHref } from '@/lib/video';
+import { Clock, Users, Flame, Check, MapPin, Gauge, Zap, Heart, Crown, CookingPot } from 'lucide-react';
+import MediaImage from './MediaImage';
+import useRecipeMedia from '@/hooks/useRecipeMedia';
+import { youtubeThumbnailSources } from '@/lib/video';
 
 const DIFFICULTY_STYLES = {
-  Easy: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  Easy: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
   Medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-  Hard: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+  Hard: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 };
 
 const ROLE_META = [
   { icon: Zap, label: 'Quick & easy', tone: 'text-lime-600 dark:text-lime-400' },
-  { icon: Heart, label: 'Classic comfort', tone: 'text-rose-600 dark:text-rose-400' },
-  { icon: Crown, label: 'Weekend showstopper', tone: 'text-teal-600 dark:text-teal-400' },
+  { icon: Heart, label: 'Classic comfort', tone: 'text-teal-600 dark:text-teal-400' },
+  { icon: Crown, label: 'Weekend showstopper', tone: 'text-amber-600 dark:text-amber-400' },
 ];
 
-const EASE = [0.22, 1, 0.36, 1];
+const cardVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.09, type: 'spring', stiffness: 300, damping: 26 },
+  }),
+};
 
 function fallbackPreview(recipeText) {
   if (!recipeText) return 'A delicious recipe.';
@@ -40,155 +46,157 @@ function fallbackPreview(recipeText) {
   return description.trim() || 'A delicious recipe.';
 }
 
+function RecipeCard({ recipe, index, isSelected, onSelect }) {
+  const preview = recipe.description || fallbackPreview(recipe.recipe);
+  const totalTime = recipe.totalTimeMinutes;
+  const role = ROLE_META[index] || ROLE_META[1];
+  const RoleIcon = role.icon;
+
+  // Real photo of the real dish (Wikipedia → TheMealDB → video still).
+  const { media, loading } = useRecipeMedia({
+    dishName: recipe.dishName,
+    title: recipe.title,
+    youtubeVideoId: recipe.youtubeVideoId,
+  });
+  const thumbSources = [
+    ...(media?.url ? [media.url] : []),
+    ...youtubeThumbnailSources(recipe.youtubeVideoId),
+  ];
+
+  return (
+    <motion.button
+      custom={index}
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      whileHover={{ y: -6 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => onSelect(index)}
+      aria-pressed={isSelected}
+      className={`text-left p-4 rounded-2xl border-2 transition-colors group ${
+        isSelected
+          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-xl shadow-emerald-500/10'
+          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-xl'
+      }`}
+    >
+      {/* Real media header */}
+      <div className="mb-3 overflow-hidden rounded-xl">
+        {loading ? (
+          <div
+            className="aspect-video w-full bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-100 dark:from-emerald-900/40 dark:via-gray-800 dark:to-teal-900/30 animate-pulse flex items-center justify-center"
+            role="status"
+            aria-label="Finding a real photo…"
+          >
+            <CookingPot size={22} className="text-emerald-400/50 dark:text-emerald-500/40" />
+          </div>
+        ) : (
+          <MediaImage
+            key={`${recipe.id}-${thumbSources[0] || 'none'}`}
+            sources={thumbSources}
+            alt={`Real photo of ${recipe.dishName || recipe.title}`}
+            rounded="rounded-xl"
+          />
+        )}
+      </div>
+
+      <div className="flex items-start justify-between mb-2 px-1">
+        <div
+          className={`bg-gradient-to-br from-emerald-500 to-teal-600 p-2 rounded-lg transition-transform group-hover:scale-110 ${
+            isSelected ? 'scale-110' : ''
+          }`}
+        >
+          <RoleIcon size={18} className="text-white" />
+        </div>
+        <div className="flex items-center gap-2">
+          {isSelected && (
+            <div className="bg-emerald-500 rounded-full p-1">
+              <Check size={14} className="text-white" />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className={`flex items-center gap-1.5 text-xs font-semibold mb-2 px-1 ${role.tone}`}>
+        <span>{role.label}</span>
+      </div>
+
+      <h3
+        className={`font-bold text-lg mb-2 line-clamp-2 px-1 ${
+          isSelected
+            ? 'text-emerald-700 dark:text-emerald-300'
+            : 'text-gray-900 dark:text-white'
+        }`}
+      >
+        {recipe.title}
+      </h3>
+
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 px-1">
+        {preview}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 px-1 pb-1">
+        {recipe.cuisine && (
+          <span className="inline-flex items-center gap-1">
+            <MapPin size={12} />
+            {recipe.cuisine}
+          </span>
+        )}
+        {recipe.difficulty && (
+          <span className={`px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_STYLES[recipe.difficulty] || DIFFICULTY_STYLES.Medium}`}>
+            {recipe.difficulty}
+          </span>
+        )}
+        {totalTime != null && (
+          <span className="inline-flex items-center gap-1">
+            <Clock size={12} />
+            {totalTime} min
+          </span>
+        )}
+        {recipe.servings != null && (
+          <span className="inline-flex items-center gap-1">
+            <Users size={12} />
+            {recipe.servings}
+          </span>
+        )}
+        {recipe.nutrition?.calories > 0 && (
+          <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+            <Flame size={12} />
+            {recipe.nutrition.calories} cal
+          </span>
+        )}
+      </div>
+    </motion.button>
+  );
+}
+
 export default function RecipeSelector({ recipes, onSelect, selectedIndex }) {
   if (!recipes || recipes.length === 0) return null;
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-10">
-      <motion.h2
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, ease: EASE }}
-        className="font-display text-3xl font-black text-gray-900 dark:text-white mb-1 text-center tracking-tight"
-      >
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="w-full max-w-4xl mx-auto mt-10"
+    >
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 text-center">
         Choose a Recipe
-      </motion.h2>
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.12, duration: 0.55 }}
-        className="text-emerald-900/60 dark:text-emerald-100/50 mb-8 text-center"
-      >
-        {recipes.length} chef-crafted options — real photos from real cooking videos
-      </motion.p>
+      </h2>
+      <p className="text-gray-500 dark:text-gray-400 mb-6 text-center">
+        {recipes.length} chef-crafted options for your ingredients — real dishes, real photos
+      </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {recipes.map((recipe, index) => {
-          const isSelected = selectedIndex === index;
-          const preview = recipe.description || fallbackPreview(recipe.recipe);
-          const totalTime = recipe.totalTimeMinutes;
-          const role = ROLE_META[index] || ROLE_META[1];
-          const RoleIcon = role.icon;
-          const hasVideo = Boolean(recipe.youtubeVideoId);
-
-          return (
-            <motion.div
-              key={recipe.id ?? index}
-              role="button"
-              tabIndex={0}
-              aria-pressed={isSelected}
-              onClick={() => onSelect(index)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onSelect(index);
-                }
-              }}
-              initial={{ opacity: 0, y: 40, rotateX: -6 }}
-              animate={{ opacity: 1, y: 0, rotateX: 0 }}
-              transition={{ delay: index * 0.14, duration: 0.7, ease: EASE }}
-              whileHover={{ y: -8, transition: { duration: 0.3, ease: EASE } }}
-              whileTap={{ scale: 0.98 }}
-              className={`shine group text-left rounded-2xl border-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm overflow-hidden shadow-md hover:shadow-2xl transition-shadow ${
-                isSelected
-                  ? 'border-emerald-500 shadow-emerald-500/25'
-                  : 'border-gray-200/80 dark:border-gray-700/80 hover:border-emerald-400/70 dark:hover:border-emerald-500/50'
-              }`}
-            >
-              {/* Real photograph of the real dish */}
-              <RecipeMedia recipe={recipe} variant="card" />
-
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`flex items-center gap-1.5 text-xs font-semibold ${role.tone}`}>
-                    <RoleIcon size={13} />
-                    <span className="capitalize">{role.label}</span>
-                  </div>
-                  {isSelected && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                      className="bg-emerald-500 rounded-full p-1 shadow-md shadow-emerald-500/40"
-                    >
-                      <Check size={13} className="text-white" />
-                    </motion.span>
-                  )}
-                </div>
-
-                <h3
-                  className={`font-display font-bold text-xl mb-2 line-clamp-2 leading-snug ${
-                    isSelected
-                      ? 'text-emerald-700 dark:text-emerald-300'
-                      : 'text-gray-900 dark:text-white'
-                  }`}
-                >
-                  {recipe.title}
-                </h3>
-
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                  {preview}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3">
-                  {recipe.cuisine && (
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin size={12} />
-                      {recipe.cuisine}
-                    </span>
-                  )}
-                  {recipe.difficulty && (
-                    <span
-                      className={`px-2 py-0.5 rounded-full font-medium ${
-                        DIFFICULTY_STYLES[recipe.difficulty] || DIFFICULTY_STYLES.Medium
-                      }`}
-                    >
-                      {recipe.difficulty}
-                    </span>
-                  )}
-                  {totalTime != null && (
-                    <span className="inline-flex items-center gap-1">
-                      <Clock size={12} />
-                      {totalTime} min
-                    </span>
-                  )}
-                  {recipe.servings != null && (
-                    <span className="inline-flex items-center gap-1">
-                      <Users size={12} />
-                      {recipe.servings}
-                    </span>
-                  )}
-                  {recipe.nutrition?.calories > 0 && (
-                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                      <Flame size={12} />
-                      {recipe.nutrition.calories} cal
-                    </span>
-                  )}
-                </div>
-
-                {/* Straight to the real, proven video */}
-                <a
-                  href={videoHref({
-                    youtubeVideoId: recipe.youtubeVideoId,
-                    title: recipe.canonicalDish || recipe.title,
-                  })}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className={`inline-flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-                    hasVideo
-                      ? 'text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300'
-                      : 'text-gray-400 dark:text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400'
-                  }`}
-                >
-                  <Youtube size={14} />
-                  {hasVideo ? `Watch real recipe${recipe.youtubeChannel ? ` · ${recipe.youtubeChannel}` : ''}` : 'Find videos on YouTube'}
-                </a>
-              </div>
-            </motion.div>
-          );
-        })}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {recipes.map((recipe, index) => (
+          <RecipeCard
+            key={recipe.id ?? index}
+            recipe={recipe}
+            index={index}
+            isSelected={selectedIndex === index}
+            onSelect={onSelect}
+          />
+        ))}
       </div>
-    </div>
+    </motion.div>
   );
 }

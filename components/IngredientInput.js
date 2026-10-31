@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Loader2, Sparkles, Carrot } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Plus, X, Loader2, Sparkles } from 'lucide-react';
 
 const MAX_INGREDIENTS = 25;
 const MAX_INGREDIENT_LENGTH = 40;
@@ -11,13 +11,6 @@ const QUICK_SUGGESTIONS = [
   'Onion', 'Tomato', 'Ginger', 'Garlic', 'Potato', 'Paneer',
   'Chicken', 'Rice', 'Toor dal', 'Spinach',
 ];
-
-const chipPop = {
-  initial: { opacity: 0, scale: 0.7 },
-  animate: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 0.7 },
-  transition: { type: 'spring', stiffness: 480, damping: 24 },
-};
 
 export default function IngredientInput({
   ingredients,
@@ -88,15 +81,15 @@ export default function IngredientInput({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full max-w-md mx-auto bg-white/85 dark:bg-gray-800/85 backdrop-blur-md p-6 rounded-3xl shadow-xl shadow-emerald-900/5 border border-emerald-900/10 dark:border-gray-700/80 transition-colors"
+      transition={{ duration: 0.45, ease: 'easeOut', delay: 0.05 }}
+      className="w-full max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 transition-colors"
     >
-      <h2 className="font-display text-2xl font-bold mb-1 text-gray-900 dark:text-white tracking-tight">
+      <h2 className="text-xl font-bold mb-1 text-gray-900 dark:text-white">
         What&apos;s in your kitchen?
       </h2>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
         Add ingredients — commas are fine. Ctrl + Enter to generate.
       </p>
 
@@ -108,14 +101,14 @@ export default function IngredientInput({
           placeholder="e.g. Chicken, Rice, Tomatoes"
           disabled={isLoading}
           aria-label="Add ingredient"
-          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-60 transition"
+          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-60 transition"
         />
         <motion.button
           type="submit"
           disabled={!inputValue.trim() || isLoading}
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.92 }}
           aria-label="Add ingredient"
-          className="bg-emerald-600 text-white p-2.5 rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md shadow-emerald-600/20"
+          className="bg-emerald-600 text-white p-2.5 rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           <Plus size={22} />
         </motion.button>
@@ -133,46 +126,37 @@ export default function IngredientInput({
             <Sparkles size={12} /> Quick add
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {QUICK_SUGGESTIONS.map((suggestion, i) => (
-              <motion.button
+            {QUICK_SUGGESTIONS.map((suggestion) => (
+              <button
                 key={suggestion}
                 type="button"
                 onClick={() => addFromText(suggestion)}
                 disabled={isLoading}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 + i * 0.04, duration: 0.35 }}
-                whileTap={{ scale: 0.92 }}
                 className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors disabled:opacity-50"
               >
                 + {suggestion}
-              </motion.button>
+              </button>
             ))}
           </div>
         </div>
       ) : (
         <div className="flex flex-wrap gap-2 mb-5">
-          <AnimatePresence mode="popLayout">
-            {ingredients.map((ing, index) => (
-              <motion.span
-                key={`${ing}-${index}`}
-                {...chipPop}
-                layout
-                className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-sm"
+          {ingredients.map((ing, index) => (
+            <span
+              key={`${ing}-${index}`}
+              className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1.5"
+            >
+              {ing}
+              <button
+                onClick={() => removeIngredient(index)}
+                disabled={isLoading}
+                aria-label={`Remove ${ing}`}
+                className="hover:text-emerald-600 dark:hover:text-emerald-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded-full transition-colors disabled:opacity-50"
               >
-                <Carrot size={12} className="opacity-70" />
-                {ing}
-                <button
-                  onClick={() => removeIngredient(index)}
-                  disabled={isLoading}
-                  aria-label={`Remove ${ing}`}
-                  className="hover:text-emerald-600 dark:hover:text-emerald-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded-full transition-colors disabled:opacity-50"
-                >
-                  <X size={14} />
-                </button>
-              </motion.span>
-            ))}
-          </AnimatePresence>
+                <X size={14} />
+              </button>
+            </span>
+          ))}
           <span className="text-xs text-gray-400 dark:text-gray-500 self-center ml-1">
             {ingredients.length}/{MAX_INGREDIENTS}
           </span>
@@ -184,8 +168,7 @@ export default function IngredientInput({
           htmlFor="preferences"
           className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
         >
-          Dietary Preferences / Restrictions{' '}
-          <span className="font-normal text-gray-400">(optional)</span>
+          Dietary Preferences / Restrictions <span className="font-normal text-gray-400">(optional)</span>
         </label>
         <textarea
           id="preferences"
@@ -194,7 +177,7 @@ export default function IngredientInput({
           onKeyDown={handlePreferencesKeyDown}
           placeholder="e.g. Vegan, Gluten-free, Spicy, under 30 minutes, Jain…"
           disabled={isLoading}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-60 h-24 resize-none transition"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-60 h-24 resize-none transition"
         />
       </div>
 
@@ -218,9 +201,8 @@ export default function IngredientInput({
       <motion.button
         onClick={onSubmit}
         disabled={!canSubmit}
-        whileHover={canSubmit ? { scale: 1.015 } : undefined}
-        whileTap={canSubmit ? { scale: 0.98 } : undefined}
-        className="w-full bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white py-3.5 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-600/30 hover:shadow-emerald-600/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-shadow flex items-center justify-center gap-2"
+        whileTap={{ scale: 0.98 }}
+        className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-emerald-600/30 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>

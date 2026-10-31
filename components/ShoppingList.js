@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { useRecipes } from '@/context/RecipeContext';
 import {
   ShoppingCart, Copy, Check, Printer, Calendar, Apple, Milk, Wheat,
@@ -234,18 +233,13 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 22 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full max-w-3xl mx-auto mt-12"
-    >
-      <div className="bg-white/85 dark:bg-gray-800/85 backdrop-blur-md rounded-3xl shadow-xl shadow-emerald-900/5 border border-emerald-900/10 dark:border-gray-700 overflow-hidden transition-colors">
-        <div className="bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600 h-2.5"></div>
+    <div className="w-full max-w-3xl mx-auto mt-12">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
+        <div className="bg-gradient-to-r from-green-400 to-emerald-500 h-3"></div>
 
         <div className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-            <h2 className="font-display text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               {viewMode === 'weekly' ? 'Weekly Shopping List' : 'Shopping List'}
             </h2>
             <div className="flex gap-2">
@@ -262,7 +256,7 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
                 onClick={copyToClipboard}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                {copied ? <Check size={16} className="text-emerald-600" /> : <Copy size={16} />}
+                {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
                 {copied ? 'Copied!' : 'Copy'}
               </button>
               <button
@@ -281,7 +275,7 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
               onClick={() => setViewMode('single')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 viewMode === 'single'
-                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
               role="tab"
@@ -294,7 +288,7 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
               disabled={mealPlan.length === 0}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 viewMode === 'weekly'
-                  ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25'
+                  ? 'bg-emerald-600 text-white shadow-sm'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
               role="tab"
@@ -337,7 +331,7 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
                       <div
                         className={`w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors ${
                           checkedKeys.has(keyOf(item.index))
-                            ? 'bg-emerald-500 border-emerald-500'
+                            ? 'bg-green-500 border-green-500'
                             : 'border-gray-300 dark:border-gray-500'
                         }`}
                         aria-hidden="true"
@@ -365,11 +359,11 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
             );
           })}
 
-          <div className="mt-6 pt-4 border-t border-emerald-100 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 text-center">
+          <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 text-center">
             {checkedCount} of {items.length} items checked
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

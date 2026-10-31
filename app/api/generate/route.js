@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { getModel, recipeGenerationConfig, MODEL_NAME } from "@/lib/gemini";
 import { buildRecipePrompt } from "@/lib/prompts";
+import { verifyVideoExists, youtubeWatchUrl } from "@/lib/video";
 import {
   parseStructuredResponse,
   parseLegacyMarkdown,
   renderRecipeMarkdown,
 } from "@/lib/recipeUtils";
-import { verifyVideoExists, thumbnailUrl } from "@/lib/video";
 
 export const maxDuration = 60;
 
@@ -150,25 +150,16 @@ export async function POST(request) {
       );
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    // REAL-MEDIA VERIFICATION (no AI imagery, ever)
-    // Each recipe may carry a YouTube video id of a REAL cooking video of
-    // the same dish. We prove the video exists by checking YouTube's CDN
-    // for its thumbnail — a 200 means the id is real and the thumbnail is
-    // a genuine photograph of the dish we can safely display. Hallucinated
-    // ids are silently dropped and the client falls back to a search link.
-    // ══════════════════════════════════════════════════════════════════
-    await Promise.all(
+    // REAL-VIDEO INTEGRITY: verify every proposed YouTube id against the
+    // thumbnail CDN and drop the ones that don't exist. The client only ever
+    // sees ids that point at real, watchable videos.
+    recipes = await Promise.all(
       recipes.map(async (recipe) => {
-        if (!recipe.youtubeVideoId) return;
-        const exists = await verifyVideoExists(recipe.youtubeVideoId);
-        if (!exists) {
-          recipe.youtubeVideoId = null;
-          recipe.youtubeChannel = null;
-          return;
-        }
-        recipe.videoVerified = true;
-        recipe.imageUrl = thumbnailUrl(recipe.youtubeVideoId);
+        if (!recipe.youtubeVideoId) return recipe;
+        const valid = await verifyVideoExists(recipe.youtubeVideoId);
+        return valid
+          ? { ...recipe, youtubeUrl: youtubeWatchUrl(recipe.youtubeVideoId) }
+          : { ...recipe, youtubeVideoId: null, youtubeUrl: null };
       })
     );
 

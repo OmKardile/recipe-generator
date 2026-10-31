@@ -140,14 +140,14 @@ export default function CookingTimer() {
               key={timer.id}
               className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border ${
                 timer.remainingSeconds === 0
-                  ? 'border-emerald-500 animate-pulse'
+                  ? 'border-green-500 animate-pulse'
                   : 'border-gray-200 dark:border-gray-700'
               } p-3 min-w-[210px] transition-colors`}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate flex items-center gap-1.5">
                   {timer.remainingSeconds === 0 && (
-                    <Volume2 size={13} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <Volume2 size={13} className="text-green-600 dark:text-green-400 shrink-0" />
                   )}
                   {timer.label}
                 </span>
@@ -163,9 +163,9 @@ export default function CookingTimer() {
                 <span
                   className={`text-2xl font-mono font-bold tabular-nums ${
                     timer.remainingSeconds === 0
-                      ? 'text-emerald-600 dark:text-emerald-400'
+                      ? 'text-green-600 dark:text-green-400'
                       : timer.remainingSeconds <= 60
-                        ? 'text-amber-500 dark:text-amber-400'
+                        ? 'text-orange-500 dark:text-orange-400'
                         : 'text-gray-900 dark:text-white'
                   }`}
                 >
@@ -176,7 +176,7 @@ export default function CookingTimer() {
                 <button
                   onClick={() => toggleTimer(timer.id)}
                   disabled={timer.remainingSeconds === 0}
-                  className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/60 transition-colors disabled:opacity-50"
+                  className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors disabled:opacity-50"
                   aria-label={timer.isRunning ? 'Pause timer' : 'Start timer'}
                 >
                   {timer.isRunning ? <Pause size={16} /> : <Play size={16} />}

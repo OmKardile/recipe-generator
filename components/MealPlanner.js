@@ -1,19 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useRecipes } from '@/context/RecipeContext';
-import { Calendar, Plus, X, UtensilsCrossed, Trash2 } from 'lucide-react';
-import { PiSunHorizon, PiForkKnife, PiMoonStars, PiCookie } from 'react-icons/pi';
+import { Calendar, Plus, X, ChefHat, Trash2 } from 'lucide-react';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
-const MEAL_ICONS = {
-  breakfast: PiSunHorizon,
-  lunch: PiForkKnife,
-  dinner: PiMoonStars,
-  snack: PiCookie,
-};
 const MEAL_COLORS = {
   breakfast: 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700',
   lunch: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700',
@@ -105,18 +97,14 @@ export default function MealPlanner() {
           {/* grid-cols-5 = day label column + 4 meal columns (was cols-8 → misaligned) */}
           <div className="grid grid-cols-5 gap-2 min-w-[680px]">
             <div className="p-2"></div>
-            {MEALS.map((meal) => {
-              const MealIcon = MEAL_ICONS[meal];
-              return (
-                <div
-                  key={meal}
-                  className="p-2 text-center font-semibold text-gray-600 dark:text-gray-300 capitalize text-sm flex flex-col items-center gap-1"
-                >
-                  <MealIcon size={18} className="text-emerald-500/70" />
-                  {meal}
-                </div>
-              );
-            })}
+            {MEALS.map((meal) => (
+              <div
+                key={meal}
+                className="p-2 text-center font-semibold text-gray-600 dark:text-gray-300 capitalize text-sm"
+              >
+                {meal}
+              </div>
+            ))}
 
             {DAYS.map((day) => (
               <div key={day} className="contents">
@@ -180,23 +168,15 @@ export default function MealPlanner() {
       )}
 
       {/* Recipe Picker Modal */}
-      <AnimatePresence>
       {pickerSlot && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={closePicker}
           role="dialog"
           aria-modal="true"
           aria-label={`Select a recipe for ${pickerSlot.day} ${pickerSlot.meal}`}
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          <div
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
@@ -227,7 +207,7 @@ export default function MealPlanner() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-lg">
-                      <UtensilsCrossed size={18} className="text-emerald-600 dark:text-emerald-400" />
+                      <ChefHat size={18} className="text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
@@ -243,29 +223,20 @@ export default function MealPlanner() {
                 </button>
               ))}
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-      </AnimatePresence>
 
       {/* Clear-week confirmation */}
-      <AnimatePresence>
       {confirmClear && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={() => setConfirmClear(false)}
           role="dialog"
           aria-modal="true"
           aria-label="Confirm clearing the meal plan"
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          <div
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full p-6 text-center"
             onClick={(e) => e.stopPropagation()}
           >
@@ -287,10 +258,9 @@ export default function MealPlanner() {
                 Clear week
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-      </AnimatePresence>
     </div>
   );
 }
