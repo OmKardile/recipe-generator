@@ -14,6 +14,8 @@ const MAX_INGREDIENTS = 25;
 const MAX_INGREDIENT_LENGTH = 60;
 const MAX_PREFERENCES_LENGTH = 500;
 const GENERATION_TIMEOUT_MS = 90_000;
+/** Single retry for an unusable (but timely) first sample — bounded tighter so the whole route stays snappy. */
+const RETRY_TIMEOUT_MS = 30_000;
 
 /** Validate + sanitize the request body. Returns {error} or normalized input. */
 function validateInput(body) {
@@ -110,33 +112,49 @@ export async function POST(request) {
     const model = getModel(); // throws MissingApiKeyError when unconfigured
     const prompt = buildRecipePrompt({ ingredients, preferences, includeNutrition });
 
-    const result = await withTimeout(
-      model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: recipeGenerationConfig(),
-      }),
-      GENERATION_TIMEOUT_MS
-    );
+    const attemptGeneration = (timeoutMs) =>
+      withTimeout(
+        model.generateContent({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: recipeGenerationConfig(),
+        }),
+        timeoutMs
+      );
 
-    const text = (await result.response).text();
+    /** Parse one attempt: strict JSON first, then legacy markdown best-effort. */
+    const parseAttempt = (text) => {
+      let recipes = parseStructuredResponse(text);
+      if (recipes.length === 0) {
+        const chunks = text
+          .split(/===RECIPE_SEPARATOR===/)
+          .map((r) => r.trim())
+          .filter(Boolean);
+        const parts = chunks.length > 1 ? chunks : text.split(/(?=^##\s)/m).filter((r) => r.startsWith("##"));
+        recipes = parts
+          .slice(0, 3)
+          .map((chunk, i) => parseLegacyMarkdown(chunk, i))
+          .filter(Boolean);
+      }
+      return recipes;
+    };
+
+    let text = (await (await attemptGeneration(GENERATION_TIMEOUT_MS)).response).text();
 
     // Primary path: strict structured JSON.
-    let recipes = parseStructuredResponse(text);
+    let recipes = parseAttempt(text);
 
-    // Fallback: legacy free-form markdown → best-effort structured extraction.
+    // A malformed sample is usually a one-off sampling artifact — one bounded
+    // retry converts a hard 502 into a good result for the user.
     if (recipes.length === 0) {
       console.warn(
-        `[generate] structured JSON parse failed for ${MODEL_NAME}; falling back to markdown parsing.`
+        `[generate] first ${MODEL_NAME} sample was unusable; retrying once.`
       );
-      const chunks = text
-        .split(/===RECIPE_SEPARATOR===/)
-        .map((r) => r.trim())
-        .filter(Boolean);
-      const parts = chunks.length > 1 ? chunks : text.split(/(?=^##\s)/m).filter((r) => r.startsWith("##"));
-      recipes = parts
-        .slice(0, 3)
-        .map((chunk, i) => parseLegacyMarkdown(chunk, i))
-        .filter(Boolean);
+      try {
+        text = (await (await attemptGeneration(RETRY_TIMEOUT_MS)).response).text();
+        recipes = parseAttempt(text);
+      } catch (retryError) {
+        console.warn("[generate] retry failed:", retryError?.message || retryError);
+      }
     }
 
     if (recipes.length === 0) {
