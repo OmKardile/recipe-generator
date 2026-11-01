@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import IngredientInput from "@/components/IngredientInput";
 import RecipeDisplay from "@/components/RecipeDisplay";
@@ -33,10 +33,24 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [includeNutrition, setIncludeNutrition] = useState(false);
   const [activeTab, setActiveTab] = useState("generate");
+  const tabRefs = useRef([]);
 
   const prefersReducedMotion = useReducedMotion();
 
   const selectedRecipe = selectedRecipeIndex !== null ? recipes[selectedRecipeIndex] : null;
+
+  /** ARIA tabs keyboard pattern: roving focus with Arrow/Home/End keys. */
+  const handleTabKeyDown = (e, index) => {
+    let next = null;
+    if (e.key === "ArrowRight") next = (index + 1) % TABS.length;
+    else if (e.key === "ArrowLeft") next = (index - 1 + TABS.length) % TABS.length;
+    else if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = TABS.length - 1;
+    if (next === null) return;
+    e.preventDefault();
+    setActiveTab(TABS[next].key);
+    tabRefs.current[next]?.focus();
+  };
 
   const generateRecipe = async () => {
     if (ingredients.length === 0) return;
@@ -121,13 +135,18 @@ export default function Home() {
           role="tablist"
           aria-label="App sections"
         >
-          {TABS.map(({ key, label, icon: Icon }) => {
+          {TABS.map(({ key, label, icon: Icon }, index) => {
             const active = activeTab === key;
             return (
               <motion.button
                 key={key}
+                ref={(el) => { tabRefs.current[index] = el; }}
+                id={`tab-${key}`}
                 role="tab"
                 aria-selected={active}
+                aria-controls={`panel-${key}`}
+                tabIndex={active ? 0 : -1}
+                onKeyDown={(e) => handleTabKeyDown(e, index)}
                 onClick={() => setActiveTab(key)}
                 whileTap={{ scale: 0.96 }}
                 initial={{ opacity: 0, y: 12 }}
@@ -160,6 +179,8 @@ export default function Home() {
           <motion.div
             key={activeTab}
             role="tabpanel"
+            id={`panel-${activeTab}`}
+            aria-labelledby={`tab-${activeTab}`}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -219,6 +240,11 @@ export default function Home() {
                       ← Back to all options
                     </button>
                     <RecipeDisplay
+                      // Keyed by selection so servings scaling, cook-mode
+                      // checkmarks and the saved flag reset when the user
+                      // switches to a different recipe (state would otherwise
+                      // leak from Recipe A into Recipe B).
+                      key={selectedRecipe.id ?? selectedRecipeIndex}
                       data={selectedRecipe}
                       ingredients={ingredients}
                       preferences={preferences}

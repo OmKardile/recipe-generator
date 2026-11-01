@@ -48,9 +48,14 @@ export default function MealPlanner() {
     closePicker();
   };
 
-  const handleClearWeek = () => {
-    mealPlan.forEach((entry) => removeFromMealPlan(entry.day, entry.meal));
+  const handleClearWeek = async () => {
     setConfirmClear(false);
+    // Remove one slot at a time, awaiting each response: firing all deletes
+    // concurrently let out-of-order responses race and leave stale meals in
+    // client state even though the server was already empty.
+    for (const entry of [...mealPlan]) {
+      await removeFromMealPlan(entry.day, entry.meal);
+    }
   };
 
   const totalCalories = mealPlan.reduce(

@@ -20,6 +20,8 @@ export default function ThemeToggle() {
           key={value}
           onClick={() => setTheme(value)}
           title={label}
+          aria-label={`${label} theme`}
+          aria-pressed={theme === value}
           className={`relative p-2 rounded-full transition-colors ${
             theme === value
               ? 'text-white'
