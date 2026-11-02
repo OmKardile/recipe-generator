@@ -325,8 +325,18 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
                   {groupItems.map((item) => (
                     <li
                       key={`${item.index}-${item.text}`}
-                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                      role="checkbox"
+                      aria-checked={checkedKeys.has(keyOf(item.index))}
+                      tabIndex={0}
                       onClick={() => toggleItem(item.index)}
+                      onKeyDown={(e) => {
+                        // Keyboard users must be able to check items off too.
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleItem(item.index);
+                        }
+                      }}
+                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                     >
                       <div
                         className={`w-5 h-5 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors ${
