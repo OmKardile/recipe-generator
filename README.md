@@ -127,6 +127,8 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 | `GET/POST` | `/api/my-recipes` | List / save personal recipes |
 | `PATCH/DELETE` | `/api/my-recipes/[id]` | Update tags / delete |
 | `GET/POST/DELETE` | `/api/meal-plan` | Weekly meal plan |
+| `GET/POST/DELETE` | `/api/interactions` | Learn the household's taste — POST behavioural events, GET the derived profile, DELETE resets learning (saved preferences untouched) |
+| `POST` | `/api/substitutions` | Substitutions for one ingredient — curated table first, schema-validated AI ideas on request, household-restriction filtered |
 | `GET/POST` | `/api/tags` | Tag library |
 | `GET/POST` | `/api/settings` | Misc settings |
 | `GET` | `/api/recipe-media` | Resolve a REAL photo of a dish (`?dish=…&title=…`) — Wikipedia → TheMealDB, cached |
@@ -136,6 +138,10 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 ## Architecture Notes
 
 - **`lib/prompts.js`** — the prompt-engineering system: role anchoring, XML-delimited sections, a diversity matrix, anti-hallucination ingredient rules, food-safety constraints, a strict JSON output contract, and the authenticity contract (real established dishes, canonical `dishName`, YouTube ids only when certain).
+- **`lib/personalization.js` + `lib/interactionStore.js`** — the adaptive layer: whitelisted behavioural events (ratings, likes, saves, skips, cooked meals, plan feedback, ingredient rejections) derive a learned taste profile injected into generation as SOFT hints; saved household restrictions are HARD constraints that always outrank learning. See [docs/ADAPTIVE-INTELLIGENCE.md](docs/ADAPTIVE-INTELLIGENCE.md).
+- **`lib/planInsights.js`** — explainable plan-quality analytics: variety / pantry fit / effort / budget / protein-balance dimensions, cross-meal ingredient reuse, leftover and expiry insights; missing data scores null with an honest note instead of an invented number.
+- **`lib/substitutions.js`** — curated Indian-kitchen substitution table (ratio + taste/texture/nutrition/cooking notes, never assumed nutritionally identical) with an AI fallback route; suggestions are filtered against household restrictions.
+- **`lib/restrictionCheck.js`** — the independent restriction gate for every AI surface (generate, planner, substitutions), with gluten-flour and plant-dairy whitelists so coconut milk is never mistaken for dairy.
 - **`lib/recipeUtils.js`** — response normalization (incl. `dishName` / `youtubeVideoId`), serving scaling (with vulgar-fraction formatting), deterministic markdown synthesis, legacy parsing, and shopping categorization.
 - **`lib/video.js`** — YouTube integrity: server-side video verification (thumbnail CDN HEAD check, 24h cache), watch/search URL helpers, thumbnail candidates.
 - **`lib/dishImage.js`** — the real-photo resolver: Wikipedia/Wikimedia Commons summary API (paced, non-food-article guard, allowed-width snapping) → TheMealDB search with word-overlap matching; 24h cache.
