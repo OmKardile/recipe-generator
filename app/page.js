@@ -7,13 +7,14 @@ import RecipeDisplay from "@/components/RecipeDisplay";
 import RecipeSelector from "@/components/RecipeSelector";
 import RecipeSkeleton from "@/components/RecipeSkeleton";
 import SavedRecipes from "@/components/SavedRecipes";
-import ShoppingList from "@/components/ShoppingList";
-import MealPlanner from "@/components/MealPlanner";
+import PlannerView from "@/components/planner/PlannerView";
+import PantryManager from "@/components/pantry/PantryManager";
+import GroceryView from "@/components/grocery/GroceryView";
 import ThemeToggle from "@/components/ThemeToggle";
 import CookingTimer from "@/components/CookingTimer";
 import AmbientBackground from "@/components/AmbientBackground";
 import {
-  CookingPot, Sparkles, BookOpen, CalendarDays, ShoppingBasket,
+  CookingPot, Sparkles, BookOpen, CalendarDays, ShoppingBasket, Refrigerator,
   AlertTriangle, RefreshCw, Leaf, Carrot, Citrus,
 } from "lucide-react";
 
@@ -21,7 +22,8 @@ const TABS = [
   { key: "generate", label: "Generate", icon: CookingPot },
   { key: "recipes", label: "My Recipes", icon: BookOpen },
   { key: "mealplan", label: "Meal Plan", icon: CalendarDays },
-  { key: "shopping", label: "Shopping", icon: ShoppingBasket },
+  { key: "pantry", label: "Pantry", icon: Refrigerator },
+  { key: "grocery", label: "Grocery", icon: ShoppingBasket },
 ];
 
 export default function Home() {
@@ -256,10 +258,18 @@ export default function Home() {
 
             {activeTab === "recipes" && <SavedRecipes />}
 
-            {activeTab === "mealplan" && <MealPlanner />}
+            {activeTab === "mealplan" && (
+              <PlannerView onGoToGrocery={() => setActiveTab("grocery")} />
+            )}
 
-            {activeTab === "shopping" && (
-              <ShoppingList currentRecipe={selectedRecipe?.recipe} currentIngredients={ingredients} />
+            {activeTab === "pantry" && <PantryManager />}
+
+            {activeTab === "grocery" && (
+              <GroceryView
+                currentRecipe={selectedRecipe?.recipe}
+                currentIngredients={ingredients}
+                onGoToPlanner={() => setActiveTab("mealplan")}
+              />
             )}
           </motion.div>
         </AnimatePresence>
