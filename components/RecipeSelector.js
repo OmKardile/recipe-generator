@@ -95,7 +95,10 @@ function RecipeCard({ recipe, index, isSelected, onSelect, onSkip, skipped }) {
           </div>
         ) : (
           <MediaImage
-            key={`${recipe.id}-${thumbSources[0] || 'none'}`}
+            // No per-source key: the card is keyed by recipe.id above, and
+            // MediaImage resets its fallback chain on source-list changes
+            // internally — so the video-still → resolved-photo handoff is a
+            // crossfade instead of a remount flash.
             sources={thumbSources}
             alt={`Real photo of ${recipe.dishName || recipe.title}`}
             rounded="rounded-xl"

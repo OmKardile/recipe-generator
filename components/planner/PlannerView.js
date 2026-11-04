@@ -50,7 +50,13 @@ const toPlanRecipe = (saved) => {
 };
 
 export default function PlannerView({ onGoToGrocery }) {
-  const { savedRecipes, mounted } = useRecipes();
+  const { savedRecipes, mounted, ensureDataLoaded } = useRecipes();
+
+  // The planner places saved recipes into slots: trigger their lazy load on
+  // mount (no-op if another tab already fetched them).
+  useEffect(() => {
+    ensureDataLoaded();
+  }, [ensureDataLoaded]);
 
   const [config, setConfig] = useState({
     name: '',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRecipes } from '@/context/RecipeContext';
 import { Trash2, ExternalLink, Clock, Bookmark, Tag, X, Search, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -14,11 +14,17 @@ function videoIdFromUrl(url) {
 }
 
 export default function SavedRecipes({ onViewRecipe }) {
-  const { savedRecipes, deleteRecipe, updateRecipeTags, tags, mounted } = useRecipes();
+  const { savedRecipes, deleteRecipe, updateRecipeTags, tags, mounted, ensureDataLoaded } = useRecipes();
   const [expandedId, setExpandedId] = useState(null);
   const [filterTag, setFilterTag] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [editingTags, setEditingTags] = useState(null);
+
+  // This tab owns the saved-recipe data: trigger its lazy load on mount
+  // (no-op if another tab already fetched it).
+  useEffect(() => {
+    ensureDataLoaded();
+  }, [ensureDataLoaded]);
 
   if (!mounted) return null;
 

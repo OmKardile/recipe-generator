@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Clock, Users, Flame, ChefHat, Info, Bookmark, Check, Share2, Link2,
   Copy, ListChecks, RotateCcw, MapPin, Gauge, Carrot, CookingPot, Lightbulb, Activity,
@@ -15,7 +15,6 @@ import ServingAdjuster from './ServingAdjuster';
 import SubstitutionPanel from './SubstitutionPanel';
 import RecipeMedia from './RecipeMedia';
 import useRecipeMedia from '@/hooks/useRecipeMedia';
-import { AnimatePresence } from 'framer-motion';
 
 const DIFFICULTY_STYLES = {
   Easy: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
@@ -36,6 +35,12 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
   const [cookMode, setCookMode] = useState(false);
   const [checkedIngredients, setCheckedIngredients] = useState(new Set());
   const [doneSteps, setDoneSteps] = useState(new Set());
+  // Focus advancement (cook mode): a ref per instruction button, plus a
+  // polite live region so completing a step both announces the completion
+  // and moves focus to the next incomplete step — hands-free cooking.
+  const stepRefs = useRef([]);
+  const [stepAnnouncement, setStepAnnouncement] = useState('');
+  const prefersReducedMotion = useReducedMotion();
 
   // Taste feedback state — every signal feeds the personalization engine.
   const [rating, setRating] = useState(null);
@@ -308,6 +313,59 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
   const resetCookMode = () => {
     setCheckedIngredients(new Set());
     setDoneSteps(new Set());
+    setStepAnnouncement('Cooking progress reset.');
+  };
+
+  /**
+   * Cook-mode step toggle with focus advancement.
+   *
+   * Completing a step moves focus (and scrolls, only as far as needed) to
+   * the next incomplete step so the cooking flow continues without hunting
+   * for it. Un-completing a step never moves focus, so backwards navigation
+   * stays exactly where the user is. The next step is only ever FOCUSED —
+   * never auto-completed. Because the toggle is a native <button>, mouse,
+   * touch and keyboard all drive the same handler.
+   */
+  const handleStepToggle = (index) => {
+    if (!cookMode || !structured) return;
+    const wasDone = doneSteps.has(index);
+    const next = new Set(doneSteps);
+    if (wasDone) next.delete(index);
+    else next.add(index);
+    setDoneSteps(next);
+
+    if (wasDone) return; // un-checking: leave focus exactly where it is
+
+    const total = structured.instructions.length;
+    let target = -1;
+    for (let i = index + 1; i < total; i++) {
+      if (!next.has(i)) {
+        target = i;
+        break;
+      }
+    }
+
+    if (target === -1) {
+      // Nothing incomplete after this one — never focus a nonexistent
+      // element; just announce where cooking stands.
+      const remaining = total - next.size;
+      setStepAnnouncement(
+        remaining === 0
+          ? `Step ${index + 1} completed. All ${total} steps done — enjoy your dish!`
+          : `Step ${index + 1} completed. ${remaining} ${remaining === 1 ? 'step' : 'steps'} still to do.`
+      );
+      return;
+    }
+
+    setStepAnnouncement(`Step ${index + 1} completed. Moving to step ${target + 1}.`);
+    const el = stepRefs.current[target];
+    if (el) {
+      el.focus();
+      el.scrollIntoView({
+        block: 'nearest',
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      });
+    }
   };
 
   const totalTime = structured?.totalTimeMinutes;
@@ -560,7 +618,10 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                   return (
                     <li key={index}>
                       <button
-                        onClick={() => cookMode && toggleItem(doneSteps, setDoneSteps, index)}
+                        ref={(el) => {
+                          stepRefs.current[index] = el;
+                        }}
+                        onClick={() => handleStepToggle(index)}
                         className={`w-full text-left flex gap-4 items-start p-3.5 rounded-xl transition-all ${
                           cookMode ? 'hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer' : 'cursor-default'
                         } ${done ? 'bg-green-50 dark:bg-green-900/20' : ''}`}
@@ -586,6 +647,12 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                   );
                 })}
               </ol>
+
+              {/* Polite announcements for cook-mode focus advancement —
+                  visually hidden, spoken by screen readers. */}
+              <span role="status" aria-live="polite" className="sr-only">
+                {stepAnnouncement}
+              </span>
 
               {/* Tips */}
               {structured.tips?.length > 0 && (
@@ -711,6 +778,7 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
             {cookMode && (doneSteps.size > 0 || checkedIngredients.size > 0) && (
               <button
                 onClick={resetCookMode}
+                aria-label="Reset cooking progress"
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 title="Reset progress"
               >

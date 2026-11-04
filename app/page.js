@@ -2,14 +2,11 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import nextDynamic from "next/dynamic";
 import IngredientInput from "@/components/IngredientInput";
 import RecipeDisplay from "@/components/RecipeDisplay";
 import RecipeSelector from "@/components/RecipeSelector";
 import RecipeSkeleton from "@/components/RecipeSkeleton";
-import SavedRecipes from "@/components/SavedRecipes";
-import PlannerView from "@/components/planner/PlannerView";
-import PantryManager from "@/components/pantry/PantryManager";
-import GroceryView from "@/components/grocery/GroceryView";
 import ThemeToggle from "@/components/ThemeToggle";
 import CookingTimer from "@/components/CookingTimer";
 import AmbientBackground from "@/components/AmbientBackground";
@@ -17,6 +14,46 @@ import {
   CookingPot, Sparkles, BookOpen, CalendarDays, ShoppingBasket, Refrigerator,
   AlertTriangle, RefreshCw, Leaf, Carrot, Citrus,
 } from "lucide-react";
+
+/* Heavy tab panels are code-split and mounted only when their tab is first
+   opened. Tab-exclusive code (~120 KB: planner, grocery + DMart matching,
+   pantry, saved-recipes) leaves the initial payload, and none of their API
+   requests fire until the tab is actually visited. Once a chunk has loaded
+   it stays cached in the browser, so revisiting a tab is instant. */
+function TabPanelLoading() {
+  return (
+    <div
+      className="w-full max-w-3xl mx-auto mt-8 animate-pulse"
+      role="status"
+      aria-label="Loading section…"
+    >
+      <div className="h-9 w-52 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 mb-6" />
+      <div className="space-y-3.5">
+        <div className="h-4 w-full rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="h-4 w-11/12 rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="h-4 w-8/12 rounded bg-gray-100 dark:bg-gray-800" />
+        <div className="h-4 w-10/12 rounded bg-gray-100 dark:bg-gray-800" />
+      </div>
+    </div>
+  );
+}
+
+const SavedRecipes = nextDynamic(() => import("@/components/SavedRecipes"), {
+  ssr: false,
+  loading: TabPanelLoading,
+});
+const PlannerView = nextDynamic(() => import("@/components/planner/PlannerView"), {
+  ssr: false,
+  loading: TabPanelLoading,
+});
+const PantryManager = nextDynamic(() => import("@/components/pantry/PantryManager"), {
+  ssr: false,
+  loading: TabPanelLoading,
+});
+const GroceryView = nextDynamic(() => import("@/components/grocery/GroceryView"), {
+  ssr: false,
+  loading: TabPanelLoading,
+});
 
 const TABS = [
   { key: "generate", label: "Generate", icon: CookingPot },
