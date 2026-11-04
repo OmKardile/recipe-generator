@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRecipes } from '@/context/RecipeContext';
 import {
   ShoppingCart, Copy, Check, Printer, Calendar, Apple, Milk, Wheat,
@@ -19,19 +19,13 @@ const CATEGORY_ICONS = {
 };
 
 export default function ShoppingList({ currentRecipe, currentIngredients }) {
-  const { savedRecipes, mealPlan, mounted, ensureDataLoaded } = useRecipes();
+  const { savedRecipes, mealPlan, mounted } = useRecipes();
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
   // Checks are keyed per list ("<listKey>#<index>") so switching recipes or
   // modes naturally shows a clean list without effect-driven state resets.
   const [checkedKeys, setCheckedKeys] = useState(new Set());
   const [copied, setCopied] = useState(false);
   const [viewMode, setViewMode] = useState('single'); // 'single' | 'weekly'
-
-  // This view reads the saved recipes + meal plan: trigger their lazy load
-  // on mount (no-op if another tab already fetched them).
-  useEffect(() => {
-    ensureDataLoaded();
-  }, [ensureDataLoaded]);
 
   if (!mounted) return null;
 

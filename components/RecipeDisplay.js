@@ -1,18 +1,15 @@
 "use client";
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Clock, Users, Flame, ChefHat, Info, Bookmark, Check, Share2, Link2,
   Copy, ListChecks, RotateCcw, MapPin, Gauge, Carrot, CookingPot, Lightbulb, Activity,
-  ThumbsUp, ThumbsDown, Star, UtensilsCrossed, ArrowLeftRight,
 } from 'lucide-react';
 import { useRecipes } from '@/context/RecipeContext';
 import { ingredientLine, formatAmount } from '@/lib/recipeUtils';
-import { applySubstitutions } from '@/lib/substitutions';
 import ServingAdjuster from './ServingAdjuster';
-import SubstitutionPanel from './SubstitutionPanel';
 import RecipeMedia from './RecipeMedia';
 import useRecipeMedia from '@/hooks/useRecipeMedia';
 
@@ -35,17 +32,6 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
   const [cookMode, setCookMode] = useState(false);
   const [checkedIngredients, setCheckedIngredients] = useState(new Set());
   const [doneSteps, setDoneSteps] = useState(new Set());
-  // Focus advancement (cook mode): a ref per instruction button, plus a
-  // polite live region so completing a step both announces the completion
-  // and moves focus to the next incomplete step — hands-free cooking.
-  const stepRefs = useRef([]);
-  const [stepAnnouncement, setStepAnnouncement] = useState('');
-  const prefersReducedMotion = useReducedMotion();
-
-  // Taste feedback state — every signal feeds the personalization engine.
-  const [rating, setRating] = useState(null);
-  const [reaction, setReaction] = useState(null);
-  const [cooked, setCooked] = useState(false);
 
   const recipe = data?.recipe;
   const structured = data?.structured && data.ingredients?.length ? data : null;
@@ -63,17 +49,8 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
 
   const [servings, setServings] = useState(baseServings);
 
-  // Substitution state — index → chosen option; panel while picking.
-  const [appliedSubs, setAppliedSubs] = useState(new Map());
-  const [subPanel, setSubPanel] = useState(null);
-
   const scaleFactor = structured ? servings / baseServings : 1;
   const isScaled = Math.abs(scaleFactor - 1) > 0.001;
-
-  const effectiveIngredients = useMemo(
-    () => applySubstitutions(structured?.ingredients, appliedSubs),
-    [structured, appliedSubs]
-  );
 
   const markdown = useMemo(() => recipe || '', [recipe]);
 
@@ -84,112 +61,6 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
     if (next.has(index)) next.delete(index);
     else next.add(index);
     setter(next);
-  };
-
-  /* Personalization telemetry — fire-and-forget, never blocks the UI. */
-  const trackEvent = (event) => {
-    fetch('/api/interactions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(event),
-    }).catch(() => {});
-  };
-
-  const eventMeta = () => ({
-    title: data.title,
-    dishName,
-    cuisine: structured?.cuisine || '',
-    ingredients: structured?.ingredients?.map((i) => i.name) || ingredients || [],
-    totalTimeMinutes: structured?.totalTimeMinutes || null,
-  });
-
-  const rate = (n) => {
-    setRating(n);
-    trackEvent({ type: 'recipe_rated', rating: n, ...eventMeta() });
-  };
-
-  const react = (r) => {
-    if (reaction === r) {
-      setReaction(null);
-      return;
-    }
-    setReaction(r);
-    trackEvent({ type: r === 'like' ? 'recipe_liked' : 'recipe_disliked', ...eventMeta() });
-  };
-
-  const markCooked = () => {
-    if (cooked) return;
-    setCooked(true);
-    trackEvent({ type: 'recipe_cooked', mealType: 'recipe', ...eventMeta() });
-  };
-
-  /* ── Substitution engine wiring (roadmap P0-3) ── */
-
-  const openSubstitute = async (index) => {
-    const original = structured?.ingredients?.[index];
-    if (!original?.name) return;
-    setSubPanel({ index, options: [], loading: true, aiError: null, aiLoaded: false, askingAi: false });
-    try {
-      const res = await fetch('/api/substitutions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingredient: original.name }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'failed');
-      setSubPanel((p) =>
-        p && p.index === index ? { ...p, loading: false, options: data.options || [], aiError: data.aiError || null } : p
-      );
-    } catch {
-      setSubPanel((p) =>
-        p && p.index === index ? { ...p, loading: false, options: [], aiError: 'Could not load substitutions — try again.' } : p
-      );
-    }
-  };
-
-  const askAiForMore = async () => {
-    if (!subPanel) return;
-    const index = subPanel.index;
-    const original = structured?.ingredients?.[index];
-    if (!original?.name) return;
-    setSubPanel((p) => ({ ...p, askingAi: true, aiError: null }));
-    try {
-      const res = await fetch('/api/substitutions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingredient: original.name, includeAi: true }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'failed');
-      setSubPanel((p) =>
-        p && p.index === index
-          ? { ...p, askingAi: false, options: data.options || [], aiLoaded: true, aiError: data.aiError || null }
-          : p
-      );
-    } catch {
-      setSubPanel((p) =>
-        p && p.index === index ? { ...p, askingAi: false, aiLoaded: true, aiError: 'Chef Rani could not be reached.' } : p
-      );
-    }
-  };
-
-  const applySub = (option) => {
-    if (!subPanel) return;
-    const { index } = subPanel;
-    const original = structured?.ingredients?.[index];
-    setAppliedSubs((prev) => new Map(prev).set(index, option));
-    setSubPanel(null);
-    if (original?.name) {
-      trackEvent({ type: 'ingredient_rejected', fromIngredient: original.name, toIngredient: option.to });
-    }
-  };
-
-  const undoSubstitute = (index) => {
-    setAppliedSubs((prev) => {
-      const next = new Map(prev);
-      next.delete(index);
-      return next;
-    });
   };
 
   const handleSave = () => {
@@ -214,7 +85,7 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
             cookMinutes: data.cookMinutes,
             totalTimeMinutes: data.totalTimeMinutes,
             servings: baseServings,
-            ingredients: effectiveIngredients,
+            ingredients: data.ingredients,
             instructions: data.instructions,
             tips: data.tips,
             dishName,
@@ -223,7 +94,6 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
         : null,
     });
     setSaved(true);
-    trackEvent({ type: 'recipe_saved', ...eventMeta() });
   };
 
   const writeClipboard = async (text) => {
@@ -277,7 +147,7 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                 cookMinutes: data.cookMinutes,
                 totalTimeMinutes: data.totalTimeMinutes,
                 servings: baseServings,
-                ingredients: effectiveIngredients,
+                ingredients: data.ingredients,
                 instructions: data.instructions,
                 tips: data.tips,
                 dishName,
@@ -313,59 +183,6 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
   const resetCookMode = () => {
     setCheckedIngredients(new Set());
     setDoneSteps(new Set());
-    setStepAnnouncement('Cooking progress reset.');
-  };
-
-  /**
-   * Cook-mode step toggle with focus advancement.
-   *
-   * Completing a step moves focus (and scrolls, only as far as needed) to
-   * the next incomplete step so the cooking flow continues without hunting
-   * for it. Un-completing a step never moves focus, so backwards navigation
-   * stays exactly where the user is. The next step is only ever FOCUSED —
-   * never auto-completed. Because the toggle is a native <button>, mouse,
-   * touch and keyboard all drive the same handler.
-   */
-  const handleStepToggle = (index) => {
-    if (!cookMode || !structured) return;
-    const wasDone = doneSteps.has(index);
-    const next = new Set(doneSteps);
-    if (wasDone) next.delete(index);
-    else next.add(index);
-    setDoneSteps(next);
-
-    if (wasDone) return; // un-checking: leave focus exactly where it is
-
-    const total = structured.instructions.length;
-    let target = -1;
-    for (let i = index + 1; i < total; i++) {
-      if (!next.has(i)) {
-        target = i;
-        break;
-      }
-    }
-
-    if (target === -1) {
-      // Nothing incomplete after this one — never focus a nonexistent
-      // element; just announce where cooking stands.
-      const remaining = total - next.size;
-      setStepAnnouncement(
-        remaining === 0
-          ? `Step ${index + 1} completed. All ${total} steps done — enjoy your dish!`
-          : `Step ${index + 1} completed. ${remaining} ${remaining === 1 ? 'step' : 'steps'} still to do.`
-      );
-      return;
-    }
-
-    setStepAnnouncement(`Step ${index + 1} completed. Moving to step ${target + 1}.`);
-    const el = stepRefs.current[target];
-    if (el) {
-      el.focus();
-      el.scrollIntoView({
-        block: 'nearest',
-        behavior: prefersReducedMotion ? 'auto' : 'smooth',
-      });
-    }
   };
 
   const totalTime = structured?.totalTimeMinutes;
@@ -428,74 +245,6 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
             )}
           </div>
 
-          {/* Taste feedback — teaches the learned profile (resettable in the
-              household profile; restrictions always outrank what is learned) */}
-          <div className="mb-8 flex flex-wrap items-center gap-2 px-1">
-            <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 mr-1">
-              Teach the app your taste
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => react('like')}
-                aria-pressed={reaction === 'like'}
-                aria-label="I liked this recipe"
-                title="Liked it"
-                className={`p-2 rounded-full transition-colors ${
-                  reaction === 'like'
-                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-gray-600 hover:text-emerald-600 dark:hover:text-emerald-400'
-                }`}
-              >
-                <ThumbsUp size={15} />
-              </button>
-              <button
-                onClick={() => react('dislike')}
-                aria-pressed={reaction === 'dislike'}
-                aria-label="I did not like this recipe"
-                title="Not for me"
-                className={`p-2 rounded-full transition-colors ${
-                  reaction === 'dislike'
-                    ? 'bg-red-500 text-white shadow-sm shadow-red-500/30'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-gray-600 hover:text-red-500'
-                }`}
-              >
-                <ThumbsDown size={15} />
-              </button>
-            </div>
-            <div className="flex items-center gap-0.5 pl-1" role="group" aria-label="Rate this recipe out of five">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  onClick={() => rate(n)}
-                  aria-label={`Rate ${n} star${n > 1 ? 's' : ''}`}
-                  className="p-1 rounded transition-transform hover:scale-110"
-                >
-                  <Star
-                    size={16}
-                    className={
-                      n <= (rating || 0)
-                        ? 'fill-amber-400 text-amber-400'
-                        : 'text-gray-300 dark:text-gray-600'
-                    }
-                  />
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={markCooked}
-              disabled={cooked}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                cooked
-                  ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-600 hover:text-emerald-700 dark:hover:text-emerald-300'
-              }`}
-              aria-pressed={cooked}
-            >
-              {cooked ? <Check size={13} /> : <UtensilsCrossed size={13} />}
-              {cooked ? 'Cooked' : 'Cooked it'}
-            </button>
-          </div>
-
           {structured ? (
             <>
               {/* Ingredients — with REAL scaling */}
@@ -513,17 +262,15 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                 )}
               </div>
 
-              <ul className="space-y-2.5 mb-6 bg-gray-50 dark:bg-gray-900/60 p-5 rounded-xl border border-gray-100 dark:border-gray-700">
-                {effectiveIngredients.map((ing, index) => {
+              <ul className="space-y-2.5 mb-8 bg-gray-50 dark:bg-gray-900/60 p-5 rounded-xl border border-gray-100 dark:border-gray-700">
+                {structured.ingredients.map((ing, index) => {
                   const line = ingredientLine(ing, scaleFactor);
                   const checked = checkedIngredients.has(index);
-                  const swapped = appliedSubs.has(index);
-                  const swappable = !cookMode && ing && typeof ing === 'object' && Boolean(ing.name);
                   return (
-                    <li key={`${ing.name}-${index}`} className="flex items-start gap-2">
+                    <li key={`${ing.name}-${index}`}>
                       <button
                         onClick={() => cookMode && toggleItem(checkedIngredients, setCheckedIngredients, index)}
-                        className={`flex-1 min-w-0 text-left flex gap-3 items-start transition-opacity ${cookMode ? 'cursor-pointer' : 'cursor-default'} ${checked ? 'opacity-50' : ''}`}
+                        className={`w-full text-left flex gap-3 items-start transition-opacity ${cookMode ? 'cursor-pointer' : 'cursor-default'} ${checked ? 'opacity-50' : ''}`}
                         aria-pressed={cookMode ? checked : undefined}
                       >
                         {cookMode && (
@@ -539,61 +286,18 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                           </span>
                         )}
                         <span
-                          className={`text-gray-700 dark:text-gray-200 leading-relaxed flex flex-wrap items-baseline gap-x-2 ${checked ? 'line-through' : ''}`}
+                          className={`text-gray-700 dark:text-gray-200 leading-relaxed ${checked ? 'line-through' : ''}`}
                         >
-                          <span>{line}</span>
-                          {swapped && (
-                            <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300">
-                              swapped
-                            </span>
-                          )}
+                          {line}
                         </span>
                       </button>
-                      {swappable &&
-                        (swapped ? (
-                          <button
-                            onClick={() => undoSubstitute(index)}
-                            aria-label={`Undo substitution, restore ${structured.ingredients[index]?.name}`}
-                            title="Undo substitution"
-                            className="mt-0.5 p-1.5 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors shrink-0"
-                          >
-                            <RotateCcw size={14} />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => openSubstitute(index)}
-                            aria-label={`Find substitutions for ${ing.name}`}
-                            title="Substitute this ingredient"
-                            className="mt-0.5 p-1.5 rounded-lg text-gray-300 dark:text-gray-600 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors shrink-0"
-                          >
-                            <ArrowLeftRight size={14} />
-                          </button>
-                        ))}
                     </li>
                   );
                 })}
               </ul>
-
-              <AnimatePresence>
-                {subPanel && (
-                  <SubstitutionPanel
-                    ingredient={structured.ingredients[subPanel.index]}
-                    options={subPanel.options}
-                    loading={subPanel.loading}
-                    aiError={subPanel.aiError}
-                    aiLoaded={subPanel.aiLoaded}
-                    askingAi={subPanel.askingAi}
-                    onApply={applySub}
-                    onAskAi={askAiForMore}
-                    onClose={() => setSubPanel(null)}
-                  />
-                )}
-              </AnimatePresence>
-
-              {(isScaled || appliedSubs.size > 0) && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 mb-8 px-1 -mt-3">
-                  {isScaled && `Amounts auto-scaled from the base recipe of ${baseServings} servings. Spices scale non-linearly — taste and adjust.`}
-                  {appliedSubs.size > 0 && ' Substitutions apply to this view and are saved with the recipe when you save it.'}
+              {isScaled && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 -mt-6 mb-8 px-1">
+                  Amounts auto-scaled from the base recipe of {baseServings} servings. Spices scale non-linearly — taste and adjust.
                 </p>
               )}
 
@@ -618,10 +322,7 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                   return (
                     <li key={index}>
                       <button
-                        ref={(el) => {
-                          stepRefs.current[index] = el;
-                        }}
-                        onClick={() => handleStepToggle(index)}
+                        onClick={() => cookMode && toggleItem(doneSteps, setDoneSteps, index)}
                         className={`w-full text-left flex gap-4 items-start p-3.5 rounded-xl transition-all ${
                           cookMode ? 'hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer' : 'cursor-default'
                         } ${done ? 'bg-green-50 dark:bg-green-900/20' : ''}`}
@@ -647,12 +348,6 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                   );
                 })}
               </ol>
-
-              {/* Polite announcements for cook-mode focus advancement —
-                  visually hidden, spoken by screen readers. */}
-              <span role="status" aria-live="polite" className="sr-only">
-                {stepAnnouncement}
-              </span>
 
               {/* Tips */}
               {structured.tips?.length > 0 && (
@@ -778,7 +473,6 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
             {cookMode && (doneSteps.size > 0 || checkedIngredients.size > 0) && (
               <button
                 onClick={resetCookMode}
-                aria-label="Reset cooking progress"
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 title="Reset progress"
               >

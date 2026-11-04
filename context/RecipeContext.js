@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const RecipeContext = createContext(null);
 
@@ -9,20 +9,14 @@ export function RecipeProvider({ children }) {
   const [mealPlan, setMealPlan] = useState([]);
   const [tags, setTags] = useState([]);
   const [mounted, setMounted] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
+    loadData();
   }, []);
 
-  /* Lazy data loading: the saved-recipes / meal-plan / tags JSON is only
-     fetched once a tab that actually consumes it mounts (My Recipes, Meal
-     Plan, Grocery). The default Generate tab only uses the write methods,
-     so a fresh page load fires zero recipe-data API requests. */
-  const loadStartedRef = useRef(false);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
+  const loadData = async () => {
     try {
       const [recipesRes, planRes, tagsRes] = await Promise.all([
         fetch('/api/my-recipes'),
@@ -33,25 +27,12 @@ export function RecipeProvider({ children }) {
       if (recipesRes.ok) setSavedRecipes(await recipesRes.json());
       if (planRes.ok) setMealPlan(await planRes.json());
       if (tagsRes.ok) setTags(await tagsRes.json());
-      return true;
     } catch (error) {
       console.error('Error loading data:', error);
-      return false;
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  /** Idempotent: the first consumer mounts → one fetch for all three
-      resources; a total failure clears the guard so the next consumer
-      mount retries instead of showing permanently empty data. */
-  const ensureDataLoaded = useCallback(() => {
-    if (loadStartedRef.current) return;
-    loadStartedRef.current = true;
-    loadData().then((ok) => {
-      if (!ok) loadStartedRef.current = false;
-    });
-  }, [loadData]);
+  };
 
   const saveRecipe = async (recipe) => {
     try {
@@ -147,7 +128,6 @@ export function RecipeProvider({ children }) {
         tags,
         mounted,
         loading,
-        ensureDataLoaded,
         saveRecipe,
         deleteRecipe,
         updateRecipeTags,

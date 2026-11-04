@@ -17,10 +17,8 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 - **Real recipe media — real photos only, never AI-generated** — every recipe is a real, established dish carrying its canonical name. The server then resolves a **real photograph of that exact dish** (Wikipedia / Wikimedia Commons first, then TheMealDB's open recipe-photo database), falling back to the thumbnail of a **server-verified real YouTube cooking video** of the same dish. The video layer only ever shows a link that passed a CDN existence check (hallucinated ids are silently dropped); dishes with no verified video get a YouTube *search* link for the canonical name — a link that can never break. When no real photo exists at all, a branded emerald placeholder is shown instead — never a fabricated image.
 - **Real serving scaling** — ingredient amounts rescale live (with pretty fractions) when you change servings.
 - **Cook Mode** — tap ingredients and steps to check them off as you cook.
-- **Household profile** — family size, default servings, dietary preference (vegetarian, vegan, keto, gluten-free…), allergies as hard exclusions, dislikes, cuisines, skill, equipment, time & budget. Allergies and preferences are enforced separately and both are re-validated server-side on every generated meal.
-- **AI Meal Planner** — generates a dated plan (1–14 days, breakfast/lunch/dinner/snack, cooking days, time limits, leftover mode) that plans the schedule as a whole: shared ingredients across meals, pantry-first, no repeats. Lock favourites, regenerate the whole plan / one day / one meal without touching locks, adjust servings, place saved recipes, move meals, mark cooked (deducts pantry stock on your confirmation).
-- **Pantry** — track what you already own with expiry alerts; pantry stock is subtracted from every shopping list automatically, and near-expiry items are prioritised by the planner. Quantities are only ever deducted through the explicit “I cooked this” action.
-- **Grocery intelligence + DMart Ready** — one consolidated, pantry-subtracted list from any plan (500 g + 300 g → 800 g; incompatible units never merge blindly), grouped into 9 supermarket categories, with a retailer-adapter architecture ([docs](docs/RETAILER-INTEGRATION.md)). For each ingredient, discover real DMart Ready products via official search links, save the products & prices you verify yourself, get clearly-labeled AI estimates, and see honest cost intelligence: packages needed, rounding deltas vs the recipe, verified vs estimated vs unpriced totals, MRP & savings, budget remaining. PIN-code location config with honest (never fabricated) serviceability. Works fully without retailer data; no scraping, no invented prices, no credential collection.
+- **Meal Planner** — drag-free weekly grid (breakfast / lunch / dinner / snack), with per-week calorie totals.
+- **Smart Shopping List** — single recipe or aggregated weekly list with amount summing, grouped into supermarket-friendly categories (produce, dairy & protein, pantry, spices).
 - **Cooking Timer** — multiple labeled timers with browser notifications and an audio chime.
 - **Save, Tag & Search** — personal cookbook with tags, search, and filtering.
 - **Share links** — one-click shareable recipe URLs.
@@ -38,8 +36,7 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 - **Backend**: Next.js API Routes
 - **AI**: Google Gemini (`@google/generative-ai`) — `gemini-2.5-flash`
 - **Media**: real photographs resolved server-side (Wikipedia/Wikimedia Commons → TheMealDB → verified YouTube video thumbnails); YouTube video ids verified against the CDN before display
-- **Storage**: JSON files on disk (`data/`) for personal recipes, meal plans, pantry, grocery lists & verified product prices; in-memory store for share links
-- **Deterministic grocery core**: unit normalization/aggregation, ingredient→product matching, package optimization and cost estimates are pure, unit-tested functions (`npm test`)
+- **Storage**: JSON files on disk (`data/`) for personal recipes & meal plans; in-memory store for share links
 
 ## Getting Started
 
@@ -127,8 +124,6 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 | `GET/POST` | `/api/my-recipes` | List / save personal recipes |
 | `PATCH/DELETE` | `/api/my-recipes/[id]` | Update tags / delete |
 | `GET/POST/DELETE` | `/api/meal-plan` | Weekly meal plan |
-| `GET/POST/DELETE` | `/api/interactions` | Learn the household's taste — POST behavioural events, GET the derived profile, DELETE resets learning (saved preferences untouched) |
-| `POST` | `/api/substitutions` | Substitutions for one ingredient — curated table first, schema-validated AI ideas on request, household-restriction filtered |
 | `GET/POST` | `/api/tags` | Tag library |
 | `GET/POST` | `/api/settings` | Misc settings |
 | `GET` | `/api/recipe-media` | Resolve a REAL photo of a dish (`?dish=…&title=…`) — Wikipedia → TheMealDB, cached |
@@ -138,10 +133,6 @@ Enter what's in your kitchen → get **three distinct recipes** (a quick everyda
 ## Architecture Notes
 
 - **`lib/prompts.js`** — the prompt-engineering system: role anchoring, XML-delimited sections, a diversity matrix, anti-hallucination ingredient rules, food-safety constraints, a strict JSON output contract, and the authenticity contract (real established dishes, canonical `dishName`, YouTube ids only when certain).
-- **`lib/personalization.js` + `lib/interactionStore.js`** — the adaptive layer: whitelisted behavioural events (ratings, likes, saves, skips, cooked meals, plan feedback, ingredient rejections) derive a learned taste profile injected into generation as SOFT hints; saved household restrictions are HARD constraints that always outrank learning. See [docs/ADAPTIVE-INTELLIGENCE.md](docs/ADAPTIVE-INTELLIGENCE.md).
-- **`lib/planInsights.js`** — explainable plan-quality analytics: variety / pantry fit / effort / budget / protein-balance dimensions, cross-meal ingredient reuse, leftover and expiry insights; missing data scores null with an honest note instead of an invented number.
-- **`lib/substitutions.js`** — curated Indian-kitchen substitution table (ratio + taste/texture/nutrition/cooking notes, never assumed nutritionally identical) with an AI fallback route; suggestions are filtered against household restrictions.
-- **`lib/restrictionCheck.js`** — the independent restriction gate for every AI surface (generate, planner, substitutions), with gluten-flour and plant-dairy whitelists so coconut milk is never mistaken for dairy.
 - **`lib/recipeUtils.js`** — response normalization (incl. `dishName` / `youtubeVideoId`), serving scaling (with vulgar-fraction formatting), deterministic markdown synthesis, legacy parsing, and shopping categorization.
 - **`lib/video.js`** — YouTube integrity: server-side video verification (thumbnail CDN HEAD check, 24h cache), watch/search URL helpers, thumbnail candidates.
 - **`lib/dishImage.js`** — the real-photo resolver: Wikipedia/Wikimedia Commons summary API (paced, non-food-article guard, allowed-width snapping) → TheMealDB search with word-overlap matching; 24h cache.

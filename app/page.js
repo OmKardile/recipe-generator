@@ -2,65 +2,26 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import nextDynamic from "next/dynamic";
 import IngredientInput from "@/components/IngredientInput";
 import RecipeDisplay from "@/components/RecipeDisplay";
 import RecipeSelector from "@/components/RecipeSelector";
 import RecipeSkeleton from "@/components/RecipeSkeleton";
+import SavedRecipes from "@/components/SavedRecipes";
+import ShoppingList from "@/components/ShoppingList";
+import MealPlanner from "@/components/MealPlanner";
 import ThemeToggle from "@/components/ThemeToggle";
 import CookingTimer from "@/components/CookingTimer";
 import AmbientBackground from "@/components/AmbientBackground";
 import {
-  CookingPot, Sparkles, BookOpen, CalendarDays, ShoppingBasket, Refrigerator,
+  CookingPot, Sparkles, BookOpen, CalendarDays, ShoppingBasket,
   AlertTriangle, RefreshCw, Leaf, Carrot, Citrus,
 } from "lucide-react";
-
-/* Heavy tab panels are code-split and mounted only when their tab is first
-   opened. Tab-exclusive code (~120 KB: planner, grocery + DMart matching,
-   pantry, saved-recipes) leaves the initial payload, and none of their API
-   requests fire until the tab is actually visited. Once a chunk has loaded
-   it stays cached in the browser, so revisiting a tab is instant. */
-function TabPanelLoading() {
-  return (
-    <div
-      className="w-full max-w-3xl mx-auto mt-8 animate-pulse"
-      role="status"
-      aria-label="Loading section…"
-    >
-      <div className="h-9 w-52 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 mb-6" />
-      <div className="space-y-3.5">
-        <div className="h-4 w-full rounded bg-gray-100 dark:bg-gray-800" />
-        <div className="h-4 w-11/12 rounded bg-gray-100 dark:bg-gray-800" />
-        <div className="h-4 w-8/12 rounded bg-gray-100 dark:bg-gray-800" />
-        <div className="h-4 w-10/12 rounded bg-gray-100 dark:bg-gray-800" />
-      </div>
-    </div>
-  );
-}
-
-const SavedRecipes = nextDynamic(() => import("@/components/SavedRecipes"), {
-  ssr: false,
-  loading: TabPanelLoading,
-});
-const PlannerView = nextDynamic(() => import("@/components/planner/PlannerView"), {
-  ssr: false,
-  loading: TabPanelLoading,
-});
-const PantryManager = nextDynamic(() => import("@/components/pantry/PantryManager"), {
-  ssr: false,
-  loading: TabPanelLoading,
-});
-const GroceryView = nextDynamic(() => import("@/components/grocery/GroceryView"), {
-  ssr: false,
-  loading: TabPanelLoading,
-});
 
 const TABS = [
   { key: "generate", label: "Generate", icon: CookingPot },
   { key: "recipes", label: "My Recipes", icon: BookOpen },
   { key: "mealplan", label: "Meal Plan", icon: CalendarDays },
-  { key: "pantry", label: "Pantry", icon: Refrigerator },
-  { key: "grocery", label: "Grocery", icon: ShoppingBasket },
+  { key: "shopping", label: "Shopping", icon: ShoppingBasket },
 ];
 
 export default function Home() {
@@ -72,7 +33,6 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [includeNutrition, setIncludeNutrition] = useState(false);
   const [activeTab, setActiveTab] = useState("generate");
-  const [genWarnings, setGenWarnings] = useState([]);
   const tabRefs = useRef([]);
 
   const prefersReducedMotion = useReducedMotion();
@@ -98,7 +58,6 @@ export default function Home() {
     setError(null);
     setRecipes([]);
     setSelectedRecipeIndex(null);
-    setGenWarnings([]);
 
     try {
       const response = await fetch("/api/generate", {
@@ -114,7 +73,6 @@ export default function Home() {
       }
 
       setRecipes(data.recipes || []);
-      setGenWarnings(Array.isArray(data.warnings) ? data.warnings : []);
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
@@ -265,21 +223,6 @@ export default function Home() {
                   </motion.div>
                 )}
 
-                {genWarnings.length > 0 && !loading && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-xl text-sm border border-amber-200 dark:border-amber-700 max-w-2xl mx-auto flex gap-2"
-                    role="status"
-                  >
-                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                    <span>
-                      <strong className="font-semibold">Household guard:</strong>{" "}
-                      {genWarnings.join(" · ")}
-                    </span>
-                  </motion.div>
-                )}
-
                 {recipes.length > 0 && selectedRecipeIndex === null && (
                   <RecipeSelector
                     recipes={recipes}
@@ -313,18 +256,10 @@ export default function Home() {
 
             {activeTab === "recipes" && <SavedRecipes />}
 
-            {activeTab === "mealplan" && (
-              <PlannerView onGoToGrocery={() => setActiveTab("grocery")} />
-            )}
+            {activeTab === "mealplan" && <MealPlanner />}
 
-            {activeTab === "pantry" && <PantryManager />}
-
-            {activeTab === "grocery" && (
-              <GroceryView
-                currentRecipe={selectedRecipe?.recipe}
-                currentIngredients={ingredients}
-                onGoToPlanner={() => setActiveTab("mealplan")}
-              />
+            {activeTab === "shopping" && (
+              <ShoppingList currentRecipe={selectedRecipe?.recipe} currentIngredients={ingredients} />
             )}
           </motion.div>
         </AnimatePresence>

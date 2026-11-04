@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Users, Flame, Check, MapPin, Gauge, Zap, Heart, Crown, CookingPot, X } from 'lucide-react';
+import { Clock, Users, Flame, Check, MapPin, Gauge, Zap, Heart, Crown, CookingPot } from 'lucide-react';
 import MediaImage from './MediaImage';
 import useRecipeMedia from '@/hooks/useRecipeMedia';
 import { youtubeThumbnailSources } from '@/lib/video';
@@ -47,7 +46,7 @@ function fallbackPreview(recipeText) {
   return description.trim() || 'A delicious recipe.';
 }
 
-function RecipeCard({ recipe, index, isSelected, onSelect, onSkip, skipped }) {
+function RecipeCard({ recipe, index, isSelected, onSelect }) {
   const preview = recipe.description || fallbackPreview(recipe.recipe);
   const totalTime = recipe.totalTimeMinutes;
   const role = ROLE_META[index] || ROLE_META[1];
@@ -65,24 +64,21 @@ function RecipeCard({ recipe, index, isSelected, onSelect, onSkip, skipped }) {
   ];
 
   return (
-    <div className="relative">
-      <motion.button
-        custom={index}
-        variants={cardVariants}
-        initial="hidden"
-        animate="visible"
-        whileHover={{ y: -6 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => onSelect(index)}
-        aria-pressed={isSelected}
-        className={`text-left w-full p-4 rounded-2xl border-2 transition-all group ${
-          skipped
-            ? 'opacity-50 saturate-[0.6] border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
-            : isSelected
-              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-xl shadow-emerald-500/10'
-              : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-xl'
-        }`}
-      >
+    <motion.button
+      custom={index}
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      whileHover={{ y: -6 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => onSelect(index)}
+      aria-pressed={isSelected}
+      className={`text-left p-4 rounded-2xl border-2 transition-colors group ${
+        isSelected
+          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 shadow-xl shadow-emerald-500/10'
+          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-xl'
+      }`}
+    >
       {/* Real media header */}
       <div className="mb-3 overflow-hidden rounded-xl">
         {loading ? (
@@ -95,10 +91,7 @@ function RecipeCard({ recipe, index, isSelected, onSelect, onSkip, skipped }) {
           </div>
         ) : (
           <MediaImage
-            // No per-source key: the card is keyed by recipe.id above, and
-            // MediaImage resets its fallback chain on source-list changes
-            // internally — so the video-still → resolved-photo handoff is a
-            // crossfade instead of a remount flash.
+            key={`${recipe.id}-${thumbSources[0] || 'none'}`}
             sources={thumbSources}
             alt={`Real photo of ${recipe.dishName || recipe.title}`}
             rounded="rounded-xl"
@@ -172,58 +165,12 @@ function RecipeCard({ recipe, index, isSelected, onSelect, onSkip, skipped }) {
           </span>
         )}
       </div>
-      </motion.button>
-
-      {/* Skip affordance — an explicit "not today" signal for the learned
-          profile. Sibling of the card button (never nested interactive
-          elements), overlaying the card corner. */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onSkip(index);
-        }}
-        aria-pressed={skipped}
-        aria-label={skipped ? `Undo skip: ${recipe.title}` : `Skip: ${recipe.title} — not interested today`}
-        title={skipped ? 'Undo skip' : 'Not interested today'}
-        className={`absolute top-2.5 right-2.5 z-10 flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold backdrop-blur-sm transition-colors ${
-          skipped
-            ? 'bg-gray-900/75 text-white'
-            : 'bg-white/85 dark:bg-gray-900/60 text-gray-400 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/40 hover:text-red-500'
-        }`}
-      >
-        {skipped ? 'Skipped' : <X size={13} />}
-      </button>
-    </div>
+    </motion.button>
   );
 }
 
 export default function RecipeSelector({ recipes, onSelect, selectedIndex }) {
-  const [skipped, setSkipped] = useState(new Set());
-
   if (!recipes || recipes.length === 0) return null;
-
-  /** Explicit negative signal — teaches the engine what NOT to suggest. */
-  const handleSkip = (index) => {
-    const recipe = recipes[index];
-    const next = new Set(skipped);
-    if (next.has(index)) {
-      next.delete(index);
-      setSkipped(next);
-      return; // undoing a skip records nothing
-    }
-    next.add(index);
-    setSkipped(next);
-    fetch('/api/interactions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'recipe_skipped',
-        title: recipe.title,
-        dishName: recipe.dishName || '',
-        cuisine: recipe.cuisine || '',
-      }),
-    }).catch(() => {});
-  };
 
   return (
     <motion.div
@@ -247,8 +194,6 @@ export default function RecipeSelector({ recipes, onSelect, selectedIndex }) {
             index={index}
             isSelected={selectedIndex === index}
             onSelect={onSelect}
-            skipped={skipped.has(index)}
-            onSkip={handleSkip}
           />
         ))}
       </div>
