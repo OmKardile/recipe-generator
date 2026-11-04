@@ -7,6 +7,7 @@ import { verifyVideoExists } from '@/lib/video';
 import { getPantry } from '@/lib/pantryStore';
 import { getPlan, savePlan } from '@/lib/mealPlanStore';
 import { loadPersonalizationContext } from '@/lib/personalizationServer';
+import { analyzePlanQuality } from '@/lib/planInsights';
 import { rateLimit, clientIp, startGeneration, endGeneration } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -202,6 +203,7 @@ export async function POST(request, { params }) {
       plan.warnings = warnings;
       plan.model = MODEL_NAME;
       plan.regeneratedAt = new Date().toISOString();
+      plan.insights = analyzePlanQuality({ plan, pantry, household });
       await savePlan(plan);
       return NextResponse.json({ plan, warnings });
     } finally {

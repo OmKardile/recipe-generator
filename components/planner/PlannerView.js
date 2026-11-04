@@ -8,6 +8,8 @@ import {
   AlertTriangle, Flame, XCircle, ThumbsUp, ThumbsDown,
 } from 'lucide-react';
 import HouseholdProfile from '@/components/household/HouseholdProfile';
+import PlanInsights from '@/components/planner/PlanInsights';
+import { analyzePlanQuality } from '@/lib/planInsights';
 import { useRecipes } from '@/context/RecipeContext';
 
 /**
@@ -73,6 +75,31 @@ export default function PlannerView({ onGoToGrocery }) {
   const [moveSource, setMoveSource] = useState(null); // { date, mealType }
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [planVoted, setPlanVoted] = useState(null); // 'up' | 'down' after plan feedback
+
+  // Lightweight context for live plan-insight recompute (household budget,
+  // current pantry stock) — refreshed per plan and after pantry consumption.
+  const [householdLite, setHouseholdLite] = useState(null);
+  const [pantryLite, setPantryLite] = useState([]);
+
+  const refreshInsightContext = useCallback(() => {
+    fetch('/api/household')
+      .then((r) => r.json())
+      .then((d) => setHouseholdLite(d.household || {}))
+      .catch(() => {});
+    fetch('/api/pantry')
+      .then((r) => r.json())
+      .then((d) => setPantryLite(d.pantry || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (activePlanId) refreshInsightContext();
+  }, [activePlanId, refreshInsightContext]);
+
+  const insights = useMemo(
+    () => (plan ? analyzePlanQuality({ plan, pantry: pantryLite, household: householdLite }) : null),
+    [plan, pantryLite, householdLite]
+  );
 
   const set = (field, value) => setConfig((c) => ({ ...c, [field]: value }));
 
@@ -272,6 +299,7 @@ export default function PlannerView({ onGoToGrocery }) {
       await fetch(`/api/planner/${plan.id}`)
         .then((r) => r.json())
         .then((d) => d.plan && setPlan(d.plan));
+      refreshInsightContext(); // pantry quantities just changed
       const skipped = data.skipped?.length
         ? ` (${data.skipped.length} pantry line(s) not deducted — unit mismatch)`
         : '';
@@ -679,6 +707,9 @@ export default function PlannerView({ onGoToGrocery }) {
               <span className="text-emerald-600 dark:text-emerald-400">Thanks — future plans will consider it.</span>
             )}
           </div>
+
+          {/* Explainable plan-quality panel (recomputed live as meals change) */}
+          <PlanInsights insights={insights} />
 
           {plan.warnings?.length > 0 && (
             <div className="p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-lg text-sm border border-amber-200 dark:border-amber-700 flex gap-2" role="status">

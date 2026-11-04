@@ -7,6 +7,7 @@ import { verifyVideoExists } from '@/lib/video';
 import { getPantry } from '@/lib/pantryStore';
 import { loadPersonalizationContext } from '@/lib/personalizationServer';
 import { recordInteractions } from '@/lib/interactionStore';
+import { analyzePlanQuality } from '@/lib/planInsights';
 import {
   buildPlanSkeleton,
   applyGeneratedMeals,
@@ -252,6 +253,10 @@ export async function POST(request) {
         warnings: warnings.filter(Boolean),
         model: MODEL_NAME,
       };
+
+      // Explainable plan-quality snapshot at generation time (PlannerView
+      // recomputes live as the user edits meals).
+      plan.insights = analyzePlanQuality({ plan, pantry, household });
 
       await savePlan(plan);
 
