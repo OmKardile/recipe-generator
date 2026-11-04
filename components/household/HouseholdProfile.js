@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, ChevronDown, Save, Check } from 'lucide-react';
+import { Users, ChevronDown, Save, Check, Sparkles, RotateCcw } from 'lucide-react';
+import { profileHeadline } from '@/lib/personalization';
 
 /**
  * Household profile — family size, servings, diet, allergies (hard
@@ -42,12 +43,41 @@ export default function HouseholdProfile({ compact = false }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
 
+  // Learned taste profile — DERIVED from behaviour, never written into the
+  // saved household fields above, and always resettable.
+  const [learned, setLearned] = useState(null);
+  const [resetArmed, setResetArmed] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
+
   useEffect(() => {
     fetch('/api/household')
       .then((r) => r.json())
       .then((d) => setHousehold(d.household || {}))
       .catch(() => setError('Could not load household preferences.'));
   }, []);
+
+  useEffect(() => {
+    fetch('/api/interactions')
+      .then((r) => r.json())
+      .then((d) => setLearned(d.profile || null))
+      .catch(() => {}); // learning state is optional UI
+  }, []);
+
+  const resetLearning = async () => {
+    if (!resetArmed) {
+      setResetArmed(true);
+      return;
+    }
+    try {
+      await fetch('/api/interactions', { method: 'DELETE' });
+      setLearned(null);
+      setResetArmed(false);
+      setResetDone(true);
+      setTimeout(() => setResetDone(false), 2500);
+    } catch {
+      /* keep the old profile on failure */
+    }
+  };
 
   const set = (field, value) => setHousehold((h) => ({ ...h, [field]: value }));
 
@@ -316,6 +346,72 @@ export default function HouseholdProfile({ compact = false }) {
                 {saved ? <Check size={15} /> : <Save size={15} />}
                 {saved ? 'Saved' : saving ? 'Saving…' : 'Save household profile'}
               </button>
+
+              {/* Learned taste profile — derived, displayed, resettable.
+                  Explicit restrictions above ALWAYS outrank what is learned. */}
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles size={15} className="text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Learned taste profile
+                  </span>
+                  <span className="text-[11px] text-gray-400 dark:text-gray-500">AI-derived, reset anytime</span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  {profileHeadline(learned)}
+                </p>
+
+                {learned && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {(learned.cuisines || []).map((c) => (
+                      <span key={`c-${c.name}`} className="px-2 py-1 rounded-full text-[11px] font-medium bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                        {c.name}
+                      </span>
+                    ))}
+                    {(learned.likedIngredients || []).slice(0, 5).map((i) => (
+                      <span key={`li-${i.name}`} className="px-2 py-1 rounded-full text-[11px] font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                        + {i.name}
+                      </span>
+                    ))}
+                    {(learned.rejectedIngredients || []).slice(0, 4).map((i) => (
+                      <span key={`ri-${i.name}`} className="px-2 py-1 rounded-full text-[11px] font-medium bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                        avoids {i.name}
+                      </span>
+                    ))}
+                    {learned.typicalCookMinutes && (
+                      <span className="px-2 py-1 rounded-full text-[11px] font-medium bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300">
+                        ~{learned.typicalCookMinutes} min meals
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={resetLearning}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                  >
+                    {resetDone ? <Check size={13} /> : <RotateCcw size={13} />}
+                    {resetDone
+                      ? 'Learning reset'
+                      : resetArmed
+                        ? 'Tap again to confirm reset'
+                        : 'Reset learned preferences'}
+                  </button>
+                  {resetArmed && !resetDone && (
+                    <button
+                      onClick={() => setResetArmed(false)}
+                      className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-2">
+                  Learning only adds soft hints — your saved allergies, diet and dislikes are
+                  enforced absolutely and are never modified by what the app learns.
+                </p>
+              </div>
             </div>
           </motion.div>
         )}

@@ -4,8 +4,9 @@ import { buildMealPlanPrompt } from '@/lib/mealPlanPrompts';
 import { normalizeRecipe } from '@/lib/recipeUtils';
 import { validateMealAgainstRestrictions } from '@/lib/restrictionCheck';
 import { verifyVideoExists } from '@/lib/video';
-import { getHousehold } from '@/lib/householdStore';
 import { getPantry } from '@/lib/pantryStore';
+import { loadPersonalizationContext } from '@/lib/personalizationServer';
+import { recordInteractions } from '@/lib/interactionStore';
 import {
   buildPlanSkeleton,
   applyGeneratedMeals,
@@ -81,14 +82,14 @@ function parsePlanJson(text) {
 }
 
 /** Normalize + restriction-validate one raw AI meal; returns {recipe, warning?}. */
-function validateMeal(rawMeal, household) {
+function validateMeal(rawMeal, restrictions) {
   const recipe = normalizeRecipe(rawMeal, 0);
   if (!recipe) return { recipe: null, warning: 'AI returned an unusable recipe' };
 
   const check = validateMealAgainstRestrictions(recipe, {
-    diet: household.diet === 'none' && household.customDiet ? household.customDiet : household.diet,
-    allergies: household.allergies,
-    dislikes: household.dislikes,
+    diet: restrictions.diet,
+    allergies: restrictions.allergies,
+    dislikes: restrictions.dislikes,
   });
   if (!check.ok) {
     // Allergies/diet are non-negotiable: drop the meal, keep the plan honest.
@@ -150,7 +151,10 @@ export async function POST(request) {
     }
 
     try {
-      const [household, pantry] = await Promise.all([getHousehold(), getPantry()]);
+      const [{ household, restrictions, learnedBlock }, pantry] = await Promise.all([
+        loadPersonalizationContext(),
+        getPantry(),
+      ]);
 
       const skeleton = buildPlanSkeleton({
         startDate: config.startDate,
@@ -170,6 +174,7 @@ export async function POST(request) {
           days: skeleton.days.map(({ date, cook, weekday }) => ({ date, cook, weekday })),
         },
         pantry,
+        learnedBlock,
       });
 
       const model = getModel();
@@ -199,7 +204,7 @@ export async function POST(request) {
               meals[slot] = null;
               continue;
             }
-            const { recipe, warning } = validateMeal(rawMeal, household);
+            const { recipe, warning } = validateMeal(rawMeal, restrictions);
             if (!recipe) {
               meals[slot] = { recipe: null, warning };
               continue;
@@ -249,6 +254,25 @@ export async function POST(request) {
       };
 
       await savePlan(plan);
+
+      // Behavioural signal: which dishes the plan OFFERED (exposure baseline;
+      // cooking / feedback events are the real endorsements).
+      const offered = [];
+      for (const day of plan.days) {
+        for (const [slot, meal] of Object.entries(day.meals || {})) {
+          if (meal?.recipe) {
+            offered.push({
+              type: 'recipe_generated',
+              title: meal.recipe.title,
+              dishName: meal.recipe.dishName,
+              cuisine: meal.recipe.cuisine,
+              mealType: slot,
+            });
+          }
+        }
+      }
+      recordInteractions(offered).catch(() => {}); // telemetry must never fail the plan
+
       return NextResponse.json({ plan });
     } finally {
       endGeneration(genKey);

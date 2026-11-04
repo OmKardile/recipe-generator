@@ -35,6 +35,7 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [includeNutrition, setIncludeNutrition] = useState(false);
   const [activeTab, setActiveTab] = useState("generate");
+  const [genWarnings, setGenWarnings] = useState([]);
   const tabRefs = useRef([]);
 
   const prefersReducedMotion = useReducedMotion();
@@ -60,6 +61,7 @@ export default function Home() {
     setError(null);
     setRecipes([]);
     setSelectedRecipeIndex(null);
+    setGenWarnings([]);
 
     try {
       const response = await fetch("/api/generate", {
@@ -75,6 +77,7 @@ export default function Home() {
       }
 
       setRecipes(data.recipes || []);
+      setGenWarnings(Array.isArray(data.warnings) ? data.warnings : []);
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
     } finally {
@@ -222,6 +225,21 @@ export default function Home() {
                       <RefreshCw size={14} />
                       Try Again
                     </button>
+                  </motion.div>
+                )}
+
+                {genWarnings.length > 0 && !loading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-xl text-sm border border-amber-200 dark:border-amber-700 max-w-2xl mx-auto flex gap-2"
+                    role="status"
+                  >
+                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                    <span>
+                      <strong className="font-semibold">Household guard:</strong>{" "}
+                      {genWarnings.join(" · ")}
+                    </span>
                   </motion.div>
                 )}
 

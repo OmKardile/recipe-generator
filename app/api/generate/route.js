@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getModel, recipeGenerationConfig, MODEL_NAME } from "@/lib/gemini";
 import { buildRecipePrompt } from "@/lib/prompts";
 import { verifyVideoExists, youtubeWatchUrl } from "@/lib/video";
+import { validateMealAgainstRestrictions } from "@/lib/restrictionCheck";
+import { loadPersonalizationContext } from "@/lib/personalizationServer";
+import { recordInteractions } from "@/lib/interactionStore";
 import {
   parseStructuredResponse,
   parseLegacyMarkdown,
@@ -109,8 +112,13 @@ export async function POST(request) {
     }
     const { ingredients, preferences, includeNutrition } = validated;
 
+    // Household profile + learned taste profile — restrictions are HARD
+    // constraints (same gate as the planner), learned hints are soft.
+    const { restrictions, learnedBlock } = await loadPersonalizationContext();
+    const restrictionWarnings = [];
+
     const model = getModel(); // throws MissingApiKeyError when unconfigured
-    const prompt = buildRecipePrompt({ ingredients, preferences, includeNutrition });
+    const prompt = buildRecipePrompt({ ingredients, preferences, includeNutrition, restrictions, learnedBlock });
 
     const attemptGeneration = (timeoutMs) =>
       withTimeout(
@@ -168,6 +176,32 @@ export async function POST(request) {
       );
     }
 
+    // HARD RESTRICTION GATE — identical guarantee to the meal planner: the
+    // prompt asks, this enforces. Allergies/diet/dislikes from the SAVED
+    // household profile drop a recipe entirely, regardless of any learned
+    // preference. Dropped recipes are reported honestly, never hidden.
+    if (restrictions.allergies?.length || (restrictions.diet && restrictions.diet !== "none") || restrictions.dislikes?.length) {
+      const survivors = [];
+      for (const recipe of recipes) {
+        const check = validateMealAgainstRestrictions(recipe, restrictions);
+        if (check.ok) survivors.push(recipe);
+        else restrictionWarnings.push(`Skipped "${recipe.title}" — ${check.violations[0]}`);
+      }
+      if (survivors.length === 0) {
+        const droppedTitles = recipes.map((r) => r.title).join(", ");
+        return NextResponse.json(
+          {
+            error:
+              `Every suggestion ("${droppedTitles}") conflicted with your saved household restrictions — ` +
+              restrictionWarnings.map((w) => w.split(" — ")[1]).join("; ") +
+              ". Adjust the household profile or your ingredients and try again.",
+          },
+          { status: 422 }
+        );
+      }
+      recipes = survivors;
+    }
+
     // REAL-VIDEO INTEGRITY: verify every proposed YouTube id against the
     // thumbnail CDN and drop the ones that don't exist. The client only ever
     // sees ids that point at real, watchable videos.
@@ -187,7 +221,18 @@ export async function POST(request) {
       recipe: recipe.rawMarkdown || renderRecipeMarkdown(recipe),
     }));
 
-    return NextResponse.json({ recipes: payload, model: MODEL_NAME });
+    // Behavioural signal: what the household was OFFERED (exposure baseline
+    // for the learned profile — saves/cooks/ratings are the endorsements).
+    recordInteractions(
+      payload.map((r) => ({
+        type: "recipe_generated",
+        title: r.title,
+        dishName: r.dishName,
+        cuisine: r.cuisine,
+      }))
+    ).catch(() => {}); // telemetry must never fail the request
+
+    return NextResponse.json({ recipes: payload, model: MODEL_NAME, warnings: restrictionWarnings });
   } catch (error) {
     console.error("Error generating recipe:", error?.message || error);
     const { status, message } = friendlyError(error);

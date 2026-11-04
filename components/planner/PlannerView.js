@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarDays, Sparkles, Lock, Unlock, RotateCw, X, Plus, CheckCircle2,
   ChevronLeft, ChevronRight, Trash2, Copy, ShoppingBasket, ChefHat,
-  AlertTriangle, Flame, XCircle,
+  AlertTriangle, Flame, XCircle, ThumbsUp, ThumbsDown,
 } from 'lucide-react';
 import HouseholdProfile from '@/components/household/HouseholdProfile';
 import { useRecipes } from '@/context/RecipeContext';
@@ -72,8 +72,18 @@ export default function PlannerView({ onGoToGrocery }) {
   const [picker, setPicker] = useState(null); // { date, mealType }
   const [moveSource, setMoveSource] = useState(null); // { date, mealType }
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [planVoted, setPlanVoted] = useState(null); // 'up' | 'down' after plan feedback
 
   const set = (field, value) => setConfig((c) => ({ ...c, [field]: value }));
+
+  /** Personalization telemetry — fire-and-forget, never blocks the UI. */
+  const trackEvent = (event) => {
+    fetch('/api/interactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(event),
+    }).catch(() => {});
+  };
 
   const toggleSlot = (s) => {
     setConfig((c) => ({
@@ -117,6 +127,7 @@ export default function PlannerView({ onGoToGrocery }) {
       return;
     }
     let cancelled = false;
+    setPlanVoted(null); // feedback is per-plan
     fetch(`/api/planner/${activePlanId}`)
       .then((r) => r.json())
       .then((d) => {
@@ -175,6 +186,19 @@ export default function PlannerView({ onGoToGrocery }) {
     const key = date && mealType ? `${date}|${mealType}` : null;
     if (key) setBusySlot(key);
     setError(null);
+    // Replacing one meal is a mild negative signal for that dish.
+    if (scope === 'meal' && date && mealType) {
+      const old = plan.days.find((d) => d.date === date)?.meals?.[mealType];
+      if (old?.recipe) {
+        trackEvent({
+          type: 'meal_replaced',
+          title: old.recipe.title,
+          dishName: old.recipe.dishName || '',
+          cuisine: old.recipe.cuisine || '',
+          mealType,
+        });
+      }
+    }
     try {
       const res = await fetch(`/api/planner/${plan.id}/regenerate`, {
         method: 'POST',
@@ -190,6 +214,17 @@ export default function PlannerView({ onGoToGrocery }) {
     } finally {
       if (key) setBusySlot(null);
     }
+  };
+
+  /** Plan-level feedback → personalization engine (up = 5, down = 1). */
+  const votePlan = (direction) => {
+    if (!plan || planVoted === direction) return;
+    setPlanVoted(direction);
+    trackEvent({
+      type: 'plan_feedback',
+      rating: direction === 'up' ? 5 : 1,
+      note: plan.name || '',
+    });
   };
 
   const patch = async (payload) => {
@@ -213,6 +248,7 @@ export default function PlannerView({ onGoToGrocery }) {
   const cookMeal = async (date, mealType) => {
     if (!plan) return;
     setError(null);
+    const meal = plan.days.find((d) => d.date === date)?.meals?.[mealType];
     try {
       const res = await fetch('/api/pantry/consume', {
         method: 'POST',
@@ -221,6 +257,18 @@ export default function PlannerView({ onGoToGrocery }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not record cooking.');
+      // Cooking a planned meal is the strongest endorsement signal.
+      if (meal?.recipe) {
+        trackEvent({
+          type: 'recipe_cooked',
+          title: meal.recipe.title,
+          dishName: meal.recipe.dishName || '',
+          cuisine: meal.recipe.cuisine || '',
+          mealType,
+          ingredients: (meal.recipe.ingredients || []).map((i) => i.name),
+          totalTimeMinutes: meal.recipe.totalTimeMinutes || null,
+        });
+      }
       await fetch(`/api/planner/${plan.id}`)
         .then((r) => r.json())
         .then((d) => d.plan && setPlan(d.plan));
@@ -598,6 +646,38 @@ export default function PlannerView({ onGoToGrocery }) {
                 <ShoppingBasket size={15} /> Grocery list
               </button>
             </div>
+          </div>
+
+          {/* Plan-level feedback — trains future plan generation. */}
+          <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <span className="font-semibold">How did this plan work out?</span>
+            <button
+              onClick={() => votePlan('up')}
+              aria-pressed={planVoted === 'up'}
+              aria-label="This plan worked well"
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full font-medium transition-colors ${
+                planVoted === 'up'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-gray-600 hover:text-emerald-600'
+              }`}
+            >
+              <ThumbsUp size={13} /> Good plan
+            </button>
+            <button
+              onClick={() => votePlan('down')}
+              aria-pressed={planVoted === 'down'}
+              aria-label="This plan did not work well"
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full font-medium transition-colors ${
+                planVoted === 'down'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-gray-600 hover:text-red-500'
+              }`}
+            >
+              <ThumbsDown size={13} /> Needs work
+            </button>
+            {planVoted && (
+              <span className="text-emerald-600 dark:text-emerald-400">Thanks — future plans will consider it.</span>
+            )}
           </div>
 
           {plan.warnings?.length > 0 && (

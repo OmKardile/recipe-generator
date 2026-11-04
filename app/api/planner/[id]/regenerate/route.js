@@ -4,9 +4,9 @@ import { buildMealPlanPrompt } from '@/lib/mealPlanPrompts';
 import { normalizeRecipe } from '@/lib/recipeUtils';
 import { validateMealAgainstRestrictions } from '@/lib/restrictionCheck';
 import { verifyVideoExists } from '@/lib/video';
-import { getHousehold } from '@/lib/householdStore';
 import { getPantry } from '@/lib/pantryStore';
 import { getPlan, savePlan } from '@/lib/mealPlanStore';
+import { loadPersonalizationContext } from '@/lib/personalizationServer';
 import { rateLimit, clientIp, startGeneration, endGeneration } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
@@ -89,7 +89,10 @@ export async function POST(request, { params }) {
       const plan = await getPlan(id);
       if (!plan) return NextResponse.json({ error: 'Meal plan not found.' }, { status: 404 });
 
-      const [household, pantry] = await Promise.all([getHousehold(), getPantry()]);
+      const [{ household, restrictions, learnedBlock }, pantry] = await Promise.all([
+        loadPersonalizationContext(),
+        getPantry(),
+      ]);
 
       // Determine which days get refilled.
       const refillDays =
@@ -139,6 +142,7 @@ export async function POST(request, { params }) {
         pantry,
         recentDishNames: avoidDishNames,
         lockedMeals,
+        learnedBlock,
       });
 
       const model = getModel();
@@ -155,11 +159,6 @@ export async function POST(request, { params }) {
       }
 
       const warnings = [];
-      const restrictions = {
-        diet: household.diet === 'none' && household.customDiet ? household.customDiet : household.diet,
-        allergies: household.allergies,
-        dislikes: household.dislikes,
-      };
 
       for (const genDay of parsed.plan.days) {
         const day = plan.days.find((d) => d.date === genDay.date);

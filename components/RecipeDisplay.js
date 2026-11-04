@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import {
   Clock, Users, Flame, ChefHat, Info, Bookmark, Check, Share2, Link2,
   Copy, ListChecks, RotateCcw, MapPin, Gauge, Carrot, CookingPot, Lightbulb, Activity,
+  ThumbsUp, ThumbsDown, Star, UtensilsCrossed,
 } from 'lucide-react';
 import { useRecipes } from '@/context/RecipeContext';
 import { ingredientLine, formatAmount } from '@/lib/recipeUtils';
@@ -32,6 +33,11 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
   const [cookMode, setCookMode] = useState(false);
   const [checkedIngredients, setCheckedIngredients] = useState(new Set());
   const [doneSteps, setDoneSteps] = useState(new Set());
+
+  // Taste feedback state — every signal feeds the personalization engine.
+  const [rating, setRating] = useState(null);
+  const [reaction, setReaction] = useState(null);
+  const [cooked, setCooked] = useState(false);
 
   const recipe = data?.recipe;
   const structured = data?.structured && data.ingredients?.length ? data : null;
@@ -61,6 +67,43 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
     if (next.has(index)) next.delete(index);
     else next.add(index);
     setter(next);
+  };
+
+  /* Personalization telemetry — fire-and-forget, never blocks the UI. */
+  const trackEvent = (event) => {
+    fetch('/api/interactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(event),
+    }).catch(() => {});
+  };
+
+  const eventMeta = () => ({
+    title: data.title,
+    dishName,
+    cuisine: structured?.cuisine || '',
+    ingredients: structured?.ingredients?.map((i) => i.name) || ingredients || [],
+    totalTimeMinutes: structured?.totalTimeMinutes || null,
+  });
+
+  const rate = (n) => {
+    setRating(n);
+    trackEvent({ type: 'recipe_rated', rating: n, ...eventMeta() });
+  };
+
+  const react = (r) => {
+    if (reaction === r) {
+      setReaction(null);
+      return;
+    }
+    setReaction(r);
+    trackEvent({ type: r === 'like' ? 'recipe_liked' : 'recipe_disliked', ...eventMeta() });
+  };
+
+  const markCooked = () => {
+    if (cooked) return;
+    setCooked(true);
+    trackEvent({ type: 'recipe_cooked', mealType: 'recipe', ...eventMeta() });
   };
 
   const handleSave = () => {
@@ -94,6 +137,7 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
         : null,
     });
     setSaved(true);
+    trackEvent({ type: 'recipe_saved', ...eventMeta() });
   };
 
   const writeClipboard = async (text) => {
@@ -243,6 +287,74 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                 {structured.description}
               </p>
             )}
+          </div>
+
+          {/* Taste feedback — teaches the learned profile (resettable in the
+              household profile; restrictions always outrank what is learned) */}
+          <div className="mb-8 flex flex-wrap items-center gap-2 px-1">
+            <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 mr-1">
+              Teach the app your taste
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => react('like')}
+                aria-pressed={reaction === 'like'}
+                aria-label="I liked this recipe"
+                title="Liked it"
+                className={`p-2 rounded-full transition-colors ${
+                  reaction === 'like'
+                    ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-gray-600 hover:text-emerald-600 dark:hover:text-emerald-400'
+                }`}
+              >
+                <ThumbsUp size={15} />
+              </button>
+              <button
+                onClick={() => react('dislike')}
+                aria-pressed={reaction === 'dislike'}
+                aria-label="I did not like this recipe"
+                title="Not for me"
+                className={`p-2 rounded-full transition-colors ${
+                  reaction === 'dislike'
+                    ? 'bg-red-500 text-white shadow-sm shadow-red-500/30'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-gray-600 hover:text-red-500'
+                }`}
+              >
+                <ThumbsDown size={15} />
+              </button>
+            </div>
+            <div className="flex items-center gap-0.5 pl-1" role="group" aria-label="Rate this recipe out of five">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => rate(n)}
+                  aria-label={`Rate ${n} star${n > 1 ? 's' : ''}`}
+                  className="p-1 rounded transition-transform hover:scale-110"
+                >
+                  <Star
+                    size={16}
+                    className={
+                      n <= (rating || 0)
+                        ? 'fill-amber-400 text-amber-400'
+                        : 'text-gray-300 dark:text-gray-600'
+                    }
+                  />
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={markCooked}
+              disabled={cooked}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                cooked
+                  ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-600 hover:text-emerald-700 dark:hover:text-emerald-300'
+              }`}
+              aria-pressed={cooked}
+            >
+              {cooked ? <Check size={13} /> : <UtensilsCrossed size={13} />}
+              {cooked ? 'Cooked' : 'Cooked it'}
+            </button>
           </div>
 
           {structured ? (
