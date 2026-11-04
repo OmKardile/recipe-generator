@@ -72,3 +72,34 @@ test('custom free-text allergies still block', () => {
   const check = validateMealAgainstRestrictions(meal(['banana flower', 'oil']), { allergies: ['banana'] })
   assert.equal(check.ok, false)
 })
+
+test('plant dairy analogues are not flagged as dairy allergens', () => {
+  const check = (ingredients) =>
+    validateMealAgainstRestrictions(
+      { title: 'Curry', dishName: '', ingredients: ingredients.map((name) => ({ name })) },
+      { allergies: ['dairy'] }
+    )
+  assert.equal(check(['coconut milk', 'rice']).ok, true)
+  assert.equal(check(['Soy milk (unsweetened)']).ok, true)
+  assert.equal(check(['peanut butter']).ok, true)
+  assert.equal(check(['Coconut cream']).ok, true)
+  // Real dairy is still blocked
+  assert.equal(check(['milk', 'rice']).ok, false)
+  assert.equal(check(['Paneer']).ok, false)
+  assert.equal(check(['condensed milk']).ok, false)
+})
+
+test('vegan meals with plant dairy analogues pass; real dairy still blocked', () => {
+  const check = (ingredients, diet = 'vegan') =>
+    validateMealAgainstRestrictions(
+      { title: 'Curry', dishName: '', ingredients: ingredients.map((name) => ({ name })) },
+      { diet }
+    )
+  assert.equal(check(['coconut milk', 'tofu', 'rice']).ok, true)
+  assert.equal(check(['Soy yogurt', 'besan']).ok, true)
+  assert.equal(check(['oat milk']).ok, true)
+  assert.equal(check(['oat milk with honey']).ok, false) // honey still caught
+  assert.equal(check(['Paneer', 'rice']).ok, false)
+  assert.equal(check(['milk']).ok, false)
+  assert.equal(check(['ghee']).ok, false)
+})
