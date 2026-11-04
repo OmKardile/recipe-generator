@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Plus, X, Timer, Volume2 } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import { Play, Pause, RotateCcw, Plus, X, Timer, Volume2 } from "lucide-react";
 
 const PRESETS = [1, 3, 5, 10];
 
@@ -12,7 +12,7 @@ function beep() {
     [0, 0.35, 0.7].forEach((delay) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.value = 880;
       gain.gain.setValueAtTime(0.001, ctx.currentTime + delay);
       gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + delay + 0.02);
@@ -30,12 +30,12 @@ function beep() {
 export default function CookingTimer() {
   const [timers, setTimers] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
-  const [newTimerMinutes, setNewTimerMinutes] = useState('');
-  const [newTimerLabel, setNewTimerLabel] = useState('');
+  const [newTimerMinutes, setNewTimerMinutes] = useState("");
+  const [newTimerLabel, setNewTimerLabel] = useState("");
   const firedRef = useRef(new Set());
 
   const requestNotificationPermission = () => {
-    if ('Notification' in window && Notification.permission === 'default') {
+    if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission().catch(() => {});
     }
   };
@@ -54,8 +54,8 @@ export default function CookingTimer() {
     };
 
     setTimers([...timers, newTimer]);
-    setNewTimerMinutes('');
-    setNewTimerLabel('');
+    setNewTimerMinutes("");
+    setNewTimerLabel("");
     setShowAdd(false);
     requestNotificationPermission();
   };
@@ -87,10 +87,10 @@ export default function CookingTimer() {
             if (!firedRef.current.has(t.id)) {
               firedRef.current.add(t.id);
               beep();
-              if ('Notification' in window && Notification.permission === 'granted') {
+              if ("Notification" in window && Notification.permission === "granted") {
                 try {
                   new Notification(`${t.label} is done!`, {
-                    body: 'Your timer has finished.',
+                    body: "Your timer has finished.",
                   });
                 } catch {
                   // notification construction failed — beep already played
@@ -109,84 +109,80 @@ export default function CookingTimer() {
   // Escape closes the add-timer modal.
   useEffect(() => {
     if (!showAdd) return;
-    const onKey = (e) => e.key === 'Escape' && setShowAdd(false);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    const onKey = (e) => e.key === "Escape" && setShowAdd(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [showAdd]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 no-print">
+    <div className="no-print" style={{ position: "fixed", bottom: "var(--gutter)", right: "var(--gutter)", zIndex: 55, display: "grid", gap: "0.5rem", justifyItems: "end" }}>
       {timers.length === 0 && (
         <button
           onClick={() => setShowAdd(true)}
-          className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-4 rounded-full shadow-lg shadow-emerald-600/30 hover:scale-105 active:scale-95 transition-transform"
-          title="Add Cooking Timer"
+          className="btn"
+          data-fill
+          title="Add cooking timer"
           aria-label="Add cooking timer"
         >
-          <Timer size={24} />
+          <span className="fill" aria-hidden="true" />
+          <Timer size={15} />
+          Timer
         </button>
       )}
 
       {timers.length > 0 && (
-        <div className="space-y-2">
+        <>
           {timers.map((timer) => (
-            <div
-              key={timer.id}
-              className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border ${
-                timer.remainingSeconds === 0
-                  ? 'border-green-500 animate-pulse'
-                  : 'border-gray-200 dark:border-gray-700'
-              } p-3 min-w-[210px] transition-colors`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate flex items-center gap-1.5">
+            <div key={timer.id} className="timer">
+              <div className="timer__top">
+                <span className="timer__label">
                   {timer.remainingSeconds === 0 && (
-                    <Volume2 size={13} className="text-green-600 dark:text-green-400 shrink-0" />
+                    <Volume2 size={12} aria-hidden style={{ display: "inline", verticalAlign: "-2px", marginRight: "0.3em" }} />
                   )}
                   {timer.label}
                 </span>
                 <button
                   onClick={() => removeTimer(timer.id)}
-                  className="text-gray-400 hover:text-red-500 transition-colors"
+                  className="icon-btn"
+                  style={{ width: "1.6rem", height: "1.6rem" }}
                   aria-label={`Remove ${timer.label}`}
                 >
-                  <X size={14} />
+                  <X size={13} />
                 </button>
               </div>
-              <div className="text-center mb-2">
-                <span
-                  className={`text-2xl font-mono font-bold tabular-nums ${
-                    timer.remainingSeconds === 0
-                      ? 'text-green-600 dark:text-green-400'
-                      : timer.remainingSeconds <= 60
-                        ? 'text-orange-500 dark:text-orange-400'
-                        : 'text-gray-900 dark:text-white'
-                  }`}
-                >
-                  {formatTime(timer.remainingSeconds)}
-                </span>
-              </div>
-              <div className="flex justify-center gap-2">
+              <span
+                className={`timer__time${timer.remainingSeconds === 0 ? " timer__time--done" : ""}`}
+                style={
+                  timer.remainingSeconds <= 60 && timer.remainingSeconds > 0
+                    ? { color: "var(--c-accent)" }
+                    : undefined
+                }
+              >
+                {formatTime(timer.remainingSeconds)}
+              </span>
+              <div className="timer__ctrls">
                 <button
                   onClick={() => toggleTimer(timer.id)}
                   disabled={timer.remainingSeconds === 0}
-                  className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors disabled:opacity-50"
-                  aria-label={timer.isRunning ? 'Pause timer' : 'Start timer'}
+                  className="icon-btn"
+                  aria-label={timer.isRunning ? "Pause timer" : "Start timer"}
+                  style={{ border: "1px solid var(--c-line-strong)", width: "2rem", height: "2rem" }}
                 >
-                  {timer.isRunning ? <Pause size={16} /> : <Play size={16} />}
+                  {timer.isRunning ? <Pause size={13} /> : <Play size={13} />}
                 </button>
                 <button
                   onClick={() => resetTimer(timer.id)}
-                  className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="icon-btn"
                   aria-label="Reset timer"
+                  style={{ border: "1px solid var(--c-line-strong)", width: "2rem", height: "2rem" }}
                 >
-                  <RotateCcw size={16} />
+                  <RotateCcw size={13} />
                 </button>
               </div>
             </div>
@@ -194,93 +190,83 @@ export default function CookingTimer() {
 
           <button
             onClick={() => setShowAdd(true)}
-            className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-3 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform"
-            title="Add Timer"
+            className="icon-btn"
+            style={{ border: "1px solid var(--c-line-strong)", background: "var(--c-bg)", width: "2.2rem", height: "2.2rem" }}
+            title="Add timer"
             aria-label="Add another timer"
           >
-            <Plus size={20} />
+            <Plus size={16} />
           </button>
-        </div>
+        </>
       )}
 
       {showAdd && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="overlay in"
           onClick={() => setShowAdd(false)}
           role="dialog"
           aria-modal="true"
           aria-label="Add cooking timer"
         >
-          <div
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-sm w-full p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              Add Cooking Timer
-            </h3>
-            <div className="space-y-4">
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal__head">
               <div>
-                <label
-                  htmlFor="timer-label"
-                  className="block text-sm text-gray-600 dark:text-gray-400 mb-1"
-                >
-                  Label <span className="text-gray-400">(optional)</span>
+                <h3 className="modal__title">Add cooking timer</h3>
+                <p className="modal__sub">Chimes even in a background tab</p>
+              </div>
+              <button onClick={() => setShowAdd(false)} className="icon-btn" aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal__body">
+              <div className="field">
+                <label className="field__label" htmlFor="timer-label">
+                  Label (optional)
                 </label>
                 <input
                   id="timer-label"
                   type="text"
                   value={newTimerLabel}
                   onChange={(e) => setNewTimerLabel(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addTimer()}
-                  placeholder="e.g., Boil rice"
+                  onKeyDown={(e) => e.key === "Enter" && addTimer()}
+                  placeholder="e.g. boil rice"
                   maxLength={40}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
                 />
               </div>
-              <div>
-                <label
-                  htmlFor="timer-minutes"
-                  className="block text-sm text-gray-600 dark:text-gray-400 mb-1"
-                >
-                  Minutes (1–600)
+              <div className="field">
+                <label className="field__label" htmlFor="timer-minutes">
+                  Minutes · 1 to 600
                 </label>
                 <input
                   id="timer-minutes"
                   type="number"
                   value={newTimerMinutes}
                   onChange={(e) => setNewTimerMinutes(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addTimer()}
+                  onKeyDown={(e) => e.key === "Enter" && addTimer()}
                   placeholder="10"
                   min="1"
                   max="600"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
                 />
-                <div className="flex gap-1.5 mt-2">
-                  {PRESETS.map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => setNewTimerMinutes(String(preset))}
-                      className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
-                    >
-                      {preset} min
-                    </button>
-                  ))}
-                </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowAdd(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
+              <div className="chips">
+                {PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setNewTimerMinutes(String(preset))}
+                    className="chip"
+                  >
+                    {preset} min
+                  </button>
+                ))}
+              </div>
+              <div className="modal__actions" style={{ marginTop: "0.5rem" }}>
+                <button onClick={() => setShowAdd(false)} className="btn btn--ghost">
                   Cancel
                 </button>
-                <button
-                  onClick={addTimer}
-                  disabled={!newTimerMinutes}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 transition"
-                >
-                  Add
+                <button onClick={addTimer} disabled={!newTimerMinutes} className="btn" data-fill>
+                  <span className="fill" aria-hidden="true" />
+                  Add timer
                 </button>
               </div>
             </div>

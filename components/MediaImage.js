@@ -9,7 +9,7 @@ import { CookingPot } from "lucide-react";
  * `sources` is an ordered list of candidate URLs (e.g. the Wikipedia photo,
  * then a verified YouTube video thumbnail, then a smaller thumbnail). Each
  * onError advances to the next candidate; when all fail — or none were
- * provided — a branded emerald placeholder is rendered instead. A broken
+ * provided — a branded steel placeholder is rendered instead. A broken
  * image icon is never acceptable.
  *
  * Plain <img> on purpose: the sources live on arbitrary real-world hosts
@@ -22,8 +22,6 @@ export default function MediaImage({
   sources,
   alt,
   className = "",
-  rounded = "rounded-2xl",
-  placeholderIcon: Icon = CookingPot,
   eager = false,
 }) {
   const list = (Array.isArray(sources) ? sources : []).filter(Boolean);
@@ -43,11 +41,12 @@ export default function MediaImage({
   if (failed || list.length === 0) {
     return (
       <div
-        className={`aspect-video w-full ${rounded} bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-100 dark:from-emerald-900/40 dark:via-gray-800 dark:to-teal-900/30 flex items-center justify-center select-none ${className}`}
+        className={`media-ph ${className}`}
+        style={{ aspectRatio: "16 / 9", width: "100%" }}
         role="img"
         aria-label={alt || "Recipe image unavailable"}
       >
-        <Icon className="h-10 w-10 text-emerald-400/60 dark:text-emerald-500/40" />
+        <CookingPot size={28} strokeWidth={1.25} />
       </div>
     );
   }
@@ -60,7 +59,8 @@ export default function MediaImage({
       loading={eager ? "eager" : "lazy"}
       decoding="async"
       referrerPolicy="no-referrer"
-      className={`aspect-video w-full object-cover ${rounded} ${className}`}
+      className={className}
+      style={{ aspectRatio: "16 / 9", width: "100%", objectFit: "cover" }}
     />
   );
 }

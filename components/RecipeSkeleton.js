@@ -1,19 +1,18 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { ChefHat } from 'lucide-react';
+import { useEffect, useState } from "react";
 
 const STATUS_MESSAGES = [
-  'Roasting the spices…',
-  'Tempering the tadka…',
-  'Kneading the dough…',
-  'Simmering the curry…',
-  'Whisking the yogurt…',
-  'Garnishing with coriander…',
-  'Plating it beautifully…',
+  "Roasting the spices",
+  "Tempering the tadka",
+  "Kneading the dough",
+  "Simmering the curry",
+  "Whisking the yogurt",
+  "Garnishing with coriander",
+  "Plating it beautifully",
 ];
 
-/** Shimmering skeleton shown while the AI generates recipes. */
+/** Steel skeleton shown while the AI generates recipes. */
 export default function RecipeSkeleton() {
   const [messageIndex, setMessageIndex] = useState(0);
 
@@ -26,36 +25,51 @@ export default function RecipeSkeleton() {
   }, []);
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-10" aria-live="polite" aria-busy="true">
-      <div className="flex items-center justify-center gap-3 mb-8">
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-2.5 rounded-full animate-pulse">
-          <ChefHat className="h-6 w-6 text-white" />
-        </div>
-        <p className="text-lg font-medium text-gray-600 dark:text-gray-300 tabular-nums">
-          {STATUS_MESSAGES[messageIndex]}
-        </p>
+    <div
+      style={{ marginTop: "calc(var(--u) * 5)", display: "grid", gap: "calc(var(--u) * 2)" }}
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div
+        className="section-head"
+        style={{ marginBottom: 0 }}
+      >
+        <h2 className="section-title">Three for tonight</h2>
+        <span className="mono" style={{ color: "var(--c-accent)" }}>
+          {STATUS_MESSAGES[messageIndex]}…
+        </span>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[0, 1, 2].map((card) => (
-          <div
-            key={card}
-            className="p-5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 space-y-4 animate-pulse"
-            style={{ animationDelay: `${card * 150}ms` }}
-          >
-            <div className="w-10 h-10 rounded-lg bg-gray-200 dark:bg-gray-700" />
-            <div className="w-24 h-3 rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="h-6 w-full rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="h-4 w-5/6 rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="flex gap-2 pt-2">
-              <div className="h-5 w-16 rounded-full bg-gray-200 dark:bg-gray-700" />
-              <div className="h-5 w-12 rounded-full bg-gray-200 dark:bg-gray-700" />
-              <div className="h-5 w-14 rounded-full bg-gray-200 dark:bg-gray-700" />
-            </div>
-          </div>
+      <ul className="index" aria-hidden="true">
+        {[0, 1, 2].map((row) => (
+          <li key={row} className="index-row" style={{ pointerEvents: "none" }}>
+            <span className="index-row__num skel" style={{ width: "1.5rem" }}>
+              &nbsp;
+            </span>
+            <span className="index-row__main">
+              <span
+                className="index-row__title skel"
+                style={{ maxWidth: `${70 - row * 12}%`, display: "block" }}
+              >
+                &nbsp;
+              </span>
+              <span className="index-row__meta">
+                <span className="skel" style={{ display: "inline-block", width: "5rem" }}>
+                  &nbsp;
+                </span>
+                <span className="skel" style={{ display: "inline-block", width: "3.5rem" }}>
+                  &nbsp;
+                </span>
+                <span className="skel" style={{ display: "inline-block", width: "4.5rem" }}>
+                  &nbsp;
+                </span>
+              </span>
+            </span>
+            <span className="index-row__arrow skel" style={{ width: "1.2rem" }}>
+              &nbsp;
+            </span>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
