@@ -40,6 +40,17 @@
   --z-header: 50;
   --z-cursor: 80;
   --z-loader: 100;
+
+  /* Garnish hues — the colorful counter-system. Decorative marks only
+     (floating icons, tab icons, medallions); text still runs on the
+     turmeric/ink pair above. Deep enough to read on steel, and lifted
+     for tandoor night below. */
+  --g-leaf: #23874f;
+  --g-citrus: #c96f0a;
+  --g-cherry: #c24356;
+  --g-grape: #6f53c9;
+  --g-leaf-fill-a: #3ecf8e;
+  --g-leaf-fill-b: #0d9488;
 }
 
 /* ── Tokens: dark "tandoor night" ── */
@@ -56,6 +67,13 @@
   --c-curtain: #0e0f0b;
   --c-wash: rgb(231 229 218 / 0.05);
   --c-wash-2: rgb(231 229 218 / 0.1);
+
+  --g-leaf: #55c98c;
+  --g-citrus: #f0a545;
+  --g-cherry: #ef8fa0;
+  --g-grape: #a893f2;
+  --g-leaf-fill-a: #3ecf8e;
+  --g-leaf-fill-b: #0d9488;
 }
 
 /* ── Foundation ── */
@@ -196,6 +214,139 @@ p {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* ── Aurora — a quiet wash of the garnish hues behind the steel ──
+   Color, not motion, does the work: static by design, so nothing here
+   needs a reduced-motion guard. Sits with the grain (z 0, inert) while
+   the stage and lid stay above it. */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(46rem 32rem at 10% -8%, rgb(35 135 79 / 0.14), transparent 62%),
+    radial-gradient(40rem 28rem at 92% 2%, rgb(201 111 10 / 0.11), transparent 62%),
+    radial-gradient(50rem 36rem at 55% 112%, rgb(111 83 201 / 0.09), transparent 62%);
+}
+.dark .aurora {
+  background:
+    radial-gradient(46rem 32rem at 10% -8%, rgb(85 201 140 / 0.09), transparent 62%),
+    radial-gradient(40rem 28rem at 92% 2%, rgb(240 165 69 / 0.07), transparent 62%),
+    radial-gradient(50rem 36rem at 55% 112%, rgb(168 147 242 / 0.07), transparent 62%);
+}
+
+/* ── Garnish constellation — the signature mark, restored ──
+   A pot in an emerald tile bobs while leaf/citrus/cherry/grape drift
+   around it, each on its own phase (duration + delay + drift vector as
+   CSS vars per icon). Brand mark, so it keeps a soft radius — exempt
+   from the 2px chamfer that governs UI surfaces. All decorative:
+   markup is aria-hidden, and under reduced motion the icons freeze
+   in place — still colorful, just still. */
+.garnish {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(3.6rem, 2.6rem + 3.2vw, 4.6rem);
+  height: clamp(3.6rem, 2.6rem + 3.2vw, 4.6rem);
+  flex: none;
+}
+.garnish--mark {
+  width: 1.95rem;
+  height: 1.95rem;
+}
+.garnish--mark .garnish__icon {
+  display: none;
+}
+.garnish__tile {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: #fff;
+  border-radius: 24%;
+  background: linear-gradient(135deg, var(--g-leaf-fill-a), var(--g-leaf-fill-b));
+  box-shadow:
+    0 0.65rem 1.5rem rgb(13 148 136 / 0.32),
+    inset 0 1px 0 rgb(255 255 255 / 0.28);
+}
+.garnish__pot {
+  width: 58%;
+  height: 58%;
+}
+.garnish--hero .garnish__tile {
+  animation: garnish-bob 5s ease-in-out infinite;
+}
+.garnish__icon {
+  position: absolute;
+  width: clamp(1.1rem, 0.85rem + 0.9vw, 1.35rem);
+  height: clamp(1.1rem, 0.85rem + 0.9vw, 1.35rem);
+  animation: garnish-drift var(--gd, 6s) ease-in-out var(--gdl, 0s) infinite;
+}
+.garnish__leaf {
+  top: 4%;
+  left: -16%;
+  color: var(--g-leaf);
+  --gx: -2px;
+  --gy: -6px;
+  --gr: 14deg;
+  --gd: 5.5s;
+  --gdl: 0s;
+}
+.garnish__citrus {
+  top: 16%;
+  right: -18%;
+  color: var(--g-citrus);
+  --gx: 2px;
+  --gy: -5px;
+  --gr: -12deg;
+  --gd: 6.5s;
+  --gdl: 0.9s;
+}
+.garnish__cherry {
+  bottom: 0;
+  left: -9%;
+  color: var(--g-cherry);
+  --gx: -2px;
+  --gy: 5px;
+  --gr: -10deg;
+  --gd: 7s;
+  --gdl: 1.7s;
+}
+.garnish__grape {
+  bottom: -7%;
+  right: -11%;
+  color: var(--g-grape);
+  --gx: 3px;
+  --gy: 6px;
+  --gr: 12deg;
+  --gd: 6s;
+  --gdl: 2.5s;
+}
+@keyframes garnish-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+@keyframes garnish-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(var(--gx, 2px), var(--gy, -6px)) rotate(var(--gr, 12deg));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .garnish--hero .garnish__tile,
+  .garnish__icon {
+    animation: none;
+  }
+}
+
 /* Lenis */
 html.lenis,
 html.lenis body {
@@ -316,6 +467,16 @@ html:not(.js) .in {
 }
 .lid__brand {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+/* The mark stays still in the lid — a colored anchor while scrolling,
+   not another moving thing competing with the page. */
+.lid__brand-text {
+  display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 0.15rem;
@@ -400,6 +561,47 @@ html:not(.js) .in {
   letter-spacing: 0.06em;
   color: var(--c-muted);
   transition: color 0.25s;
+}
+/* Per-tier hue: each section owns a garnish color (generate=leaf,
+   recipes=citrus, mealplan=grape, shopping=cherry). The icon is a
+   second, redundant cue — selection still has the underline draw and
+   aria-selected, so color is never the only signal. */
+.tier[data-tab="generate"] {
+  --tier-hue: var(--g-leaf);
+}
+.tier[data-tab="recipes"] {
+  --tier-hue: var(--g-citrus);
+}
+.tier[data-tab="mealplan"] {
+  --tier-hue: var(--g-grape);
+}
+.tier[data-tab="shopping"] {
+  --tier-hue: var(--g-cherry);
+}
+.tier__icon {
+  display: inline-flex;
+  align-self: center;
+  color: var(--c-muted);
+  transition: color 0.25s;
+}
+.tier__icon svg {
+  width: 0.9em;
+  height: 0.9em;
+}
+.tier[aria-selected="true"] .tier__icon {
+  color: var(--tier-hue, var(--c-accent));
+}
+@media (hover: hover) {
+  .tier:hover .tier__icon {
+    color: var(--tier-hue, var(--c-fg));
+  }
+}
+/* On phones the numbers yield their slot to the icons so the tab strip
+   stays about as wide as before (it already scrolls with edge fades). */
+@media (max-width: 640px) {
+  .tier__num {
+    display: none;
+  }
 }
 @media (hover: hover) {
   .tier:hover {
@@ -623,6 +825,14 @@ html:not(.js) .in {
     color: var(--c-fg);
     background: var(--c-wash);
   }
+  /* Quick-add chips lean leaf-green on approach — a hint of what
+     tapping them grows into. Same tint on keyboard focus. */
+  .chip--add:hover,
+  .chip--add:focus-visible {
+    color: var(--g-leaf);
+    border-color: var(--g-leaf);
+    background: color-mix(in srgb, var(--g-leaf) 9%, transparent);
+  }
 }
 .chip--add {
   color: var(--c-muted);
@@ -738,6 +948,12 @@ html:not(.js) .in {
   font-family: var(--f-display);
   font-weight: 700;
   letter-spacing: 0.01em;
+}
+/* The one emerald surface: the main CTA carries the brand color the
+   garnish reintroduced. Filled state text stays curtain-dark, which
+   holds contrast across both gradient stops. */
+.btn--primary .fill {
+  background: linear-gradient(135deg, var(--g-leaf-fill-a), var(--g-leaf-fill-b));
 }
 .btn:disabled {
   opacity: 0.4;
@@ -943,6 +1159,46 @@ html:not(.js) .in {
   gap: var(--u);
   text-align: center;
   padding: calc(var(--u) * 8) var(--gutter);
+}
+/* Medallion — every empty state leads with its section's garnish hue
+   in a gradient tile, so even "nothing here" looks like the app. The
+   gentle bob reuses the garnish keyframe; decorative (aria-hidden). */
+.empty__mark {
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  color: #fff;
+  border-radius: 26%;
+  background: linear-gradient(135deg, var(--mk-a), var(--mk-b));
+  box-shadow:
+    0 0.55rem 1.3rem var(--mk-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 0.24);
+  animation: garnish-bob 5.5s ease-in-out infinite;
+}
+.empty__mark svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+.empty__mark--amber {
+  --mk-a: #f2b257;
+  --mk-b: #c07513;
+  --mk-shadow: rgb(201 111 10 / 0.3);
+}
+.empty__mark--violet {
+  --mk-a: #9d86ee;
+  --mk-b: #6a4fc4;
+  --mk-shadow: rgb(111 83 201 / 0.3);
+}
+.empty__mark--rose {
+  --mk-a: #ef8fa0;
+  --mk-b: #bd4258;
+  --mk-shadow: rgb(194 67 86 / 0.3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .empty__mark {
+    animation: none;
+  }
 }
 .empty__title {
   font-family: var(--f-display);

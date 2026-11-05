@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRecipes } from "@/context/RecipeContext";
-import { Trash2, ExternalLink, Clock, Tag, X, Search, Check } from "lucide-react";
+import { Trash2, ExternalLink, Clock, Tag, X, Search, Check, BookOpen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import MediaImage from "./MediaImage";
 import { youtubeThumbnailSources } from "@/lib/video";
@@ -44,6 +44,9 @@ export default function SavedRecipes({ onViewRecipe }) {
   if (savedRecipes.length === 0) {
     return (
       <div className="empty in">
+        <span className="empty__mark empty__mark--amber" aria-hidden="true">
+          <BookOpen strokeWidth={2} />
+        </span>
         <p className="empty__title">No saved recipes yet</p>
         <p>Generate a recipe and press Save recipe to start your collection.</p>
       </div>
@@ -252,6 +255,9 @@ export default function SavedRecipes({ onViewRecipe }) {
 
       {filteredRecipes.length === 0 && (
         <div className="empty">
+          <span className="empty__mark empty__mark--amber" aria-hidden="true">
+            <BookOpen strokeWidth={2} />
+          </span>
           <p className="empty__title">Nothing matches</p>
           <p>No recipes match your search.</p>
         </div>

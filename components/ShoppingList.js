@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRecipes } from "@/context/RecipeContext";
-import { Copy, Check, Printer, RotateCcw } from "lucide-react";
+import { Copy, Check, Printer, RotateCcw, ShoppingCart } from "lucide-react";
 import {
   ingredientLine, categorizeIngredient, SHOPPING_CATEGORIES, escapeHtml,
 } from "@/lib/recipeUtils";
@@ -196,6 +196,9 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
   if (viewMode === "weekly" && mealPlan.length === 0) {
     return (
       <div className="empty in">
+        <span className="empty__mark empty__mark--rose" aria-hidden="true">
+          <ShoppingCart strokeWidth={2} />
+        </span>
         <p className="empty__title">No meals planned</p>
         <p>Add recipes to your meal plan to generate a weekly shopping list.</p>
       </div>
@@ -205,6 +208,9 @@ export default function ShoppingList({ currentRecipe, currentIngredients }) {
   if (viewMode === "single" && !selectedRecipe?.recipe) {
     return (
       <div className="empty in">
+        <span className="empty__mark empty__mark--rose" aria-hidden="true">
+          <ShoppingCart strokeWidth={2} />
+        </span>
         <p className="empty__title">No recipe selected</p>
         <p>Generate a recipe or select a saved recipe to view its shopping list.</p>
       </div>

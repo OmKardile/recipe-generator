@@ -70,6 +70,7 @@ export default function RootLayout({ children }) {
         <a className="skip-link" href="#main">
           Skip to content
         </a>
+        <div className="aurora" aria-hidden="true" />
         <div className="grain" aria-hidden="true" />
         {/* The lid: first-load loader, real progress, lifts off */}
         <div id="loader" role="status" aria-label="Loading">

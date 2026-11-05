@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRecipes } from "@/context/RecipeContext";
-import { Plus, X, Trash2 } from "lucide-react";
+import { Plus, X, Trash2, CalendarDays } from "lucide-react";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const MEALS = ["breakfast", "lunch", "dinner", "snack"];
@@ -82,6 +82,9 @@ export default function MealPlanner() {
 
       {savedRecipes.length === 0 ? (
         <div className="empty">
+          <span className="empty__mark empty__mark--violet" aria-hidden="true">
+            <CalendarDays strokeWidth={2} />
+          </span>
           <p className="empty__title">Nothing to plan with yet</p>
           <p>Save some recipes first, then come back to plan your week.</p>
         </div>

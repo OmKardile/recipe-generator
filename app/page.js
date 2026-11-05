@@ -10,13 +10,16 @@ import ShoppingList from "@/components/ShoppingList";
 import MealPlanner from "@/components/MealPlanner";
 import ThemeToggle from "@/components/ThemeToggle";
 import CookingTimer from "@/components/CookingTimer";
-import { RefreshCw } from "lucide-react";
+import Garnish from "@/components/Garnish";
+import { RefreshCw, Sparkles, BookOpen, CalendarDays, ShoppingCart } from "lucide-react";
 
+/* Each tab owns a garnish hue (see globals.css .tier[data-tab]) so the
+   section's color is consistent from the tab strip to its empty state. */
 const TABS = [
-  { key: "generate", label: "Generate" },
-  { key: "recipes", label: "My Recipes" },
-  { key: "mealplan", label: "Meal Plan" },
-  { key: "shopping", label: "Shopping" },
+  { key: "generate", label: "Generate", Icon: Sparkles },
+  { key: "recipes", label: "My Recipes", Icon: BookOpen },
+  { key: "mealplan", label: "Meal Plan", Icon: CalendarDays },
+  { key: "shopping", label: "Shopping", Icon: ShoppingCart },
 ];
 
 export default function Home() {
@@ -97,10 +100,13 @@ export default function Home() {
       {/* ── The lid: sticky header. Wordmark left, tiers right. ── */}
       <header className="lid">
         <div className="lid__brand">
-          <span className="lid__mark">
-            Indian Recipe <em>Generator</em>
+          <Garnish variant="mark" />
+          <span className="lid__brand-text">
+            <span className="lid__mark">
+              Indian Recipe <em>Generator</em>
+            </span>
+            <span className="lid__sub">Real dishes · real photos · verified videos</span>
           </span>
-          <span className="lid__sub">Real dishes · real photos · verified videos</span>
         </div>
         <div className="lid__tools">
           <nav
@@ -109,7 +115,7 @@ export default function Home() {
             role="tablist"
             aria-label="App sections"
           >
-            {TABS.map(({ key, label }, index) => {
+            {TABS.map(({ key, label, Icon }, index) => {
               const active = activeTab === key;
               return (
                 <button
@@ -124,9 +130,13 @@ export default function Home() {
                   tabIndex={active ? 0 : -1}
                   onKeyDown={(e) => handleTabKeyDown(e, index)}
                   onClick={() => setActiveTab(key)}
+                  data-tab={key}
                   className="tier"
                 >
                   <span className="tier__num">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="tier__icon" aria-hidden="true">
+                    <Icon strokeWidth={2.2} />
+                  </span>
                   {label}
                 </button>
               );

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, X, Loader2 } from "lucide-react";
+import Garnish from "./Garnish";
 
 const MAX_INGREDIENTS = 25;
 const MAX_INGREDIENT_LENGTH = 40;
@@ -94,6 +95,7 @@ export default function IngredientInput({
 
   return (
     <section className="hero" aria-labelledby="hero-title">
+      <Garnish variant="hero" className="in" />
       <h1 className="hero__title in" id="hero-title">
         What&apos;s in your <span className="accent">kitchen?</span>
       </h1>
