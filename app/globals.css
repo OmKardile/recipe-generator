@@ -1,79 +1,99 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   INDIAN RECIPE GENERATOR — "The Tiffin" design system
-   Steel ground · curry-leaf ink · one turmeric accent · 2px chamfer.
-   Concept, palette and type rationale: DESIGN.md.
+   INDIAN RECIPE GENERATOR — "Sunny Kitchen" design system
+   Warm cream ground · cocoa ink · mango accent · big soft radii.
+   Friendly, comfortable, rounded — the garnish constellation of colorful
+   floating icons is the visual headline of the app (see .garnish--hero).
+   Concept and palette rationale: DESIGN.md.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* ── Tokens: light "steel morning" ── */
+/* ── Tokens: light "sunny cream" ── */
 :root {
-  --c-bg: #e9e9e3;
-  --c-fg: #1b1c16;
-  --c-muted: #63655c;
-  --c-line: rgb(27 28 22 / 0.14);
-  --c-line-strong: rgb(27 28 22 / 0.32);
-  --c-accent: #8f5410; /* turmeric, deepened to pass AA as 12px mono text */
-  --c-accent-fill: #e8a33c;
-  --c-leaf: #3f6b4a;
-  --c-danger: #b3261e; /* destructive actions only; 5.4:1 on steel */
-  --c-curtain: #14150f;
-  --c-wash: rgb(27 28 22 / 0.045);
-  --c-wash-2: rgb(27 28 22 / 0.08);
+  --c-bg: #fbf1de;
+  --c-surface: #fffdf7;
+  --c-fg: #432d18;
+  --c-muted: #8a6c4b;
+  --c-line: #eddebf;
+  --c-line-strong: #dcc49a;
+  --c-accent: #c25e00; /* deep mango — passes AA as small text on cream */
+  --c-accent-fill: #ff9e38;
+  --c-leaf: #2e8b4f;
+  --c-danger: #b33223; /* destructive actions only */
+  --c-curtain: #3b2310; /* text color on filled mango surfaces */
+  --c-loader: #fff0d6;
+  --c-wash: rgb(67 45 24 / 0.05);
+  --c-wash-2: rgb(67 45 24 / 0.09);
 
-  --f-display: var(--font-display), "Arial Narrow", system-ui, sans-serif;
+  /* Garnish hues — the colorful counter-system, now the main event.
+     Decorative marks (constellation, tab icons, medallions) run on these;
+     text stays on the mango/cocoa pair above. */
+  --g-leaf: #1f9255;
+  --g-citrus: #e8821e;
+  --g-cherry: #e14b66;
+  --g-grape: #7d5bd8;
+  --g-carrot: #e8703f;
+  --g-salad: #14a08c;
+  --g-croissant: #c79233;
+  --g-leaf-fill-a: #3ecf8e;
+  --g-leaf-fill-b: #0d9488;
+
+  --f-display: var(--font-display), "Arial Rounded MT Bold", system-ui, sans-serif;
   --f-body: var(--font-body), system-ui, sans-serif;
   --f-mono: var(--font-mono), ui-monospace, monospace;
 
-  --t-mega: clamp(3.4rem, 1.1rem + 12vw, 11rem);
-  --t-xl: clamp(2.6rem, 1.5rem + 4.6vw, 5.6rem);
-  --t-l: clamp(1.9rem, 1.4rem + 2vw, 3.1rem);
-  --t-m: clamp(1.3rem, 1.15rem + 0.6vw, 1.7rem);
-  --t-body: clamp(1rem, 0.95rem + 0.22vw, 1.125rem);
-  --t-s: 0.875rem;
+  --t-mega: clamp(2.6rem, 1.7rem + 4.6vw, 4.7rem);
+  --t-xl: clamp(2.1rem, 1.6rem + 2.6vw, 3.4rem);
+  --t-l: clamp(1.7rem, 1.4rem + 1.4vw, 2.4rem);
+  --t-m: clamp(1.2rem, 1.1rem + 0.5vw, 1.45rem);
+  --t-body: clamp(1rem, 0.96rem + 0.2vw, 1.1rem);
+  --t-s: 0.9rem;
   --t-xs: 0.75rem;
 
   --u: clamp(0.55rem, 0.4rem + 0.6vw, 1rem);
   --gutter: clamp(1.1rem, 0.7rem + 1.8vw, 3rem);
   --cols: 12;
 
-  --radius: 2px;
+  --radius: 14px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+  --r-pill: 999px;
+
+  --shadow-soft: 0 6px 18px -6px rgb(133 86 26 / 0.16);
+  --shadow-lift: 0 16px 36px -12px rgb(133 86 26 / 0.26);
 
   --z-header: 50;
   --z-cursor: 80;
   --z-loader: 100;
-
-  /* Garnish hues — the colorful counter-system. Decorative marks only
-     (floating icons, tab icons, medallions); text still runs on the
-     turmeric/ink pair above. Deep enough to read on steel, and lifted
-     for tandoor night below. */
-  --g-leaf: #23874f;
-  --g-citrus: #c96f0a;
-  --g-cherry: #c24356;
-  --g-grape: #6f53c9;
-  --g-leaf-fill-a: #3ecf8e;
-  --g-leaf-fill-b: #0d9488;
 }
 
-/* ── Tokens: dark "tandoor night" ── */
+/* ── Tokens: dark "midnight chai" ── */
 .dark {
-  --c-bg: #151611;
-  --c-fg: #e7e5da;
-  --c-muted: #9a9a8e;
-  --c-line: rgb(231 229 218 / 0.15);
-  --c-line-strong: rgb(231 229 218 / 0.34);
-  --c-accent: #e8a33c;
-  --c-accent-fill: #e8a33c;
-  --c-leaf: #7fb98a;
-  --c-danger: #e57368; /* lifted red for tandoor night, 6:1 on coal */
-  --c-curtain: #0e0f0b;
-  --c-wash: rgb(231 229 218 / 0.05);
-  --c-wash-2: rgb(231 229 218 / 0.1);
+  --c-bg: #221912;
+  --c-surface: #2c2117;
+  --c-fg: #f7ebd9;
+  --c-muted: #c4aa88;
+  --c-line: rgb(247 235 217 / 0.12);
+  --c-line-strong: rgb(247 235 217 / 0.26);
+  --c-accent: #ffb169;
+  --c-accent-fill: #f98a28;
+  --c-leaf: #62c88f;
+  --c-danger: #f0907f;
+  --c-curtain: #2c2117;
+  --c-loader: #1b130d;
+  --c-wash: rgb(247 235 217 / 0.06);
+  --c-wash-2: rgb(247 235 217 / 0.11);
 
-  --g-leaf: #55c98c;
-  --g-citrus: #f0a545;
-  --g-cherry: #ef8fa0;
-  --g-grape: #a893f2;
+  --g-leaf: #5bd494;
+  --g-citrus: #f7ae56;
+  --g-cherry: #f492a6;
+  --g-grape: #b39cf5;
+  --g-carrot: #f59a70;
+  --g-salad: #46c6b4;
+  --g-croissant: #e7bc6a;
   --g-leaf-fill-a: #3ecf8e;
   --g-leaf-fill-b: #0d9488;
+
+  --shadow-soft: 0 6px 18px -6px rgb(0 0 0 / 0.4);
+  --shadow-lift: 0 16px 36px -12px rgb(0 0 0 / 0.55);
 }
 
 /* ── Foundation ── */
@@ -95,7 +115,7 @@ body {
   min-height: 100dvh;
   font-family: var(--f-body);
   font-size: var(--t-body);
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -142,10 +162,10 @@ p {
 }
 ::selection {
   background: var(--c-accent-fill);
-  color: #14150f;
+  color: var(--c-curtain);
 }
 
-/* Focus: one consistent turmeric ring, both themes (keeps the a11y work). */
+/* Focus: one warm mango ring, both themes (keeps the a11y work). */
 :where(
     a,
     button,
@@ -158,9 +178,9 @@ p {
     summary,
     [tabindex]
   ):focus-visible {
-  outline: 2px solid var(--c-accent);
+  outline: 3px solid color-mix(in srgb, var(--c-accent) 80%, transparent);
   outline-offset: 3px;
-  border-radius: 2px;
+  border-radius: 10px;
 }
 #main:focus {
   outline: none;
@@ -170,10 +190,12 @@ p {
   left: var(--gutter);
   top: var(--gutter);
   z-index: calc(var(--z-loader) + 1);
-  padding: 0.6em 1em;
+  padding: 0.6em 1.1em;
   background: var(--c-fg);
   color: var(--c-bg);
   font-size: var(--t-s);
+  font-weight: 700;
+  border-radius: var(--r-pill);
   transform: translateY(-200%);
 }
 .skip-link:focus-visible {
@@ -191,30 +213,31 @@ p {
   border: 0;
 }
 
-/* Scrollbar: thin steel */
+/* Scrollbar: soft rounded toffee */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--c-line-strong);
-  border-radius: 8px;
+  border-radius: var(--r-pill);
+  border: 2px solid var(--c-bg);
 }
 
-/* Static film grain — steel tactility, still at rest (by design, DESIGN.md). */
+/* Static film grain — barely-there warmth on the cream (DESIGN.md). */
 .grain {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ── Aurora — a quiet wash of the garnish hues behind the steel ──
+/* ── Aurora — a soft wash of peach, lilac and mint behind the cream ──
    Color, not motion, does the work: static by design, so nothing here
    needs a reduced-motion guard. Sits with the grain (z 0, inert) while
    the stage and lid stay above it. */
@@ -224,126 +247,212 @@ p {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(46rem 32rem at 10% -8%, rgb(35 135 79 / 0.14), transparent 62%),
-    radial-gradient(40rem 28rem at 92% 2%, rgb(201 111 10 / 0.11), transparent 62%),
-    radial-gradient(50rem 36rem at 55% 112%, rgb(111 83 201 / 0.09), transparent 62%);
+    radial-gradient(46rem 32rem at 12% -8%, rgb(255 158 56 / 0.16), transparent 62%),
+    radial-gradient(40rem 28rem at 92% 4%, rgb(125 91 216 / 0.1), transparent 62%),
+    radial-gradient(52rem 36rem at 55% 112%, rgb(31 146 85 / 0.09), transparent 62%);
 }
 .dark .aurora {
   background:
-    radial-gradient(46rem 32rem at 10% -8%, rgb(85 201 140 / 0.09), transparent 62%),
-    radial-gradient(40rem 28rem at 92% 2%, rgb(240 165 69 / 0.07), transparent 62%),
-    radial-gradient(50rem 36rem at 55% 112%, rgb(168 147 242 / 0.07), transparent 62%);
+    radial-gradient(46rem 32rem at 12% -8%, rgb(249 138 40 / 0.09), transparent 62%),
+    radial-gradient(40rem 28rem at 92% 4%, rgb(179 156 245 / 0.07), transparent 62%),
+    radial-gradient(52rem 36rem at 55% 112%, rgb(91 212 148 / 0.06), transparent 62%);
 }
 
-/* ── Garnish constellation — the signature mark, restored ──
-   A pot in an emerald tile bobs while leaf/citrus/cherry/grape drift
-   around it, each on its own phase (duration + delay + drift vector as
-   CSS vars per icon). Brand mark, so it keeps a soft radius — exempt
-   from the 2px chamfer that governs UI surfaces. All decorative:
-   markup is aria-hidden, and under reduced motion the icons freeze
-   in place — still colorful, just still. */
+/* ═══════════════════════════════════════════════════════════════════════
+   THE GARNISH CONSTELLATION — the app's visual headline
+   ═══════════════════════════════════════════════════════════════════════
+   A pot medallion anchors the center while seven colorful ingredient
+   icons float around it, each with:
+     · a parallax layer  — .garnish__float gets its transform written by
+       JS (components/Garnish.js), lerped from the pointer + scroll, per
+       data-depth. Centering uses the separate CSS `translate` property
+       so JS `transform` and centering compose instead of clobbering.
+     · an idle sway      — .garnish__bob runs the garnish-sway keyframes
+       (bob + tilt via per-icon vars), pure CSS, own phase.
+     · a pastel glow     — .garnish__bob::before is a soft radial blob in
+       the icon's hue, so every icon reads as a little lantern.
+   All decorative: aria-hidden markup; under reduced motion the JS never
+   starts and CSS freezes the sway — icons stay colorful, just still.
+   On phones the whole field scales via --g-scale and the two aux icons
+   step aside. */
 .garnish {
   position: relative;
   display: grid;
   place-items: center;
-  width: clamp(3.6rem, 2.6rem + 3.2vw, 4.6rem);
-  height: clamp(3.6rem, 2.6rem + 3.2vw, 4.6rem);
   flex: none;
 }
 .garnish--mark {
-  width: 1.95rem;
-  height: 1.95rem;
+  width: 2rem;
+  height: 2rem;
 }
-.garnish--mark .garnish__icon {
-  display: none;
+.garnish--hero {
+  width: 100%;
+  height: clamp(10.5rem, 12vw + 4rem, 13.5rem);
+  --g-scale: 1;
 }
+/* two tiny confetti dots so the field feels alive even at rest */
+.garnish--hero::before,
+.garnish--hero::after {
+  content: "";
+  position: absolute;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: var(--r-pill);
+  opacity: 0.75;
+}
+.garnish--hero::before {
+  left: 13%;
+  top: 32%;
+  background: color-mix(in srgb, var(--g-citrus) 55%, transparent);
+}
+.garnish--hero::after {
+  right: 11%;
+  top: 62%;
+  background: color-mix(in srgb, var(--g-grape) 55%, transparent);
+}
+
+/* parallax layer */
+.garnish__float {
+  position: absolute;
+  left: calc(50% + var(--gx, 0rem) * var(--g-scale, 1));
+  top: calc(50% + var(--gy, 0rem) * var(--g-scale, 1));
+  translate: -50% -50%;
+  will-change: transform;
+}
+/* idle sway layer + glow */
+.garnish__bob {
+  position: relative;
+  display: grid;
+  place-items: center;
+  animation: garnish-sway var(--gd, 6s) ease-in-out var(--gdl, 0s) infinite;
+}
+.garnish__bob::before {
+  content: "";
+  position: absolute;
+  inset: -58%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--glow, transparent), transparent 74%);
+}
+.garnish__icon {
+  position: relative;
+  z-index: 1;
+  width: clamp(1.45rem, 1rem + 1.8vw, 2.05rem);
+  height: clamp(1.45rem, 1rem + 1.8vw, 2.05rem);
+  color: var(--hue, var(--g-leaf));
+  filter: drop-shadow(0 10px 16px var(--glow, transparent));
+}
+/* the pot medallion */
 .garnish__tile {
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
   color: #fff;
-  border-radius: 24%;
+  border-radius: 30%;
   background: linear-gradient(135deg, var(--g-leaf-fill-a), var(--g-leaf-fill-b));
   box-shadow:
-    0 0.65rem 1.5rem rgb(13 148 136 / 0.32),
-    inset 0 1px 0 rgb(255 255 255 / 0.28);
+    0 0.75rem 1.6rem rgb(13 148 136 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.3);
+}
+.garnish--hero .garnish__tile {
+  width: clamp(3.9rem, 5vw + 2rem, 4.8rem);
+  height: clamp(3.9rem, 5vw + 2rem, 4.8rem);
 }
 .garnish__pot {
   width: 58%;
   height: 58%;
 }
-.garnish--hero .garnish__tile {
-  animation: garnish-bob 5s ease-in-out infinite;
-}
-.garnish__icon {
-  position: absolute;
-  width: clamp(1.1rem, 0.85rem + 0.9vw, 1.35rem);
-  height: clamp(1.1rem, 0.85rem + 0.9vw, 1.35rem);
-  animation: garnish-drift var(--gd, 6s) ease-in-out var(--gdl, 0s) infinite;
-}
+
+/* per-icon choreography: position (gx/gy), sway phase (gd/gdl), tilt (gr),
+   hue and glow — seven distinct little characters */
 .garnish__leaf {
-  top: 4%;
-  left: -16%;
-  color: var(--g-leaf);
-  --gx: -2px;
-  --gy: -6px;
-  --gr: 14deg;
+  --gx: -13rem;
+  --gy: -2.4rem;
   --gd: 5.5s;
   --gdl: 0s;
+  --gr: 9deg;
+  --hue: var(--g-leaf);
+  --glow: rgb(62 207 142 / 0.42);
 }
 .garnish__citrus {
-  top: 16%;
-  right: -18%;
-  color: var(--g-citrus);
-  --gx: 2px;
-  --gy: -5px;
-  --gr: -12deg;
+  --gx: -8rem;
+  --gy: 3.6rem;
   --gd: 6.5s;
   --gdl: 0.9s;
+  --gr: -11deg;
+  --hue: var(--g-citrus);
+  --glow: rgb(249 158 56 / 0.42);
 }
 .garnish__cherry {
-  bottom: 0;
-  left: -9%;
-  color: var(--g-cherry);
-  --gx: -2px;
-  --gy: 5px;
-  --gr: -10deg;
-  --gd: 7s;
+  --gx: 8.2rem;
+  --gy: -4rem;
+  --gd: 7.2s;
   --gdl: 1.7s;
+  --gr: 12deg;
+  --hue: var(--g-cherry);
+  --glow: rgb(244 146 166 / 0.45);
 }
 .garnish__grape {
-  bottom: -7%;
-  right: -11%;
-  color: var(--g-grape);
-  --gx: 3px;
-  --gy: 6px;
-  --gr: 12deg;
+  --gx: 13.2rem;
+  --gy: 1.6rem;
   --gd: 6s;
   --gdl: 2.5s;
+  --gr: -8deg;
+  --hue: var(--g-grape);
+  --glow: rgb(179 156 245 / 0.42);
 }
-@keyframes garnish-bob {
+.garnish__carrot {
+  --gx: 3.4rem;
+  --gy: -5.6rem;
+  --gd: 6.8s;
+  --gdl: 1.2s;
+  --gr: 14deg;
+  --hue: var(--g-carrot);
+  --glow: rgb(245 154 112 / 0.4);
+}
+.garnish__salad {
+  --gx: -5.8rem;
+  --gy: -5.8rem;
+  --gd: 5.8s;
+  --gdl: 2.1s;
+  --gr: -10deg;
+  --hue: var(--g-salad);
+  --glow: rgb(70 198 180 / 0.38);
+}
+.garnish__croissant {
+  --gx: 5.8rem;
+  --gy: 5.4rem;
+  --gd: 7.6s;
+  --gdl: 3s;
+  --gr: 8deg;
+  --hue: var(--g-croissant);
+  --glow: rgb(231 188 106 / 0.42);
+}
+@keyframes garnish-sway {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translateY(-4px) rotate(calc(-1 * var(--gr, 8deg)));
   }
   50% {
-    transform: translateY(-7px);
-  }
-}
-@keyframes garnish-drift {
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  50% {
-    transform: translate(var(--gx, 2px), var(--gy, -6px)) rotate(var(--gr, 12deg));
+    transform: translateY(5px) rotate(var(--gr, 8deg));
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .garnish--hero .garnish__tile,
-  .garnish__icon {
+  .garnish__bob,
+  .garnish--hero .garnish__tile {
     animation: none;
+  }
+}
+/* phones: shrink the whole constellation, drop the two aux icons */
+@media (max-width: 700px) {
+  .garnish--hero {
+    --g-scale: 0.55;
+    height: clamp(8.5rem, 24vw, 10.5rem);
+  }
+}
+@media (max-width: 480px) {
+  .garnish__float--aux {
+    display: none;
   }
 }
 
@@ -369,7 +478,7 @@ html.lenis body {
   margin-bottom: -0.08em;
 }
 
-/* Loader — the lid */
+/* Loader — a warm cream curtain that lifts */
 #loader {
   position: fixed;
   inset: 0;
@@ -377,8 +486,8 @@ html.lenis body {
   display: grid;
   align-content: end;
   padding: var(--gutter);
-  background: var(--c-curtain);
-  color: #e7e5da;
+  background: var(--c-loader);
+  color: var(--c-fg);
   clip-path: inset(0% 0% 0% 0%);
 }
 .loader__inner {
@@ -392,19 +501,19 @@ html.lenis body {
   font-family: var(--f-display);
   font-weight: 700;
   font-size: var(--t-l);
-  line-height: 0.9;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
+  line-height: 1.05;
 }
 .loader__count {
   font-family: var(--f-mono);
   font-variant-numeric: tabular-nums;
   font-size: var(--t-m);
+  color: var(--c-accent);
 }
 .loader__bar {
-  height: 2px;
+  height: 5px;
   margin-top: calc(var(--u) * 1.5);
-  background: var(--c-accent-fill);
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--c-accent-fill), var(--g-cherry));
   transform: scaleX(0);
   transform-origin: left;
 }
@@ -413,13 +522,13 @@ html:not(.js) #loader,
   display: none;
 }
 
-/* ── Entrances: "lift and settle" (CSS clock, replays per panel mount) ──
-   Gated on is-loaded so the hero settles exactly as the loader lid lifts.
+/* ── Entrances: "rise and settle" (CSS clock, replays per panel mount) ──
+   Gated on is-loaded so the hero settles exactly as the loader lifts.
    Reduced motion: the global rule neuters durations → content just appears. */
 @keyframes settle-in {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -428,28 +537,26 @@ html:not(.js) #loader,
 }
 html.is-loaded .in,
 html:not(.js) .in {
-  animation: settle-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: settle-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* ── Type helpers ── */
 .display {
   font-family: var(--f-display);
-  text-transform: uppercase;
-  letter-spacing: -0.01em;
-  line-height: 0.88;
+  line-height: 1.06;
+  letter-spacing: 0;
 }
 .mono {
   font-family: var(--f-mono);
   font-size: var(--t-xs);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 .t-body {
   font-size: var(--t-body);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   THE LID — sticky header: wordmark left, tier tabs right
+   THE LID — warm glass header: wordmark left, pill tabs right
    ═══════════════════════════════════════════════════════════════════ */
 .lid {
   position: sticky;
@@ -459,10 +566,10 @@ html:not(.js) .in {
   align-items: stretch;
   justify-content: space-between;
   gap: var(--gutter);
-  padding: calc(var(--u) * 1.1) var(--gutter);
-  background: color-mix(in srgb, var(--c-bg) 86%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: calc(var(--u) * 0.9) var(--gutter);
+  background: color-mix(in srgb, var(--c-bg) 80%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--c-line);
 }
 .lid__brand {
@@ -470,25 +577,23 @@ html:not(.js) .in {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
+  gap: 0.7rem;
   min-width: 0;
 }
 /* The mark stays still in the lid — a colored anchor while scrolling,
-   not another moving thing competing with the page. */
+   not another moving thing competing with the hero constellation. */
 .lid__brand-text {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.15rem;
+  gap: 0.1rem;
   min-width: 0;
 }
 .lid__mark {
   font-family: var(--f-display);
-  font-weight: 800;
-  font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.35rem);
-  line-height: 0.95;
-  letter-spacing: 0;
-  text-transform: uppercase;
+  font-weight: 700;
+  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.4rem);
+  line-height: 1.05;
   white-space: nowrap;
 }
 .lid__mark em {
@@ -496,10 +601,8 @@ html:not(.js) .in {
   color: var(--c-accent);
 }
 .lid__sub {
-  font-family: var(--f-mono);
-  font-size: 0.625rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--c-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -511,13 +614,15 @@ html:not(.js) .in {
   gap: var(--u);
 }
 
-/* Tier tabs: underline-draw, current tier keeps the line (touch sees it) */
+/* Tier tabs: friendly pills, current tier wears its hue as a soft tint */
 .tiers {
   display: flex;
-  align-items: stretch;
-  gap: clamp(0.6rem, 0.4rem + 1vw, 1.6rem);
+  align-items: center;
+  gap: 0.35rem;
   overflow-x: auto;
   scrollbar-width: none;
+  padding: 0.25rem;
+  border-radius: var(--r-pill);
   /* a horizontal tab swipe must never trigger browser back-navigation */
   overscroll-behavior-x: contain;
 }
@@ -545,27 +650,25 @@ html:not(.js) .in {
 .tier {
   position: relative;
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.45em;
-  padding: 0.5em 0.15em;
+  padding: 0.55em 1.05em;
   font-size: var(--t-s);
-  font-weight: 500;
+  font-weight: 700;
   color: var(--c-muted);
   white-space: nowrap;
-  background: linear-gradient(var(--c-fg) 0 0) left bottom / 0% 1px no-repeat;
-  transition: background-size 0.45s cubic-bezier(0.165, 0.84, 0.44, 1), color 0.25s;
+  border-radius: var(--r-pill);
+  transition: background-color 0.25s, color 0.25s, box-shadow 0.25s;
 }
+/* The editorial numerals are retired with the steel skin — icons and
+   labels carry the tabs now. (Markup keeps them; they simply rest.) */
 .tier__num {
-  font-family: var(--f-mono);
-  font-size: 0.625rem;
-  letter-spacing: 0.06em;
-  color: var(--c-muted);
-  transition: color 0.25s;
+  display: none;
 }
 /* Per-tier hue: each section owns a garnish color (generate=leaf,
-   recipes=citrus, mealplan=grape, shopping=cherry). The icon is a
-   second, redundant cue — selection still has the underline draw and
-   aria-selected, so color is never the only signal. */
+   recipes=citrus, mealplan=grape, shopping=cherry). The icon and the
+   pill tint are second, redundant cues — selection still has weight,
+   contrast and aria-selected, so color is never the only signal. */
 .tier[data-tab="generate"] {
   --tier-hue: var(--g-leaf);
 }
@@ -582,73 +685,70 @@ html:not(.js) .in {
   display: inline-flex;
   align-self: center;
   color: var(--c-muted);
-  transition: color 0.25s;
+  transition: color 0.25s, transform 0.25s;
 }
 .tier__icon svg {
-  width: 0.9em;
-  height: 0.9em;
-}
-.tier[aria-selected="true"] .tier__icon {
-  color: var(--tier-hue, var(--c-accent));
-}
-@media (hover: hover) {
-  .tier:hover .tier__icon {
-    color: var(--tier-hue, var(--c-fg));
-  }
-}
-/* On phones the numbers yield their slot to the icons so the tab strip
-   stays about as wide as before (it already scrolls with edge fades). */
-@media (max-width: 640px) {
-  .tier__num {
-    display: none;
-  }
+  width: 1em;
+  height: 1em;
 }
 @media (hover: hover) {
   .tier:hover {
     color: var(--c-fg);
-    background-size: 100% 1px;
+    background: var(--c-wash);
+  }
+  .tier:hover .tier__icon {
+    color: var(--tier-hue, var(--c-accent));
+    transform: translateY(-1px);
   }
 }
 .tier[aria-selected="true"] {
   color: var(--c-fg);
-  background-size: 100% 1px;
+  background: color-mix(in srgb, var(--tier-hue, var(--c-accent)) 16%, var(--c-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tier-hue, var(--c-accent)) 38%, transparent);
 }
-.tier[aria-selected="true"] .tier__num {
-  color: var(--c-accent);
+.tier[aria-selected="true"] .tier__icon {
+  color: var(--tier-hue, var(--c-accent));
+}
+@media (max-width: 640px) {
+  .tier {
+    padding: 0.5em 0.9em;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .tier {
+  .tier,
+  .tier__icon {
     transition: none;
   }
 }
 
-/* Theme switch: three steel states */
+/* Theme switch: a soft pill trio */
 .theme {
   display: inline-flex;
-  border: 1px solid var(--c-line-strong);
-  border-radius: var(--radius);
-  overflow: hidden;
+  padding: 0.2rem;
+  gap: 0.15rem;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-wash);
 }
 .theme button {
   display: grid;
   place-items: center;
-  width: 2.4rem;
-  height: 2rem;
+  width: 2.2rem;
+  height: 1.9rem;
   color: var(--c-muted);
-  transition: color 0.25s, background-color 0.25s;
-}
-.theme button + button {
-  border-left: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  transition: color 0.25s, background-color 0.25s, box-shadow 0.25s;
 }
 @media (hover: hover) {
   .theme button:hover {
     color: var(--c-fg);
-    background: var(--c-wash);
+    background: var(--c-wash-2);
   }
 }
 .theme button[aria-pressed="true"] {
-  color: var(--c-curtain);
-  background: var(--c-accent-fill);
+  color: var(--c-accent);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-soft);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -662,7 +762,7 @@ html:not(.js) .in {
   margin: 0 auto;
 }
 .tier-panel {
-  padding-top: calc(var(--u) * 7);
+  padding-top: calc(var(--u) * 6);
   padding-bottom: calc(var(--u) * 6);
   min-height: 58vh;
 }
@@ -673,39 +773,39 @@ html:not(.js) .in {
   justify-content: space-between;
   gap: var(--u);
   margin-top: calc(var(--u) * 4);
-  font-family: var(--f-mono);
   font-size: var(--t-xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 600;
   color: var(--c-muted);
 }
 
 /* ── Hero ── */
 .hero {
   display: grid;
-  gap: calc(var(--u) * 2.2);
+  gap: calc(var(--u) * 2.1);
 }
 .hero__title {
   font-family: var(--f-display);
   font-weight: 800;
   font-size: var(--t-mega);
-  line-height: 0.86;
-  letter-spacing: -0.015em;
-  text-transform: uppercase;
-  margin-left: -0.04em;
-  max-width: 12ch;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  margin-left: -0.02em;
+  max-width: 15ch;
 }
 .hero__title .accent {
-  color: var(--c-accent);
+  background: linear-gradient(115deg, #f97316 15%, #e85d75 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .hero__lede {
   max-width: 46ch;
   color: var(--c-muted);
   font-size: var(--t-m);
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
-/* ── Fields: steel underline ── */
+/* ── Fields: soft filled cards with a mango focus ring ── */
 .field-row {
   display: flex;
   gap: var(--u);
@@ -719,73 +819,71 @@ html:not(.js) .in {
 .field input,
 .field textarea {
   width: 100%;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--c-line-strong);
-  border-radius: 0;
-  padding: 0.55em 0.1em;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: var(--radius);
+  padding: 0.7em 1em;
   font-size: var(--t-body);
   color: var(--c-fg);
-  transition: border-color 0.25s;
+  transition: border-color 0.25s, box-shadow 0.25s;
 }
 .field textarea {
   resize: none;
-  min-height: 3.2em;
+  min-height: 3.4em;
   line-height: 1.5;
 }
 .field input::placeholder,
 .field textarea::placeholder {
   color: var(--c-muted);
-  opacity: 0.75;
+  opacity: 0.7;
 }
 .field input:focus,
 .field textarea:focus {
   outline: none;
   border-color: var(--c-accent);
-}
-.field input:focus-visible,
-.field textarea:focus-visible {
-  outline: 2px solid var(--c-accent);
-  outline-offset: 3px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-accent) 18%, transparent);
 }
 .field__label {
   position: absolute;
-  top: -1.1em;
-  left: 0.1em;
-  font-family: var(--f-mono);
-  font-size: 0.625rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  top: -1.25em;
+  left: 0.2em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
   color: var(--c-muted);
 }
 
-/* Square add button */
+/* Round add button */
 .sq-btn {
   display: grid;
   place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border: 1px solid var(--c-line-strong);
-  border-radius: var(--radius);
-  color: var(--c-fg);
-  transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+  width: 2.9rem;
+  height: 2.9rem;
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: 50%;
+  background: var(--c-surface);
+  color: var(--c-accent);
+  box-shadow: var(--shadow-soft);
+  transition: background-color 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
 }
 .sq-btn:disabled {
-  opacity: 0.35;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 @media (hover: hover) {
   .sq-btn:not(:disabled):hover {
-    background: var(--c-fg);
-    color: var(--c-bg);
-    border-color: var(--c-fg);
+    background: var(--c-accent-fill);
+    border-color: var(--c-accent-fill);
+    color: var(--c-curtain);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift);
   }
 }
 .sq-btn:not(:disabled):active {
-  transform: scale(0.95);
+  transform: scale(0.94);
 }
 
-/* Chips: steel tokens */
+/* Chips: friendly little pills */
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -796,34 +894,35 @@ html:not(.js) .in {
   display: inline-flex;
   align-items: center;
   gap: 0.4em;
-  padding: 0.45em 0.85em;
+  padding: 0.45em 0.95em;
   font-size: var(--t-s);
-  font-weight: 500;
+  font-weight: 600;
   border: 1px solid var(--c-line-strong);
-  border-radius: var(--radius);
+  border-radius: var(--r-pill);
   color: var(--c-fg);
-  background: transparent;
-  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  background: var(--c-surface);
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
 }
 .chip .x {
   display: grid;
   place-items: center;
-  width: 1.1em;
-  height: 1.1em;
+  width: 1.2em;
+  height: 1.2em;
   color: var(--c-muted);
-  border-radius: 2px;
+  border-radius: 50%;
   transition: color 0.2s, background-color 0.2s;
 }
 @media (hover: hover) {
   .chip:hover {
-    border-color: var(--c-fg);
+    border-color: var(--c-accent);
+    transform: translateY(-1px);
   }
   .chip--filled:hover {
-    background: var(--c-wash-2);
+    background: color-mix(in srgb, var(--c-accent-fill) 22%, var(--c-surface));
   }
   .chip .x:hover {
-    color: var(--c-fg);
-    background: var(--c-wash);
+    color: var(--c-danger);
+    background: color-mix(in srgb, var(--c-danger) 12%, transparent);
   }
   /* Quick-add chips lean leaf-green on approach — a hint of what
      tapping them grows into. Same tint on keyboard focus. */
@@ -831,39 +930,42 @@ html:not(.js) .in {
   .chip--add:focus-visible {
     color: var(--g-leaf);
     border-color: var(--g-leaf);
-    background: color-mix(in srgb, var(--g-leaf) 9%, transparent);
+    background: color-mix(in srgb, var(--g-leaf) 10%, transparent);
   }
 }
 .chip--add {
   color: var(--c-muted);
   border-style: dashed;
+  background: transparent;
 }
 .chip--add::before {
   content: "+";
-  font-family: var(--f-mono);
+  font-weight: 800;
 }
 .chip--filled {
-  background: var(--c-wash);
+  background: color-mix(in srgb, var(--c-accent-fill) 16%, var(--c-surface));
+  border-color: color-mix(in srgb, var(--c-accent) 30%, transparent);
 }
 .chip--filled .x {
   color: inherit;
 }
 
-/* Nutrition switch */
+/* Nutrition switch: a friendly pill toggle */
 .switch-row {
   display: flex;
   align-items: center;
   gap: 0.7em;
   font-size: var(--t-s);
+  font-weight: 600;
   color: var(--c-muted);
 }
 .switch {
   position: relative;
-  width: 2.6rem;
-  height: 1.4rem;
+  width: 3rem;
+  height: 1.65rem;
   border: 1px solid var(--c-line-strong);
-  border-radius: var(--radius);
-  background: transparent;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
   transition: background-color 0.25s, border-color 0.25s;
 }
 .switch::after {
@@ -871,19 +973,19 @@ html:not(.js) .in {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: calc(1.4rem - 8px);
-  height: calc(1.4rem - 8px);
-  background: var(--c-muted);
-  border-radius: 2px;
-  transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), background-color 0.25s;
+  width: calc(1.65rem - 8px);
+  height: calc(1.65rem - 8px);
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.2);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .switch[aria-checked="true"] {
-  background: var(--c-accent-fill);
-  border-color: var(--c-accent-fill);
+  background: linear-gradient(135deg, var(--c-accent-fill), var(--g-cherry));
+  border-color: transparent;
 }
 .switch[aria-checked="true"]::after {
-  transform: translateX(1.2rem);
-  background: var(--c-curtain);
+  transform: translateX(1.35rem);
 }
 @media (prefers-reduced-motion: reduce) {
   .switch::after {
@@ -891,7 +993,9 @@ html:not(.js) .in {
   }
 }
 
-/* ── Buttons: the turmeric flood ── */
+/* ── Buttons: the mango flood ──
+   Soft pills; the GSAP engine floods .fill from the pointer's entry.
+   Filled text turns cocoa — warm and readable on both gradient stops. */
 .btn {
   position: relative;
   isolation: isolate;
@@ -899,28 +1003,30 @@ html:not(.js) .in {
   align-items: center;
   justify-content: center;
   gap: 0.5em;
-  padding: 0.9em 1.6em;
-  border: 1px solid var(--c-fg);
-  border-radius: var(--radius);
-  font-weight: 600;
+  padding: 0.8em 1.5em;
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: var(--r-pill);
+  font-weight: 700;
   font-size: var(--t-s);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
   color: var(--c-fg);
-  background: transparent;
+  background: var(--c-surface);
+  box-shadow: var(--shadow-soft);
   overflow: clip;
-  transition: color 0.3s;
+  transition: color 0.3s, transform 0.2s, box-shadow 0.25s;
 }
 .btn .fill {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: var(--c-accent-fill);
+  background: linear-gradient(135deg, #ffb25e, #f97316);
   clip-path: circle(0% at 50% 50%);
 }
 .btn.is-filled,
 .btn:active {
   color: var(--c-curtain);
+}
+.btn:active {
+  transform: scale(0.97);
 }
 .btn:active .fill {
   clip-path: circle(150% at 50% 50%);
@@ -943,26 +1049,26 @@ html:not(.js) .in {
 }
 .btn--primary {
   width: 100%;
-  padding: 1.05em 1.6em;
+  padding: 1em 1.7em;
   font-size: var(--t-m);
   font-family: var(--f-display);
   font-weight: 700;
-  letter-spacing: 0.01em;
+  border-color: color-mix(in srgb, var(--c-accent) 45%, transparent);
 }
-/* The one emerald surface: the main CTA carries the brand color the
-   garnish reintroduced. Filled state text stays curtain-dark, which
-   holds contrast across both gradient stops. */
-.btn--primary .fill {
-  background: linear-gradient(135deg, var(--g-leaf-fill-a), var(--g-leaf-fill-b));
+.dark .btn .fill {
+  background: linear-gradient(135deg, #f9a13c, #f97316);
 }
 .btn:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
+  box-shadow: none;
 }
 .btn--ghost {
-  border-color: var(--c-line-strong);
+  border-color: var(--c-line);
   color: var(--c-muted);
-  font-weight: 500;
+  background: transparent;
+  box-shadow: none;
+  font-weight: 600;
 }
 .btn--ghost:hover {
   color: var(--c-fg);
@@ -973,27 +1079,35 @@ html:not(.js) .in {
   border-color: var(--c-fg);
 }
 .btn--danger {
-  color: #b3261e;
-  border-color: currentColor;
+  color: var(--c-danger);
+  border-color: color-mix(in srgb, var(--c-danger) 55%, transparent);
+  background: color-mix(in srgb, var(--c-danger) 6%, var(--c-surface));
+  box-shadow: none;
+}
+.btn--danger .fill {
+  background: linear-gradient(135deg, #ef6a5a, #d93a2b);
 }
 .dark .btn--danger {
-  color: #e08a84;
+  color: var(--c-danger);
 }
 .icon-btn {
   display: grid;
   place-items: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: var(--radius);
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
   color: var(--c-muted);
-  transition: color 0.2s, background-color 0.2s;
+  transition: color 0.2s, background-color 0.2s, transform 0.2s;
 }
 .icon-btn:hover {
   color: var(--c-fg);
   background: var(--c-wash);
 }
+.icon-btn:active {
+  transform: scale(0.92);
+}
 
-/* ── Notices ── */
+/* ── Notices: soft rose cards ── */
 .notice {
   display: flex;
   flex-wrap: wrap;
@@ -1001,18 +1115,17 @@ html:not(.js) .in {
   justify-content: space-between;
   gap: var(--u);
   padding: var(--u) calc(var(--u) * 1.4);
-  border: 1px solid #b3261e;
+  border: 1px solid color-mix(in srgb, var(--c-danger) 35%, transparent);
   border-radius: var(--radius);
-  color: #b3261e;
+  background: color-mix(in srgb, var(--c-danger) 7%, var(--c-surface));
+  color: var(--c-danger);
   font-size: var(--t-s);
+  font-weight: 600;
   margin-top: calc(var(--u) * 3);
-}
-.dark .notice {
-  color: #e08a84;
-  border-color: #e08a84;
 }
 .hint {
   font-size: var(--t-xs);
+  font-weight: 600;
   color: var(--c-muted);
 }
 
@@ -1026,36 +1139,36 @@ html:not(.js) .in {
 }
 .section-title {
   font-family: var(--f-display);
-  font-weight: 800;
+  font-weight: 700;
   font-size: var(--t-l);
-  line-height: 0.9;
-  text-transform: uppercase;
-  letter-spacing: -0.01em;
+  line-height: 1.08;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   INDEX ROWS — the results list, saved recipes
+   INDEX CARDS — the results list, saved recipes
    ═══════════════════════════════════════════════════════════════════ */
 .index {
   list-style: none;
   padding: 0;
   display: grid;
+  gap: 0.7rem;
 }
 .index-row {
   position: relative;
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: clamp(0.8rem, 0.5rem + 1.5vw, 2rem);
+  gap: clamp(0.8rem, 0.5rem + 1.5vw, 1.8rem);
   align-items: center;
   width: 100%;
   text-align: left;
-  padding: calc(var(--u) * 1.6) 0.2rem;
-  border-bottom: 1px solid var(--c-line);
+  padding: calc(var(--u) * 1.1) calc(var(--u) * 1.3);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
   color: var(--c-fg);
-  transition: padding-left 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-.index-row:first-child {
-  border-top: 1px solid var(--c-line);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s,
+    border-color 0.25s;
 }
 .index-row__num {
   font-family: var(--f-mono);
@@ -1066,49 +1179,94 @@ html:not(.js) .in {
 .index-row__main {
   min-width: 0;
   display: grid;
-  gap: 0.3em;
+  gap: 0.25em;
 }
 .index-row__title {
   font-family: var(--f-display);
   font-weight: 700;
-  font-size: clamp(1.5rem, 1.2rem + 1.6vw, 2.6rem);
-  line-height: 0.92;
-  text-transform: uppercase;
-  letter-spacing: -0.01em;
+  font-size: clamp(1.25rem, 1.05rem + 1vw, 1.7rem);
+  line-height: 1.12;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 .index-row__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4em 1.2em;
-  font-family: var(--f-mono);
+  gap: 0.4em 1.1em;
   font-size: var(--t-xs);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-weight: 600;
   color: var(--c-muted);
 }
 .index-row__meta .hot {
   color: var(--c-accent);
 }
 .index-row__arrow {
+  display: grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 50%;
   font-family: var(--f-mono);
   font-size: var(--t-s);
   color: var(--c-muted);
-  transition: transform 0.35s cubic-bezier(0.165, 0.84, 0.44, 1), color 0.25s;
+  background: var(--c-wash);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), color 0.25s,
+    background-color 0.25s;
 }
 @media (hover: hover) {
   .index-row:hover {
-    padding-left: 0.8rem;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
+    border-color: color-mix(in srgb, var(--c-accent) 45%, transparent);
   }
   .index-row:hover .index-row__arrow {
-    transform: translateX(6px);
-    color: var(--c-accent);
+    transform: translateX(4px);
+    color: var(--c-curtain);
+    background: var(--c-accent-fill);
   }
 }
 .index-row[aria-pressed="true"] .index-row__title {
   color: var(--c-accent);
+}
+
+/* Saved-recipe cards — same friendly card family as the index rows */
+.saved-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
+  padding: calc(var(--u) * 1.1) calc(var(--u) * 1.2);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s,
+    border-color 0.25s;
+}
+.saved-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+}
+.saved-card__row {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--u) * 1.2);
+}
+.saved-card__main {
+  min-width: 0;
+  flex: 1;
+}
+.saved-card__title {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: var(--t-m);
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.saved-card__actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 /* Floating real-photo preview (fine pointers; hidden on touch/reduced) */
@@ -1123,9 +1281,10 @@ html:not(.js) .in {
   opacity: 0;
   visibility: hidden;
   z-index: 5;
-  border-radius: var(--radius);
+  border-radius: var(--r-lg);
   overflow: hidden;
-  box-shadow: 0 24px 60px rgb(0 0 0 / 0.35);
+  border: 3px solid var(--c-surface);
+  box-shadow: 0 24px 60px rgb(60 32 8 / 0.35);
 }
 .preview img {
   width: 100%;
@@ -1162,38 +1321,38 @@ html:not(.js) .in {
 }
 /* Medallion — every empty state leads with its section's garnish hue
    in a gradient tile, so even "nothing here" looks like the app. The
-   gentle bob reuses the garnish keyframe; decorative (aria-hidden). */
+   gentle bob reuses the garnish sway; decorative (aria-hidden). */
 .empty__mark {
   display: grid;
   place-items: center;
-  width: 3.4rem;
-  height: 3.4rem;
+  width: 4.2rem;
+  height: 4.2rem;
   color: #fff;
-  border-radius: 26%;
+  border-radius: 30%;
   background: linear-gradient(135deg, var(--mk-a), var(--mk-b));
   box-shadow:
-    0 0.55rem 1.3rem var(--mk-shadow),
-    inset 0 1px 0 rgb(255 255 255 / 0.24);
-  animation: garnish-bob 5.5s ease-in-out infinite;
+    0 0.65rem 1.5rem var(--mk-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 0.25);
+  animation: garnish-sway 5.5s ease-in-out infinite;
 }
 .empty__mark svg {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.9rem;
+  height: 1.9rem;
 }
 .empty__mark--amber {
-  --mk-a: #f2b257;
-  --mk-b: #c07513;
-  --mk-shadow: rgb(201 111 10 / 0.3);
+  --mk-a: #f6b756;
+  --mk-b: #e8821e;
+  --mk-shadow: rgb(232 130 30 / 0.35);
 }
 .empty__mark--violet {
-  --mk-a: #9d86ee;
-  --mk-b: #6a4fc4;
-  --mk-shadow: rgb(111 83 201 / 0.3);
+  --mk-a: #a88bef;
+  --mk-b: #7d5bd8;
+  --mk-shadow: rgb(125 91 216 / 0.35);
 }
 .empty__mark--rose {
-  --mk-a: #ef8fa0;
-  --mk-b: #bd4258;
-  --mk-shadow: rgb(194 67 86 / 0.3);
+  --mk-a: #f492a6;
+  --mk-b: #e14b66;
+  --mk-shadow: rgb(225 75 102 / 0.35);
 }
 @media (prefers-reduced-motion: reduce) {
   .empty__mark {
@@ -1203,15 +1362,14 @@ html:not(.js) .in {
 .empty__title {
   font-family: var(--f-display);
   font-weight: 700;
-  font-size: var(--t-m);
-  text-transform: uppercase;
+  font-size: 1.35rem;
 }
 .empty p {
   color: var(--c-muted);
-  max-width: 40ch;
+  max-width: 42ch;
 }
 
-/* Skeletons — steel shimmer */
+/* Skeletons — cream shimmer */
 .skel {
   border-radius: var(--radius);
   background: var(--c-wash-2);
@@ -1238,28 +1396,32 @@ html:not(.js) .in {
   align-items: center;
   gap: 0.5em;
   margin-bottom: calc(var(--u) * 2);
-  font-family: var(--f-mono);
-  font-size: var(--t-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--t-s);
+  font-weight: 700;
   color: var(--c-muted);
-  background: linear-gradient(var(--c-fg) 0 0) left bottom / 0% 1px no-repeat;
-  transition: background-size 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), color 0.25s;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  padding: 0.45em 1em;
+  box-shadow: var(--shadow-soft);
+  transition: color 0.25s, border-color 0.25s, transform 0.2s;
 }
 @media (hover: hover) {
   .back-link:hover {
-    color: var(--c-fg);
-    background-size: 100% 1px;
+    color: var(--c-accent);
+    border-color: color-mix(in srgb, var(--c-accent) 45%, transparent);
+    transform: translateY(-1px);
   }
 }
 .dish {
   display: grid;
-  gap: calc(var(--u) * 3);
+  gap: calc(var(--u) * 2.6);
 }
 .dish__photo {
-  border-radius: var(--radius);
+  border-radius: var(--r-xl);
   overflow: clip;
   border: 1px solid var(--c-line);
+  box-shadow: var(--shadow-soft);
 }
 .dish__photo img,
 .dish__photo .media-ph {
@@ -1276,25 +1438,21 @@ html:not(.js) .in {
   font-family: var(--f-display);
   font-weight: 800;
   font-size: var(--t-xl);
-  line-height: 0.88;
-  text-transform: uppercase;
-  letter-spacing: -0.015em;
-  margin-left: -0.03em;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
 }
 .dish__desc {
   font-size: var(--t-m);
-  line-height: 1.45;
+  line-height: 1.5;
   color: var(--c-fg);
   max-width: 58ch;
 }
 .dish__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5em 1.6em;
-  font-family: var(--f-mono);
+  gap: 0.5em 1.4em;
   font-size: var(--t-xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 700;
   color: var(--c-muted);
 }
 .dish__meta .hot {
@@ -1307,27 +1465,25 @@ html:not(.js) .in {
   gap: 0.5em;
 }
 .dish__meta button {
-  font-family: var(--f-mono);
   font-size: var(--t-xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 700;
   color: var(--c-muted);
-  padding: 0.2em 0;
-  border-bottom: 1px solid var(--c-line-strong);
-  transition: color 0.2s, border-color 0.2s;
+  padding: 0.35em 0.8em;
+  border-radius: var(--r-pill);
+  background: var(--c-wash);
+  transition: color 0.2s, background-color 0.2s;
 }
 .dish__meta button:hover {
   color: var(--c-accent);
-  border-color: var(--c-accent);
+  background: color-mix(in srgb, var(--c-accent) 12%, transparent);
 }
 .dish__meta .stepper button {
+  background: var(--c-surface);
   border: 1px solid var(--c-line-strong);
-  border-radius: var(--radius);
-  padding: 0.15em 0.5em;
 }
 .dish__meta .stepper button:hover {
-  border-color: var(--c-fg);
-  color: var(--c-fg);
+  border-color: var(--c-accent);
+  color: var(--c-accent);
 }
 
 /* Ingredients + steps */
@@ -1338,14 +1494,22 @@ html:not(.js) .in {
 .dish__section-title {
   font-family: var(--f-display);
   font-weight: 700;
-  font-size: var(--t-m);
-  text-transform: uppercase;
-  letter-spacing: 0;
+  font-size: 1.3rem;
   display: flex;
   align-items: baseline;
-  gap: 0.8em;
+  gap: 0.6em;
   border-bottom: 1px solid var(--c-line);
   padding-bottom: 0.5em;
+}
+/* a small mango dot marks each section — a friendly rhythm */
+.dish__section-title::before {
+  content: "";
+  align-self: center;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-accent-fill), var(--g-cherry));
+  flex: none;
 }
 .dish__section-title .mono {
   color: var(--c-muted);
@@ -1361,19 +1525,19 @@ html:not(.js) .in {
   display: flex;
   gap: 0.7em;
   align-items: baseline;
-  padding: 0.45em 0.1em;
+  padding: 0.5em 0.15em;
   font-size: var(--t-body);
-  border-bottom: 1px dotted var(--c-line);
+  border-bottom: 1px dotted var(--c-line-strong);
   text-align: left;
   width: 100%;
   color: inherit;
 }
 .ing .box {
   flex-shrink: 0;
-  width: 1rem;
-  height: 1rem;
-  border: 1px solid var(--c-line-strong);
-  border-radius: 2px;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: 0.4em;
   align-self: center;
   display: grid;
   place-items: center;
@@ -1389,8 +1553,8 @@ html:not(.js) .in {
   text-decoration-color: var(--c-line-strong);
 }
 .ing[aria-pressed="true"] .box {
-  background: var(--c-leaf);
-  border-color: var(--c-leaf);
+  background: linear-gradient(135deg, var(--g-leaf-fill-a), var(--g-leaf-fill-b));
+  border-color: transparent;
   color: #fff;
 }
 .ing--static {
@@ -1404,29 +1568,37 @@ html:not(.js) .in {
 }
 .step {
   display: flex;
-  gap: clamp(0.9rem, 0.6rem + 1.5vw, 1.8rem);
-  padding: calc(var(--u) * 1.3) 0.2rem;
+  gap: clamp(0.9rem, 0.6rem + 1.5vw, 1.6rem);
+  padding: calc(var(--u) * 1.1) 0.2rem;
   border-bottom: 1px solid var(--c-line);
   text-align: left;
   width: 100%;
   color: inherit;
 }
 .step__num {
-  font-family: var(--f-mono);
-  font-size: clamp(1.1rem, 0.9rem + 0.8vw, 1.5rem);
-  line-height: 1;
-  color: var(--c-muted);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.3rem;
+  height: 2.3rem;
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--c-accent);
+  background: color-mix(in srgb, var(--c-accent) 13%, transparent);
+  border-radius: 50%;
   font-variant-numeric: tabular-nums;
-  min-width: 2.2em;
-  transition: color 0.2s;
+  transition: background-color 0.25s, color 0.25s;
 }
 .step__text {
   font-size: var(--t-body);
   line-height: 1.55;
   max-width: 62ch;
+  align-self: center;
 }
 .step[aria-pressed="true"] .step__num {
-  color: var(--c-leaf);
+  color: #fff;
+  background: linear-gradient(135deg, var(--g-leaf-fill-a), var(--g-leaf-fill-b));
 }
 .step[aria-pressed="true"] .step__text {
   color: var(--c-muted);
@@ -1443,7 +1615,7 @@ html:not(.js) .in {
 }
 .tips li {
   position: relative;
-  padding-left: 1.2em;
+  padding-left: 1.3em;
   color: var(--c-muted);
   font-size: var(--t-s);
 }
@@ -1451,22 +1623,25 @@ html:not(.js) .in {
   content: "";
   position: absolute;
   left: 0;
-  top: 0.55em;
-  width: 0.4em;
-  height: 0.4em;
-  background: var(--c-accent-fill);
+  top: 0.5em;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-accent-fill), var(--g-cherry));
 }
 
-/* Nutrition: data facts */
+/* Nutrition: friendly fact tiles */
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  background: var(--c-surface);
   border: 1px solid var(--c-line);
-  border-radius: var(--radius);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
   overflow: hidden;
 }
 .fact {
-  padding: calc(var(--u) * 1.4) calc(var(--u) * 1.2);
+  padding: calc(var(--u) * 1.3) calc(var(--u) * 1.1);
   border-left: 1px solid var(--c-line);
   display: grid;
   gap: 0.2em;
@@ -1478,19 +1653,17 @@ html:not(.js) .in {
   font-family: var(--f-display);
   font-weight: 700;
   font-size: var(--t-l);
-  line-height: 0.9;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .fact__value small {
   font-size: 0.45em;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--c-muted);
 }
 .fact__label {
-  font-family: var(--f-mono);
   font-size: var(--t-xs);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-weight: 700;
   color: var(--c-muted);
 }
 
@@ -1523,13 +1696,11 @@ html:not(.js) .in {
   font-family: var(--f-display);
   font-weight: 800;
   font-size: var(--t-l);
-  text-transform: uppercase;
 }
 .md h2 {
   font-family: var(--f-display);
   font-weight: 700;
   font-size: var(--t-m);
-  text-transform: uppercase;
   margin-top: 0.6em;
   border-bottom: 1px solid var(--c-line);
   padding-bottom: 0.4em;
@@ -1551,7 +1722,7 @@ html:not(.js) .in {
   gap: 0.4em;
 }
 .md strong {
-  font-weight: 650;
+  font-weight: 700;
 }
 
 /* Media badge / video link */
@@ -1560,16 +1731,16 @@ html:not(.js) .in {
 }
 .media-slot__credit {
   position: absolute;
-  left: 0;
-  bottom: 0;
-  padding: 0.4em 0.7em;
-  font-family: var(--f-mono);
-  font-size: 0.625rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  left: 0.6rem;
+  bottom: 0.6rem;
+  padding: 0.4em 0.8em;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   color: #fff;
-  background: rgb(20 21 15 / 0.72);
-  border-radius: 0 var(--radius) 0 0;
+  background: rgb(43 26 12 / 0.72);
+  border-radius: var(--r-pill);
+  backdrop-filter: blur(4px);
 }
 .media-ph {
   display: grid;
@@ -1591,22 +1762,19 @@ html:not(.js) .in {
 .week__grid {
   display: grid;
   grid-template-columns: 3.5rem repeat(4, minmax(9rem, 1fr));
-  gap: 6px;
+  gap: 8px;
   min-width: 42rem;
 }
 .week__col {
-  font-family: var(--f-mono);
   font-size: var(--t-xs);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-weight: 700;
   color: var(--c-muted);
   text-align: center;
   padding: 0.4em 0;
 }
 .week__day {
-  font-family: var(--f-mono);
   font-size: var(--t-xs);
-  text-transform: uppercase;
+  font-weight: 700;
   color: var(--c-muted);
   display: flex;
   align-items: center;
@@ -1615,26 +1783,29 @@ html:not(.js) .in {
 }
 .slot {
   min-height: 4.5rem;
-  border: 1px dashed var(--c-line-strong);
+  border: 1.5px dashed var(--c-line-strong);
   border-radius: var(--radius);
   padding: 0.55em 0.7em;
   display: grid;
   align-content: start;
   gap: 0.25em;
+  background: color-mix(in srgb, var(--c-surface) 55%, transparent);
   transition: border-color 0.25s, background-color 0.25s;
 }
 .slot:hover {
   border-color: var(--c-accent);
+  background: color-mix(in srgb, var(--c-accent) 7%, var(--c-surface));
 }
 .slot--filled {
   border-style: solid;
   border-color: var(--c-line-strong);
-  background: var(--c-wash);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-soft);
   position: relative;
 }
 .slot__title {
   font-size: var(--t-s);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.25;
   overflow: hidden;
   display: -webkit-box;
@@ -1645,24 +1816,23 @@ html:not(.js) .in {
 .slot__cal {
   font-family: var(--f-mono);
   font-size: 0.625rem;
-  letter-spacing: 0.05em;
   color: var(--c-muted);
 }
 .slot__x {
   position: absolute;
-  top: 3px;
-  right: 3px;
+  top: 5px;
+  right: 5px;
   display: grid;
   place-items: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.4rem;
+  height: 1.4rem;
   color: var(--c-muted);
-  border-radius: 2px;
+  border-radius: 50%;
   transition: color 0.2s, background-color 0.2s;
 }
 .slot__x:hover {
-  color: #b3261e;
-  background: var(--c-wash);
+  color: var(--c-danger);
+  background: color-mix(in srgb, var(--c-danger) 12%, transparent);
 }
 .slot__plus {
   color: var(--c-line-strong);
@@ -1677,17 +1847,18 @@ html:not(.js) .in {
   display: grid;
   place-items: center;
   padding: var(--gutter);
-  background: rgb(20 21 15 / 0.55);
-  backdrop-filter: blur(3px);
+  background: rgb(43 26 12 / 0.5);
+  backdrop-filter: blur(5px);
 }
 .modal {
   width: min(30rem, 100%);
   max-height: 80vh;
   display: grid;
   grid-template-rows: auto 1fr;
-  background: var(--c-bg);
-  border: 1px solid var(--c-line-strong);
-  border-radius: var(--radius);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lift);
   overflow: hidden;
 }
 .modal__head {
@@ -1702,13 +1873,10 @@ html:not(.js) .in {
   font-family: var(--f-display);
   font-weight: 700;
   font-size: var(--t-m);
-  text-transform: uppercase;
 }
 .modal__sub {
-  font-family: var(--f-mono);
   font-size: var(--t-xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 600;
   color: var(--c-muted);
   margin-top: 0.3em;
 }
@@ -1725,17 +1893,19 @@ html:not(.js) .in {
   gap: 0.9em;
   width: 100%;
   text-align: left;
-  padding: 0.7em 0.8em;
+  padding: 0.7em 0.9em;
   border: 1px solid var(--c-line);
   border-radius: var(--radius);
-  transition: border-color 0.2s, background-color 0.2s;
+  background: var(--c-surface);
+  transition: border-color 0.2s, background-color 0.2s, transform 0.2s;
 }
 .pick:hover {
-  border-color: var(--c-fg);
-  background: var(--c-wash);
+  border-color: color-mix(in srgb, var(--c-accent) 50%, transparent);
+  background: color-mix(in srgb, var(--c-accent) 6%, var(--c-surface));
+  transform: translateY(-1px);
 }
 .pick__title {
-  font-weight: 600;
+  font-weight: 700;
   font-size: var(--t-s);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1759,7 +1929,7 @@ html:not(.js) .in {
    ═══════════════════════════════════════════════════════════════════ */
 .shop {
   display: grid;
-  gap: calc(var(--u) * 2);
+  gap: 0.5rem;
   max-width: 46rem;
 }
 .shop-row {
@@ -1768,32 +1938,39 @@ html:not(.js) .in {
   gap: 0.8em;
   width: 100%;
   text-align: left;
-  padding: 0.6em 0.1em;
-  border-bottom: 1px solid var(--c-line);
+  padding: 0.65em 0.95em;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--radius);
   font-size: var(--t-body);
+  transition: opacity 0.2s;
 }
 .shop-row .box {
   flex-shrink: 0;
-  width: 1.1rem;
-  height: 1.1rem;
-  border: 1px solid var(--c-line-strong);
-  border-radius: 2px;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1.5px solid var(--c-line-strong);
+  border-radius: 0.4em;
   display: grid;
   place-items: center;
   color: transparent;
   font-size: 0.75rem;
   transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
-.shop-row[aria-checked="true"], .shop-row.is-checked {
+.shop-row[aria-checked="true"],
+.shop-row.is-checked {
   color: var(--c-muted);
+  opacity: 0.75;
 }
-.shop-row[aria-checked="true"], .shop-row.is-checked .label {
+.shop-row[aria-checked="true"] .label,
+.shop-row.is-checked .label {
   text-decoration: line-through;
   text-decoration-color: var(--c-line-strong);
 }
-.shop-row[aria-checked="true"], .shop-row.is-checked .box {
-  background: var(--c-leaf);
-  border-color: var(--c-leaf);
+.shop-row[aria-checked="true"] .box,
+.shop-row.is-checked .box {
+  background: linear-gradient(135deg, var(--g-leaf-fill-a), var(--g-leaf-fill-b));
+  border-color: transparent;
   color: #fff;
 }
 .shop-row .qty {
@@ -1801,11 +1978,14 @@ html:not(.js) .in {
   font-family: var(--f-mono);
   font-size: var(--t-xs);
   color: var(--c-muted);
+  background: var(--c-wash);
+  padding: 0.25em 0.65em;
+  border-radius: var(--r-pill);
   white-space: nowrap;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   TIMER — floating steel widget
+   TIMER — floating kitchen companion
    ═══════════════════════════════════════════════════════════════════ */
 .timer {
   position: fixed;
@@ -1813,10 +1993,10 @@ html:not(.js) .in {
   bottom: var(--gutter);
   z-index: 55;
   width: 15rem;
-  background: var(--c-bg);
-  border: 1px solid var(--c-line-strong);
-  border-radius: var(--radius);
-  box-shadow: 0 18px 50px rgb(0 0 0 / 0.18);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lift);
   padding: calc(var(--u) * 1.2);
   display: grid;
   gap: 0.6em;
@@ -1828,17 +2008,15 @@ html:not(.js) .in {
   gap: 0.5em;
 }
 .timer__label {
-  font-family: var(--f-mono);
   font-size: var(--t-xs);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-weight: 700;
   color: var(--c-muted);
 }
 .timer__time {
   font-family: var(--f-display);
   font-weight: 700;
   font-size: var(--t-l);
-  line-height: 0.9;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .timer__time--done {
@@ -1850,26 +2028,29 @@ html:not(.js) .in {
 }
 .timer input {
   width: 100%;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--c-line-strong);
-  padding: 0.3em 0.1em;
+  background: var(--c-wash);
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  padding: 0.4em 0.7em;
   font-family: var(--f-mono);
   font-size: var(--t-s);
   color: var(--c-fg);
+  transition: border-color 0.25s, box-shadow 0.25s;
 }
 .timer input:focus {
   outline: none;
   border-color: var(--c-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-accent) 20%, transparent);
 }
 /* keyboard focus keeps the system ring (same pattern as .field inputs) */
 .timer input:focus-visible {
-  outline: 2px solid var(--c-accent);
-  outline-offset: 3px;
+  outline: 3px solid color-mix(in srgb, var(--c-accent) 80%, transparent);
+  outline-offset: 2px;
+  box-shadow: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   FOOTER — finale
+   FOOTER — a warm sign-off
    ═══════════════════════════════════════════════════════════════════ */
 .finale {
   position: relative;
@@ -1884,13 +2065,14 @@ html:not(.js) .in {
   font-family: var(--f-display);
   font-weight: 800;
   font-size: var(--t-xl);
-  line-height: 0.9;
-  text-transform: uppercase;
-  letter-spacing: -0.015em;
-  max-width: 14ch;
+  line-height: 1.06;
+  max-width: 16ch;
 }
 .finale__line .accent {
-  color: var(--c-accent);
+  background: linear-gradient(115deg, #f97316 15%, #e85d75 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .finale__meta {
   display: flex;
@@ -1898,10 +2080,8 @@ html:not(.js) .in {
   justify-content: space-between;
   gap: var(--u);
   margin-top: calc(var(--u) * 3);
-  font-family: var(--f-mono);
   font-size: var(--t-xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-weight: 600;
   color: var(--c-muted);
 }
 
@@ -1924,7 +2104,7 @@ html:not(.js) .in {
     width: 100%;
   }
   .tier {
-    padding: 0.5em 0.25em 0.6em;
+    padding: 0.5em 0.9em;
   }
   .tier-panel {
     padding-top: calc(var(--u) * 5);
@@ -1974,7 +2154,7 @@ html:not(.js) .in {
     right: 0;
     bottom: 0;
     width: 100%;
-    border-radius: 0;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
     border-left: 0;
     border-right: 0;
     border-bottom: 0;

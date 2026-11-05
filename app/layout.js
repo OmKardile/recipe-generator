@@ -1,19 +1,19 @@
-import { Big_Shoulders, Host_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Baloo_2, Nunito, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { RecipeProvider } from "@/context/RecipeContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import Engine from "@/components/Engine";
 
-const display = Big_Shoulders({
+const display = Baloo_2({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600", "700", "800"],
+  weight: ["500", "600", "700", "800"],
 });
 
-const body = Host_Grotesk({
+const body = Nunito({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const mono = JetBrains_Mono({
@@ -45,8 +45,8 @@ export const metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#e9e9e3" },
-    { media: "(prefers-color-scheme: dark)", color: "#151611" },
+    { media: "(prefers-color-scheme: light)", color: "#fbf1de" },
+    { media: "(prefers-color-scheme: dark)", color: "#221912" },
   ],
 };
 

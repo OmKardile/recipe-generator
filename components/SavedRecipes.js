@@ -77,7 +77,7 @@ export default function SavedRecipes({ onViewRecipe }) {
           <Search
             size={14}
             aria-hidden
-            style={{ position: "absolute", bottom: "0.65em", left: "0.1em", color: "var(--c-muted)" }}
+            style={{ position: "absolute", bottom: "0.78em", left: "0.95em", color: "var(--c-muted)" }}
           />
         </div>
 
@@ -102,17 +102,10 @@ export default function SavedRecipes({ onViewRecipe }) {
         </div>
       </div>
 
-      <ul className="index" style={{ listStyle: "none" }}>
+      <ul className="index">
         {filteredRecipes.map((recipe) => (
-          <li key={recipe.id} style={{ borderBottom: "1px solid var(--c-line)" }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "calc(var(--u) * 1.2)",
-                padding: "calc(var(--u) * 1.4) 0.2rem",
-              }}
-            >
+          <li key={recipe.id} className="saved-card">
+            <div className="saved-card__row">
               {/* Real media persisted with the save */}
               <div className="thumb">
                 <MediaImage
@@ -123,22 +116,8 @@ export default function SavedRecipes({ onViewRecipe }) {
                   alt={`Real photo of ${recipe.dishName || recipe.title}`}
                 />
               </div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h3
-                  style={{
-                    fontFamily: "var(--f-display)",
-                    fontWeight: 700,
-                    fontSize: "var(--t-m)",
-                    lineHeight: 1,
-                    textTransform: "uppercase",
-                    letterSpacing: "-0.01em",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {recipe.title}
-                </h3>
+              <div className="saved-card__main">
+                <h3 className="saved-card__title">{recipe.title}</h3>
                 <div className="index-row__meta" style={{ marginTop: "0.5em" }}>
                   <span>
                     <Clock size={11} aria-hidden /> {new Date(recipe.savedAt).toLocaleDateString()}
@@ -151,7 +130,7 @@ export default function SavedRecipes({ onViewRecipe }) {
                   ))}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: "0.25rem", flexShrink: 0 }}>
+              <div className="saved-card__actions">
                 <button
                   onClick={() => setEditingTags(editingTags === recipe.id ? null : recipe.id)}
                   className="icon-btn"
@@ -183,7 +162,7 @@ export default function SavedRecipes({ onViewRecipe }) {
 
             {/* Tag editor */}
             {editingTags === recipe.id && (
-              <div style={{ padding: "0 0.2rem calc(var(--u) * 1.4)", display: "grid", gap: "0.6em" }}>
+              <div style={{ padding: "calc(var(--u) * 0.8) 0.2rem calc(var(--u) * 0.6)", display: "grid", gap: "0.6em" }}>
                 <span className="mono">Select tags</span>
                 <div className="chips">
                   {tags.map((tag) => (
@@ -202,7 +181,7 @@ export default function SavedRecipes({ onViewRecipe }) {
             )}
 
             {expandedId === recipe.id && (
-              <div style={{ padding: "0 0.2rem calc(var(--u) * 1.6)" }}>
+              <div style={{ padding: "calc(var(--u) * 0.6) 0.2rem calc(var(--u) * 0.8)" }}>
                 <div className="md">
                   <ReactMarkdown
                     components={{
