@@ -1,4 +1,4 @@
-import { Baloo_2, Nunito, JetBrains_Mono } from "next/font/google";
+import { Baloo_2, Nunito, JetBrains_Mono, Caveat } from "next/font/google";
 import "./globals.css";
 import { RecipeProvider } from "@/context/RecipeContext";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -20,6 +20,13 @@ const mono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
+});
+
+/* Handwritten margin notes — the human scribbles on the recipe card. */
+const hand = Caveat({
+  variable: "--font-hand",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata = {
@@ -63,7 +70,7 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${display.variable} ${body.variable} ${mono.variable}`}
+      className={`${display.variable} ${body.variable} ${mono.variable} ${hand.variable}`}
     >
       <body>
         <script dangerouslySetInnerHTML={{ __html: initScript }} />

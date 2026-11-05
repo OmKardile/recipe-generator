@@ -10,6 +10,7 @@ import {
   Carrot,
   Salad,
   Croissant,
+  Soup,
 } from "lucide-react";
 
 /**
@@ -41,6 +42,7 @@ const HERO_ICONS = [
   { Icon: Carrot, cls: "garnish__carrot", depth: 1.1 },
   { Icon: Salad, cls: "garnish__salad", depth: 0.6, aux: true },
   { Icon: Croissant, cls: "garnish__croissant", depth: 1.0, aux: true },
+  { Icon: Soup, cls: "garnish__soup", depth: 1.15 },
 ];
 
 export default function Garnish({ variant = "hero", className = "" }) {

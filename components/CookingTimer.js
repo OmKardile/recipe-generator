@@ -121,7 +121,7 @@ export default function CookingTimer() {
   };
 
   return (
-    <div className="no-print" style={{ position: "fixed", bottom: "var(--gutter)", right: "var(--gutter)", zIndex: 55, display: "grid", gap: "0.5rem", justifyItems: "end" }}>
+    <div className="timer-fab no-print">
       {timers.length === 0 && (
         <button
           onClick={() => setShowAdd(true)}

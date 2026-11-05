@@ -95,16 +95,23 @@ export default function IngredientInput({
 
   return (
     <section className="hero" aria-labelledby="hero-title">
-      <Garnish variant="hero" className="in" />
-      <h1 className="hero__title in" id="hero-title">
-        What&apos;s in your <span className="accent">kitchen?</span>
-      </h1>
-      <p className="hero__lede in" style={{ animationDelay: "0.08s" }}>
-        Add what you have. Get three real, chef-crafted Indian dishes — with real photos,
-        verified videos and a plan for the week.
-      </p>
+      {/* The magnet field: colorful stickers scattered around (and over)
+          the paper's edges — the page's visual headline. Decorative. */}
+      <Garnish variant="hero" />
 
-      <form onSubmit={handleAddIngredient} className="field-row in" style={{ animationDelay: "0.14s" }}>
+      <div className="hero__paper in" style={{ animationDelay: "0.02s" }}>
+        <h1 className="hero__title in" id="hero-title">
+          What&apos;s in your <span className="accent">kitchen?</span>
+        </h1>
+        <p className="hero__lede in" style={{ animationDelay: "0.08s" }}>
+          Add what you have. Get three real, chef-crafted Indian dishes — with real photos,
+          verified videos and a plan for the week.
+        </p>
+        <span className="hero__note in" style={{ animationDelay: "0.1s" }} aria-hidden="true">
+          every photo is a real dish — never AI-generated
+        </span>
+
+        <form onSubmit={handleAddIngredient} className="field-row in" style={{ animationDelay: "0.14s" }}>
         <div className="field">
           <label className="field__label" htmlFor="ingredient-input">
             Ingredients
@@ -171,7 +178,7 @@ export default function IngredientInput({
         </div>
       )}
 
-      <div className="field in" style={{ animationDelay: "0.24s" }}>
+      <div className="field in" style={{ animationDelay: "0.24s", marginTop: "var(--u)" }}>
         <label className="field__label" htmlFor="preferences">
           Preferences · restrictions (optional)
         </label>
@@ -219,6 +226,7 @@ export default function IngredientInput({
           "Generate three dishes"
         )}
       </button>
+      </div>
     </section>
   );
 }

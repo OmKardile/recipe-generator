@@ -97,18 +97,19 @@ export default function Home() {
 
   return (
     <>
-      {/* ── The lid: sticky header. Wordmark left, tiers right. ── */}
-      <header className="lid">
-        <div className="lid__brand">
-          <Garnish variant="mark" />
-          <span className="lid__brand-text">
-            <span className="lid__mark">
+      {/* ── The kitchen: a spice-rack rail carries the brand + nav + theme,
+          while the counter holds the working surface. On phones the rack
+          dissolves into floating magnets (brand top-left, theme top-right,
+          nav as a bottom dock) so the wallpaper and the paper own the page. ── */}
+      <div className="kitchen">
+        <aside className="rack">
+          <div className="rack__brand">
+            <Garnish variant="mark" />
+            <span className="rack__name">
               Indian Recipe <em>Generator</em>
             </span>
-            <span className="lid__sub">Real dishes · real photos · verified videos</span>
-          </span>
-        </div>
-        <div className="lid__tools">
+          </div>
+
           <nav
             ref={tiersRef}
             className={`tiers${tiersOverflow ? " tiers--fade" : ""}`}
@@ -137,21 +138,18 @@ export default function Home() {
                   <span className="tier__icon" aria-hidden="true">
                     <Icon strokeWidth={2.2} />
                   </span>
-                  {label}
+                  <span className="tier__label">{label}</span>
                 </button>
               );
             })}
           </nav>
+
           <ThemeToggle />
-        </div>
-      </header>
+        </aside>
 
-      {/* Floating REAL-photo preview for index rows (fine pointers only) */}
-      <div className="preview" aria-hidden="true">
-        <img alt="" />
-      </div>
-
-      <div className="stage">
+        <div className="counter">
+          {/* Floating REAL-photo preview for index rows (fine pointers only) */}
+          <div className="stage">
         {/* ── Tier panels: each settles into place on mount ── */}
         <div
           key={activeTab}
@@ -235,23 +233,30 @@ export default function Home() {
         {/* Corner meta under the first tier */}
         {activeTab === "generate" && !selectedRecipe && (
           <div className="corner-meta in" style={{ animationDelay: "0.25s" }}>
-            <span>Real dishes · real photos</span>
-            <span>Kitchen · {ingredients.length} ingredient{ingredients.length === 1 ? "" : "s"}</span>
+            <span>real dishes · real photos</span>
+            <span>kitchen · {ingredients.length} ingredient{ingredients.length === 1 ? "" : "s"}</span>
           </div>
         )}
+          </div>
+
+          {/* ── Finale ── */}
+          <footer className="finale">
+            <p className="finale__line in">
+              Real food, from <span className="accent">what you&apos;ve got.</span>
+            </p>
+            <div className="finale__meta">
+              <span>Indian Recipe Generator</span>
+              <span>Built with Next.js &amp; Google Gemini</span>
+              <span>Always taste and adjust as you cook</span>
+            </div>
+          </footer>
+        </div>
       </div>
 
-      {/* ── Finale ── */}
-      <footer className="finale">
-        <p className="finale__line in">
-          Real food, from <span className="accent">what you&apos;ve got.</span>
-        </p>
-        <div className="finale__meta">
-          <span>Indian Recipe Generator</span>
-          <span>Built with Next.js &amp; Google Gemini</span>
-          <span>Always taste and adjust as you cook</span>
-        </div>
-      </footer>
+      {/* Floating REAL-photo preview for index rows (fine pointers only) */}
+      <div className="preview" aria-hidden="true">
+        <img alt="" />
+      </div>
 
       {/* Floating cooking timer */}
       <CookingTimer />
