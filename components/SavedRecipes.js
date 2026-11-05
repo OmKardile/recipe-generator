@@ -171,7 +171,7 @@ export default function SavedRecipes({ onViewRecipe }) {
                   className="icon-btn"
                   title="Delete recipe"
                   aria-label={`Delete ${recipe.title}`}
-                  style={{ color: "#b3261e" }}
+                  style={{ color: "var(--c-danger)" }}
                 >
                   <Trash2 size={16} />
                 </button>

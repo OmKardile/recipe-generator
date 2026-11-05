@@ -366,7 +366,7 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
       </div>
 
       {shareError && (
-        <p role="alert" className="hint" style={{ color: "#b3261e" }}>
+        <p role="alert" className="hint" style={{ color: "var(--c-danger)" }}>
           {shareError}
         </p>
       )}

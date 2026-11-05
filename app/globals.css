@@ -14,6 +14,7 @@
   --c-accent: #8f5410; /* turmeric, deepened to pass AA as 12px mono text */
   --c-accent-fill: #e8a33c;
   --c-leaf: #3f6b4a;
+  --c-danger: #b3261e; /* destructive actions only; 5.4:1 on steel */
   --c-curtain: #14150f;
   --c-wash: rgb(27 28 22 / 0.045);
   --c-wash-2: rgb(27 28 22 / 0.08);
@@ -51,6 +52,7 @@
   --c-accent: #e8a33c;
   --c-accent-fill: #e8a33c;
   --c-leaf: #7fb98a;
+  --c-danger: #e57368; /* lifted red for tandoor night, 6:1 on coal */
   --c-curtain: #0e0f0b;
   --c-wash: rgb(231 229 218 / 0.05);
   --c-wash-2: rgb(231 229 218 / 0.1);
@@ -355,6 +357,26 @@ html:not(.js) .in {
   gap: clamp(0.6rem, 0.4rem + 1vw, 1.6rem);
   overflow-x: auto;
   scrollbar-width: none;
+  /* a horizontal tab swipe must never trigger browser back-navigation */
+  overscroll-behavior-x: contain;
+}
+/* When the tiers overflow (phones), soft edge fades say "more this way"
+   without a scrollbar. Measured in app/page.js; wide screens stay clean. */
+.tiers--fade {
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 1.25rem,
+    #000 calc(100% - 1.25rem),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    #000 1.25rem,
+    #000 calc(100% - 1.25rem),
+    transparent 100%
+  );
 }
 .tiers::-webkit-scrollbar {
   display: none;
@@ -1584,6 +1606,11 @@ html:not(.js) .in {
   outline: none;
   border-color: var(--c-accent);
 }
+/* keyboard focus keeps the system ring (same pattern as .field inputs) */
+.timer input:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 3px;
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    FOOTER — finale
@@ -1592,7 +1619,9 @@ html:not(.js) .in {
   position: relative;
   z-index: 1;
   margin-top: calc(var(--u) * 6);
-  padding: calc(var(--u) * 5) var(--gutter) calc(var(--u) * 3);
+  /* bottom padding reserves the corner for the fixed cooking-timer button,
+     which otherwise sits on top of the meta row at the very end of the page */
+  padding: calc(var(--u) * 5) var(--gutter) calc(var(--gutter) + 4rem);
   border-top: 1px solid var(--c-line);
 }
 .finale__line {

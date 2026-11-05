@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import IngredientInput from "@/components/IngredientInput";
 import RecipeDisplay from "@/components/RecipeDisplay";
 import RecipeSelector from "@/components/RecipeSelector";
@@ -29,6 +29,25 @@ export default function Home() {
   const [includeNutrition, setIncludeNutrition] = useState(false);
   const [activeTab, setActiveTab] = useState("generate");
   const tabRefs = useRef([]);
+
+  /* On phones the four tabs overflow their scroller (scrollbar deliberately
+     hidden). When they do, an edge fade tells the user there is more to
+     swipe to; measured, not assumed, so wide screens keep clean edges. */
+  const tiersRef = useRef(null);
+  const [tiersOverflow, setTiersOverflow] = useState(false);
+  useEffect(() => {
+    const el = tiersRef.current;
+    if (!el) return;
+    const measure = () => setTiersOverflow(el.scrollWidth - el.clientWidth > 8);
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const selectedRecipe = selectedRecipeIndex !== null ? recipes[selectedRecipeIndex] : null;
 
@@ -84,7 +103,12 @@ export default function Home() {
           <span className="lid__sub">Real dishes · real photos · verified videos</span>
         </div>
         <div className="lid__tools">
-          <nav className="tiers" role="tablist" aria-label="App sections">
+          <nav
+            ref={tiersRef}
+            className={`tiers${tiersOverflow ? " tiers--fade" : ""}`}
+            role="tablist"
+            aria-label="App sections"
+          >
             {TABS.map(({ key, label }, index) => {
               const active = activeTab === key;
               return (
