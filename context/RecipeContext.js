@@ -1,9 +1,29 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  migrateLegacyServerData,
+  getRecipes,
+  addRecipe,
+  updateRecipe,
+  deleteRecipe,
+  getMealPlan,
+  addToMealPlan,
+  removeFromMealPlan,
+  getTags,
+  addTag,
+} from '@/lib/cacheStore';
 
 const RecipeContext = createContext(null);
 
+/**
+ * Saved recipes, meal plan and tags live in the BROWSER's CacheStorage as
+ * JSON (lib/cacheStore.js) — not on the server. The previous design POSTed
+ * to /api/my-recipes, which wrote files on the server: fine in local dev,
+ * silently broken on any read-only/serverless deploy, and shared across
+ * all visitors. Each browser now owns a private collection that works
+ * offline and survives restarts.
+ */
 export function RecipeProvider({ children }) {
   const [savedRecipes, setSavedRecipes] = useState([]);
   const [mealPlan, setMealPlan] = useState([]);
@@ -18,17 +38,18 @@ export function RecipeProvider({ children }) {
 
   const loadData = async () => {
     try {
-      const [recipesRes, planRes, tagsRes] = await Promise.all([
-        fetch('/api/my-recipes'),
-        fetch('/api/meal-plan'),
-        fetch('/api/tags'),
+      // One-time import of anything the old server file store had.
+      await migrateLegacyServerData();
+      const [recipes, plan, tagList] = await Promise.all([
+        getRecipes(),
+        getMealPlan(),
+        getTags(),
       ]);
-
-      if (recipesRes.ok) setSavedRecipes(await recipesRes.json());
-      if (planRes.ok) setMealPlan(await planRes.json());
-      if (tagsRes.ok) setTags(await tagsRes.json());
+      setSavedRecipes(recipes);
+      setMealPlan(plan);
+      setTags(tagList);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading saved data:', error);
     } finally {
       setLoading(false);
     }
@@ -36,14 +57,8 @@ export function RecipeProvider({ children }) {
 
   const saveRecipe = async (recipe) => {
     try {
-      const res = await fetch('/api/my-recipes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(recipe),
-      });
-      const newRecipe = await res.json();
-      // Never inject an error payload into the saved list.
-      if (!res.ok || !newRecipe?.id) throw new Error(newRecipe?.error || 'Save failed');
+      const newRecipe = await addRecipe(recipe);
+      if (!newRecipe?.id) throw new Error('Save failed');
       setSavedRecipes((prev) => [newRecipe, ...prev]);
       return newRecipe;
     } catch (error) {
@@ -52,9 +67,9 @@ export function RecipeProvider({ children }) {
     }
   };
 
-  const deleteRecipe = async (id) => {
+  const deleteSavedRecipe = async (id) => {
     try {
-      await fetch(`/api/my-recipes/${id}`, { method: 'DELETE' });
+      await deleteRecipe(id);
       setSavedRecipes((prev) => prev.filter((r) => r.id !== id));
     } catch (error) {
       console.error('Error deleting recipe:', error);
@@ -63,13 +78,7 @@ export function RecipeProvider({ children }) {
 
   const updateRecipeTags = async (id, recipeTags) => {
     try {
-      const res = await fetch(`/api/my-recipes/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tags: recipeTags }),
-      });
-      if (!res.ok) throw new Error('Tag update failed');
-      const updated = await res.json();
+      const updated = await updateRecipe(id, { tags: recipeTags });
       if (updated?.id) {
         setSavedRecipes((prev) => prev.map((r) => (r.id === id ? updated : r)));
       }
@@ -78,42 +87,27 @@ export function RecipeProvider({ children }) {
     }
   };
 
-  const addToMealPlan = async (day, meal, recipe) => {
+  const addRecipeToMealPlan = async (day, meal, recipe) => {
     try {
-      const res = await fetch('/api/meal-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ day, meal, recipe }),
-      });
-      const plan = await res.json();
+      const plan = await addToMealPlan(day, meal, recipe);
       setMealPlan(plan);
     } catch (error) {
       console.error('Error adding to meal plan:', error);
     }
   };
 
-  const removeFromMealPlan = async (day, meal) => {
+  const removeRecipeFromMealPlan = async (day, meal) => {
     try {
-      const res = await fetch('/api/meal-plan', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ day, meal }),
-      });
-      const plan = await res.json();
+      const plan = await removeFromMealPlan(day, meal);
       setMealPlan(plan);
     } catch (error) {
       console.error('Error removing from meal plan:', error);
     }
   };
 
-  const addTag = async (tag) => {
+  const createTag = async (tag) => {
     try {
-      const res = await fetch('/api/tags', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tag }),
-      });
-      const updated = await res.json();
+      const updated = await addTag(tag);
       setTags(updated);
     } catch (error) {
       console.error('Error adding tag:', error);
@@ -129,11 +123,11 @@ export function RecipeProvider({ children }) {
         mounted,
         loading,
         saveRecipe,
-        deleteRecipe,
+        deleteRecipe: deleteSavedRecipe,
         updateRecipeTags,
-        addToMealPlan,
-        removeFromMealPlan,
-        addTag,
+        addToMealPlan: addRecipeToMealPlan,
+        removeFromMealPlan: removeRecipeFromMealPlan,
+        addTag: createTag,
       }}
     >
       {children}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Check, Bookmark, Share2, Link2, Copy, ListChecks, RotateCcw } from "lucide-react";
 import { useRecipes } from "@/context/RecipeContext";
@@ -12,6 +12,7 @@ import useRecipeMedia from "@/hooks/useRecipeMedia";
 export default function RecipeDisplay({ data, ingredients, preferences }) {
   const { saveRecipe } = useRecipes();
   const [saved, setSaved] = useState(false);
+  const savingRef = useRef(false);
   const [shared, setShared] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [shareError, setShareError] = useState("");
@@ -82,10 +83,17 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
       : null,
   });
 
-  const handleSave = () => {
-    if (saved) return;
-    saveRecipe(payload());
-    setSaved(true);
+  const handleSave = async () => {
+    if (saved || savingRef.current) return;
+    savingRef.current = true;
+    try {
+      // Only claim "Saved" when the store actually has it — the old code
+      // flipped the label regardless, so a failed save looked like success.
+      const stored = await saveRecipe(payload());
+      if (stored) setSaved(true);
+    } finally {
+      savingRef.current = false;
+    }
   };
 
   const writeClipboard = async (text) => {

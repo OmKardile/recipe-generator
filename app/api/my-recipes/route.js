@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getRecipes, addRecipe } from '@/lib/dataStore';
+import { getRecipes } from '@/lib/dataStore';
 
+/**
+ * Read-only legacy endpoint. Saved recipes now live in the browser's
+ * CacheStorage (lib/cacheStore.js); the client fetches this once, on a
+ * fresh browser, to import anything the old server file store had
+ * (local-dev `data/recipes.json`). Nothing writes here anymore — server
+ * filesystems are read-only on most deploys, which is why saving broke.
+ */
 export async function GET() {
   try {
     const recipes = await getRecipes();
@@ -8,16 +15,5 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching recipes:', error);
     return NextResponse.json({ error: 'Failed to fetch recipes' }, { status: 500 });
-  }
-}
-
-export async function POST(request) {
-  try {
-    const body = await request.json();
-    const recipe = await addRecipe(body);
-    return NextResponse.json(recipe);
-  } catch (error) {
-    console.error('Error adding recipe:', error);
-    return NextResponse.json({ error: 'Failed to add recipe' }, { status: 500 });
   }
 }

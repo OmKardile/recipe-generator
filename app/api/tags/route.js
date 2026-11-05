@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getTags, addTag } from '@/lib/dataStore';
+import { getTags } from '@/lib/dataStore';
 
+/**
+ * Read-only legacy endpoint — one-time migration source for the
+ * browser-side CacheStorage store (lib/cacheStore.js). See
+ * app/api/my-recipes/route.js.
+ */
 export async function GET() {
   try {
     const tags = await getTags();
@@ -8,16 +13,5 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching tags:', error);
     return NextResponse.json({ error: 'Failed to fetch tags' }, { status: 500 });
-  }
-}
-
-export async function POST(request) {
-  try {
-    const { tag } = await request.json();
-    const tags = await addTag(tag);
-    return NextResponse.json(tags);
-  } catch (error) {
-    console.error('Error adding tag:', error);
-    return NextResponse.json({ error: 'Failed to add tag' }, { status: 500 });
   }
 }
