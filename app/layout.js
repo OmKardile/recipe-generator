@@ -1,32 +1,45 @@
-import { Baloo_2, Nunito, JetBrains_Mono, Caveat } from "next/font/google";
+// Self-hosted variable fonts (app/fonts, latin subset). Deliberately NOT
+// next/font/google: Vercel's restored Turbopack build cache chokes on the
+// generated google-font module ("next/font/google queries have exactly one
+// entry") whenever the font set changes — see deploy log for 7fedef7.
+// next/font/local is cache-proof and needs no build-time network access.
+import localFont from "next/font/local";
 import "./globals.css";
 import { RecipeProvider } from "@/context/RecipeContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import Engine from "@/components/Engine";
 
-const display = Baloo_2({
+const display = localFont({
+  src: "./fonts/baloo-2-var.woff2",
   variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: "400 800",
+  style: "normal",
+  display: "swap",
 });
 
-const body = Nunito({
+const body = localFont({
+  src: "./fonts/nunito-var.woff2",
   variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "400 800",
+  style: "normal",
+  display: "swap",
 });
 
-const mono = JetBrains_Mono({
+const mono = localFont({
+  src: "./fonts/jetbrains-mono-var.woff2",
   variable: "--font-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: "400 500",
+  style: "normal",
+  display: "swap",
 });
 
 /* Handwritten margin notes — the human scribbles on the recipe card. */
-const hand = Caveat({
+const hand = localFont({
+  src: "./fonts/caveat-var.woff2",
   variable: "--font-hand",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: "400 700",
+  style: "normal",
+  display: "swap",
 });
 
 export const metadata = {
