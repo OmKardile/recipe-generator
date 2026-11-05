@@ -66,19 +66,17 @@ export default function SavedRecipes({ onViewRecipe }) {
           <label className="field__label" htmlFor="recipe-search">
             Search
           </label>
-          <input
-            id="recipe-search"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search your recipes…"
-            style={{ paddingLeft: "2.1rem" }}
-          />
-          <Search
-            size={15}
-            aria-hidden
-            style={{ position: "absolute", top: "50%", transform: "translateY(-50%)", left: "0.85em", color: "var(--c-muted)", pointerEvents: "none" }}
-          />
+          <span className="field__control">
+            <input
+              id="recipe-search"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search your recipes…"
+              style={{ paddingLeft: "2.1rem" }}
+            />
+            <Search size={15} aria-hidden />
+          </span>
         </div>
 
         <div className="chips">

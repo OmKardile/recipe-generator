@@ -175,7 +175,7 @@ export default function IngredientInput({
         </div>
       )}
 
-      <div className="field in" style={{ animationDelay: "0.24s", marginTop: "var(--u)" }}>
+      <div className="field in" style={{ animationDelay: "0.24s" }}>
         <label className="field__label" htmlFor="preferences">
           Preferences · restrictions (optional)
         </label>
