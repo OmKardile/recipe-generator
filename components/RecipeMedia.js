@@ -42,14 +42,17 @@ export default function RecipeMedia({ dishName, title, youtubeVideoId, media, lo
           <Camera size={26} />
         </div>
       ) : (
-        <>
+        /* dish__photo wraps the picture with the same rounded, bordered
+           frame the share page uses — and gives the credit badge a
+           positioning context ON the photo, not over the button row */
+        <div className="dish__photo">
           <MediaImage
             sources={heroSources}
             alt={`Real photo of ${dishName || title}`}
             eager
           />
           {credit && <span className="media-slot__credit">{credit}</span>}
-        </>
+        </div>
       )}
 
       {/* Video layer — verified video, or a search that can never break */}

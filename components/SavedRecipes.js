@@ -72,12 +72,12 @@ export default function SavedRecipes({ onViewRecipe }) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search your recipes…"
-            style={{ paddingLeft: "1.8rem" }}
+            style={{ paddingLeft: "2.1rem" }}
           />
           <Search
-            size={14}
+            size={15}
             aria-hidden
-            style={{ position: "absolute", bottom: "0.78em", left: "0.95em", color: "var(--c-muted)" }}
+            style={{ position: "absolute", top: "50%", transform: "translateY(-50%)", left: "0.85em", color: "var(--c-muted)", pointerEvents: "none" }}
           />
         </div>
 

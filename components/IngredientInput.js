@@ -107,9 +107,6 @@ export default function IngredientInput({
           Add what you have. Get three real, chef-crafted Indian dishes — with real photos,
           verified videos and a plan for the week.
         </p>
-        <span className="hero__note in" style={{ animationDelay: "0.1s" }} aria-hidden="true">
-          every photo is a real dish — never AI-generated
-        </span>
 
         <form onSubmit={handleAddIngredient} className="field-row in" style={{ animationDelay: "0.14s" }}>
         <div className="field">
@@ -191,7 +188,7 @@ export default function IngredientInput({
           disabled={isLoading}
           rows={2}
         />
-        <p className="hint" style={{ marginTop: "0.4em" }}>
+        <p className="hint" style={{ marginTop: "0.55em" }}>
           Ctrl + Enter generates from here.
         </p>
       </div>

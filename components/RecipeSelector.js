@@ -49,7 +49,25 @@ function RecipeRow({ recipe, index, isSelected, onSelect }) {
         data-preview={thumbSources[0] || ""}
         className="index-row"
       >
-        <span className="index-row__num">{String(index + 1).padStart(2, "0")}</span>
+        {/* The real photo rides IN the row — the picture is the point of
+            the app, so it is never hidden behind a hover. The numeral
+            badges the thumb's corner like a sticker. */}
+        <span className="index-row__thumb">
+          {loading ? (
+            <span
+              className="skel"
+              role="status"
+              aria-label="Finding a real photo"
+            />
+          ) : (
+            <MediaImage
+              key={`${recipe.id}-${thumbSources[0] || "none"}`}
+              sources={thumbSources}
+              alt={`Real photo of ${recipe.dishName || recipe.title}`}
+            />
+          )}
+          <span className="index-row__num">{String(index + 1).padStart(2, "0")}</span>
+        </span>
         <span className="index-row__main">
           <span className="index-row__title">{recipe.title}</span>
           <span className="index-row__meta">
@@ -77,20 +95,6 @@ function RecipeRow({ recipe, index, isSelected, onSelect }) {
           →
         </span>
       </button>
-      {/* Inline thumb for touch: the cursor preview is disabled there */}
-      <div className="only-touch" style={{ marginTop: "0.6rem" }}>
-        {loading ? (
-          <div className="skel" style={{ aspectRatio: "16 / 9", maxWidth: "20rem" }} role="status" aria-label="Finding a real photo" />
-        ) : (
-          <div style={{ maxWidth: "20rem" }}>
-            <MediaImage
-              key={`${recipe.id}-${thumbSources[0] || "none"}`}
-              sources={thumbSources}
-              alt={`Real photo of ${recipe.dishName || recipe.title}`}
-            />
-          </div>
-        )}
-      </div>
     </li>
   );
 }

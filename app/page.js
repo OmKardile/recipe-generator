@@ -54,6 +54,19 @@ export default function Home() {
 
   const selectedRecipe = selectedRecipeIndex !== null ? recipes[selectedRecipeIndex] : null;
 
+  /* Picking a dish renders the recipe BELOW the tall ingredient form —
+     without a nudge the click looks like a no-op and the recipe (and its
+     photo) stays hidden under the fold. Scroll the recipe into view as it
+     mounts; jumping straight under reduced motion. */
+  const recipeRef = useRef(null);
+  useEffect(() => {
+    if (selectedRecipeIndex === null) return;
+    const el = recipeRef.current;
+    if (!el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  }, [selectedRecipeIndex]);
+
   /** ARIA tabs keyboard pattern: roving focus with Arrow/Home/End keys. */
   const handleTabKeyDown = (e, index) => {
     let next = null;
@@ -199,7 +212,7 @@ export default function Home() {
               )}
 
               {selectedRecipe && (
-                <div className="in" style={{ animationDelay: "0.1s" }}>
+                <div ref={recipeRef} className="in recipe-anchor" style={{ animationDelay: "0.1s" }}>
                   <button
                     onClick={() => setSelectedRecipeIndex(null)}
                     className="back-link"
