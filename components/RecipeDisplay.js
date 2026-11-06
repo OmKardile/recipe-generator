@@ -2,9 +2,21 @@
 
 import { useState, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { Check, Bookmark, Share2, Link2, Copy, ListChecks, RotateCcw } from "lucide-react";
+import {
+  Check,
+  Bookmark,
+  Share2,
+  Link2,
+  Copy,
+  ListChecks,
+  RotateCcw,
+  Globe,
+  Gauge,
+  Clock,
+  Flame,
+} from "lucide-react";
 import { useRecipes } from "@/context/RecipeContext";
-import { ingredientLine, formatAmount } from "@/lib/recipeUtils";
+import { formatAmount, scaleAmount } from "@/lib/recipeUtils";
 import ServingAdjuster from "./ServingAdjuster";
 import RecipeMedia from "./RecipeMedia";
 import useRecipeMedia from "@/hooks/useRecipeMedia";
@@ -44,6 +56,17 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
   const isScaled = Math.abs(scaleFactor - 1) > 0.001;
 
   const markdown = useMemo(() => recipe || "", [recipe]);
+
+  /** Amount cell for the ingredient data list — "2 tbsp" / "to taste" / "".
+   *  Kept separate from the name so the column can align and scale cleanly. */
+  const amountPart = (ing, factor) => {
+    if (ing?.unit === "to taste") return "to taste";
+    if (typeof ing?.amount === "number" && ing.amount > 0) {
+      const n = formatAmount(scaleAmount(ing.amount, factor));
+      return ing.unit ? `${n} ${ing.unit}` : n;
+    }
+    return "";
+  };
 
   if (!recipe && !structured) return null;
 
@@ -164,25 +187,34 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
 
   return (
     <article className="dish">
-      {/* Real media — real photo of the real dish + verified video */}
-      <RecipeMedia
-        dishName={dishName}
-        title={data.title}
-        youtubeVideoId={youtubeVideoId}
-        media={media}
-        loading={mediaLoading}
-      />
-
-      {/* Head: title · description · meta strip */}
+      {/* Head first — the recipe is about its text and data, not its photo */}
       <header className="dish__head">
         <h1 className="dish__title">{data.title}</h1>
         {structured?.description && <p className="dish__desc">{structured.description}</p>}
         <div className="dish__meta">
-          {structured?.cuisine && <span>{structured.cuisine}</span>}
-          {structured?.difficulty && <span>{structured.difficulty}</span>}
-          {totalTime != null && <span>{totalTime} min total</span>}
+          {structured?.cuisine && (
+            <span className="meta-chip">
+              <Globe size={13} aria-hidden="true" />
+              {structured.cuisine}
+            </span>
+          )}
+          {structured?.difficulty && (
+            <span className="meta-chip">
+              <Gauge size={13} aria-hidden="true" />
+              {structured.difficulty}
+            </span>
+          )}
+          {totalTime != null && (
+            <span className="meta-chip">
+              <Clock size={13} aria-hidden="true" />
+              {totalTime} min total
+            </span>
+          )}
           {data.nutrition?.calories > 0 && (
-            <span className="hot">{data.nutrition.calories} cal / serving</span>
+            <span className="meta-chip meta-chip--hot">
+              <Flame size={13} aria-hidden="true" />
+              {data.nutrition.calories} cal/serving
+            </span>
           )}
           <ServingAdjuster
             servings={servings}
@@ -192,9 +224,18 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
         </div>
       </header>
 
+      {/* Media, kept out of the eye's main line: a slim YouTube-first row */}
+      <RecipeMedia
+        dishName={dishName}
+        title={data.title}
+        youtubeVideoId={youtubeVideoId}
+        media={media}
+        loading={mediaLoading}
+      />
+
       {structured ? (
         <>
-          {/* Ingredients — with REAL scaling */}
+          {/* Ingredients — a data list: aligned amount column + name, with REAL scaling */}
           <section aria-labelledby="ing-title">
             <h2 id="ing-title" className="dish__section-title">
               Ingredients
@@ -204,7 +245,7 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
             </h2>
             <ul className="ing-grid">
               {structured.ingredients.map((ing, index) => {
-                const line = ingredientLine(ing, scaleFactor);
+                const amt = amountPart(ing, scaleFactor);
                 const checked = checkedIngredients.has(index);
                 return (
                   <li key={`${ing.name}-${index}`}>
@@ -212,7 +253,7 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                       onClick={() =>
                         cookMode && toggleItem(checkedIngredients, setCheckedIngredients, index)
                       }
-                      className={`ing${cookMode ? "" : " ing--static"}`}
+                      className={`ing${cookMode ? " ing--check" : " ing--static"}`}
                       aria-pressed={cookMode ? checked : undefined}
                     >
                       {cookMode && (
@@ -220,7 +261,11 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
                           ✓
                         </span>
                       )}
-                      <span className="label">{line}</span>
+                      <span className="ing__amt">{amt || "—"}</span>
+                      <span className="ing__name">
+                        {ing.name}
+                        {ing.note && <em> — {ing.note}</em>}
+                      </span>
                     </button>
                   </li>
                 );
@@ -303,29 +348,50 @@ export default function RecipeDisplay({ data, ingredients, preferences }) {
           <h2 id="nut-title" className="dish__section-title">
             Nutrition per serving
           </h2>
-          <div className="facts">
-            {[
-              ["Calories", data.nutrition.calories, ""],
-              ["Protein", data.nutrition.protein, "g"],
-              ["Carbs", data.nutrition.carbs, "g"],
-              ["Fat", data.nutrition.fat, "g"],
-            ].map(([label, value, unit]) => (
-              <div className="fact" key={label}>
-                <span className="fact__value">
-                  {value}
-                  {unit && <small> {unit}</small>}
-                </span>
-                <span className="fact__label">{label}</span>
-              </div>
-            ))}
-          </div>
+          <table className="nutrition">
+            <thead>
+              <tr>
+                <th scope="col">Nutrient</th>
+                <th scope="col">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="nutrition__cal">
+                <th scope="row">Calories</th>
+                <td>
+                  {data.nutrition.calories}
+                  <small> kcal</small>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Protein</th>
+                <td>
+                  {data.nutrition.protein}
+                  <small> g</small>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Carbs</th>
+                <td>
+                  {data.nutrition.carbs}
+                  <small> g</small>
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Fat</th>
+                <td>
+                  {data.nutrition.fat}
+                  <small> g</small>
+                </td>
+              </tr>
+            </tbody>
+          </table>
           <p className="hint">Estimated per serving — unaffected by serving scaling.</p>
         </section>
       )}
 
       {/* Action bar */}
       <div className="action-bar">
-        <span className="mono">Real dish · real photo · verified video</span>
         <div className="action-bar__group">
           {structured && (
             <button

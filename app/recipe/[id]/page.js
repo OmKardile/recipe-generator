@@ -1,9 +1,9 @@
 import ReactMarkdown from "react-markdown";
-import { ArrowLeft, PlayCircle, Youtube } from "lucide-react";
+import { ArrowLeft, Play, Youtube } from "lucide-react";
 import Link from "next/link";
 import { getRecipe } from "@/lib/sharedStore";
 import MediaImage from "@/components/MediaImage";
-import { youtubeSearchUrl, youtubeThumbnailSources } from "@/lib/video";
+import { youtubeSearchUrl, youtubeThumbnailSources, youtubeWatchUrl } from "@/lib/video";
 
 /**
  * Reads the in-memory shared store DIRECTLY on the server.
@@ -51,6 +51,9 @@ export default async function SharedRecipePage({ params }) {
   }
 
   const structured = recipe.structured;
+  const videoId = (recipe.youtubeUrl || "").match(/v=([A-Za-z0-9_-]{11})/)?.[1];
+  const watchUrl = youtubeWatchUrl(videoId);
+  const mediaUrl = watchUrl || youtubeSearchUrl(recipe.dishName || recipe.title);
 
   return (
     <main className="stage">
@@ -61,63 +64,66 @@ export default async function SharedRecipePage({ params }) {
         </Link>
 
         <article className="dish">
-          {/* REAL media captured at share time — photo of the real dish + verified video */}
-          {(recipe.media?.url || recipe.youtubeUrl) && (
-            <div className="media-slot">
-              <div className="dish__photo">
-                <MediaImage
-                  sources={[
-                    ...(recipe.media?.url ? [recipe.media.url] : []),
-                    ...youtubeThumbnailSources(
-                      (recipe.youtubeUrl || "").match(/v=([A-Za-z0-9_-]{11})/)?.[1]
-                    ),
-                  ]}
-                  alt={`Real photo of ${recipe.dishName || recipe.title}`}
-                  eager
-                />
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  gap: "0.9em",
-                  marginTop: "0.9em",
-                }}
-              >
-                <a
-                  href={recipe.youtubeUrl || youtubeSearchUrl(recipe.dishName || recipe.title)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn--ghost"
-                >
-                  {recipe.youtubeUrl ? <PlayCircle size={15} /> : <Youtube size={15} />}
-                  {recipe.youtubeUrl
-                    ? "Watch this dish on YouTube"
-                    : "Find video recipes on YouTube"}
-                </a>
-                {recipe.media?.credit && (
-                  <span className="mono" style={{ textTransform: "none" }}>
-                    {recipe.media.credit}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
           <header className="dish__head">
             <h1 className="dish__title">{recipe.title}</h1>
             {structured && (
               <div className="dish__meta">
-                {structured.cuisine && <span>{structured.cuisine}</span>}
-                {structured.difficulty && <span>{structured.difficulty}</span>}
-                {structured.totalTimeMinutes != null && (
-                  <span>{structured.totalTimeMinutes} min</span>
+                {structured.cuisine && (
+                  <span className="meta-chip">{structured.cuisine}</span>
                 )}
-                {structured.servings != null && <span>{structured.servings} servings</span>}
+                {structured.difficulty && (
+                  <span className="meta-chip">{structured.difficulty}</span>
+                )}
+                {structured.totalTimeMinutes != null && (
+                  <span className="meta-chip">{structured.totalTimeMinutes} min</span>
+                )}
+                {structured.servings != null && (
+                  <span className="meta-chip">{structured.servings} servings</span>
+                )}
               </div>
             )}
           </header>
+
+          {/* REAL media captured at share time — kept out of the eye's main
+              line as a slim YouTube-first row, mirroring the generator page */}
+          {(recipe.media?.url || recipe.youtubeUrl) && (
+            <div className="media-row">
+              <a
+                href={mediaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="media-row__thumb"
+                aria-label={`Watch a real video of ${recipe.dishName || recipe.title} on YouTube`}
+              >
+                <MediaImage
+                  sources={[
+                    ...(recipe.media?.url ? [recipe.media.url] : []),
+                    ...youtubeThumbnailSources(videoId),
+                  ]}
+                  alt={`Real photo of ${recipe.dishName || recipe.title}`}
+                  variant="thumb"
+                  eager
+                />
+                <span className="media-row__play" aria-hidden="true">
+                  <Play size={13} fill="currentColor" />
+                </span>
+              </a>
+              <div className="media-row__body">
+                <a
+                  href={mediaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn--yt"
+                >
+                  {watchUrl ? <Play size={15} fill="currentColor" /> : <Youtube size={15} />}
+                  {watchUrl ? "Watch this dish on YouTube" : "Find video recipes on YouTube"}
+                </a>
+                {recipe.media?.credit && (
+                  <span className="media-row__credit mono">Photo: {recipe.media.credit}</span>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="md">
             <ReactMarkdown
@@ -136,22 +142,47 @@ export default async function SharedRecipePage({ params }) {
           </div>
 
           {recipe.nutrition && (
-            <div className="facts">
-              {[
-                ["Calories", recipe.nutrition.calories, ""],
-                ["Protein", recipe.nutrition.protein, "g"],
-                ["Carbs", recipe.nutrition.carbs, "g"],
-                ["Fat", recipe.nutrition.fat, "g"],
-              ].map(([label, value, unit]) => (
-                <div className="fact" key={label}>
-                  <span className="fact__value">
-                    {value}
-                    {unit && <small> {unit}</small>}
-                  </span>
-                  <span className="fact__label">{label}</span>
-                </div>
-              ))}
-            </div>
+            <section>
+              <h2 className="dish__section-title">Nutrition per serving</h2>
+              <table className="nutrition">
+                <thead>
+                  <tr>
+                    <th scope="col">Nutrient</th>
+                    <th scope="col">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="nutrition__cal">
+                    <th scope="row">Calories</th>
+                    <td>
+                      {recipe.nutrition.calories}
+                      <small> kcal</small>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Protein</th>
+                    <td>
+                      {recipe.nutrition.protein}
+                      <small> g</small>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Carbs</th>
+                    <td>
+                      {recipe.nutrition.carbs}
+                      <small> g</small>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Fat</th>
+                    <td>
+                      {recipe.nutrition.fat}
+                      <small> g</small>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
           )}
 
           <p className="mono" style={{ color: "var(--c-muted)" }}>

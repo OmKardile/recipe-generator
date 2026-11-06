@@ -18,6 +18,7 @@
   --c-accent-fill: #ff9e38;
   --c-leaf: #2e8b4f;
   --c-danger: #b33223; /* destructive actions only */
+  --c-yt: #b3271e; /* YouTube CTA — recognizable red, AA with white text */
   --c-curtain: #3b2310; /* text color on filled mango surfaces */
   --c-loader: #fff0d6;
   --c-wash: rgb(67 45 24 / 0.05);
@@ -86,6 +87,7 @@
   --c-accent-fill: #f98a28;
   --c-leaf: #62c88f;
   --c-danger: #f0907f;
+  --c-yt: #cf3a33;
   --c-curtain: #2c2117;
   --c-loader: #1b130d;
   --c-wash: rgb(247 235 217 / 0.06);
@@ -1331,8 +1333,16 @@ html:not(.js) .in {
   cursor: not-allowed;
   box-shadow: none;
 }
+/* A hover affordance that works with or without the pointer-flood engine:
+   the border warms to mango as the fill rushes in. */
+@media (hover: hover) {
+  .btn:not(:disabled):hover {
+    border-color: color-mix(in srgb, var(--c-accent) 50%, transparent);
+    box-shadow: var(--shadow-lift);
+  }
+}
 .btn--ghost {
-  border-color: var(--c-line);
+  border-color: var(--c-line-strong);
   color: var(--c-muted);
   background: transparent;
   box-shadow: none;
@@ -1340,6 +1350,7 @@ html:not(.js) .in {
 }
 .btn--ghost:hover {
   color: var(--c-fg);
+  border-color: color-mix(in srgb, var(--c-accent) 45%, transparent);
 }
 .btn--active {
   background: var(--c-fg);
@@ -1354,6 +1365,36 @@ html:not(.js) .in {
 }
 .btn--danger .fill {
   background: linear-gradient(135deg, #ef6a5a, #d93a2b);
+}
+/* YouTube CTA — the PREFERRED medium on the recipe page. Outline at rest
+   (red text, soft red tint), floods chili-red with white text on hover. */
+.btn--yt {
+  color: var(--c-yt);
+  border-color: color-mix(in srgb, var(--c-yt) 55%, transparent);
+  background: color-mix(in srgb, var(--c-yt) 7%, var(--c-surface));
+}
+.btn--yt .fill {
+  background: linear-gradient(135deg, #e0453a, var(--c-yt));
+}
+.btn--yt.is-filled,
+.btn--yt:active {
+  color: #fff;
+}
+.btn--yt.is-filled {
+  border-color: transparent;
+}
+@media (hover: hover) {
+  .btn--yt:not(:disabled):hover {
+    border-color: color-mix(in srgb, var(--c-yt) 65%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn--yt:focus-visible,
+  .btn--yt:hover {
+    color: #fff;
+    background: var(--c-yt);
+    border-color: var(--c-yt);
+  }
 }
 .dark .btn--danger {
   color: var(--c-danger);
@@ -1734,21 +1775,16 @@ html:not(.js) .in {
   }
 }
 .dish {
+  /* A proper reading surface: the recipe is text and data first, so it
+     sits on a clean card — lifted off the cream wallpaper — with generous
+     padding. This one change does most of the readability work. */
   display: grid;
-  gap: calc(var(--u) * 2.6);
-}
-.dish__photo {
-  position: relative; /* anchors the credit badge ON the photo */
-  border-radius: var(--r-xl);
-  overflow: clip;
+  gap: calc(var(--u) * 2.4);
+  background: var(--c-surface);
   border: 1px solid var(--c-line);
+  border-radius: var(--r-xl);
+  padding: clamp(1.4rem, 3.4vw, 2.6rem);
   box-shadow: var(--shadow-soft);
-}
-.dish__photo img,
-.dish__photo .media-ph {
-  aspect-ratio: 16 / 9;
-  width: 100%;
-  object-fit: cover;
 }
 .dish__head {
   display: grid;
@@ -1764,47 +1800,76 @@ html:not(.js) .in {
 }
 .dish__desc {
   font-size: var(--t-m);
-  line-height: 1.5;
-  color: var(--c-fg);
+  line-height: 1.55;
+  color: var(--c-muted);
   max-width: 58ch;
 }
 .dish__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5em 1.4em;
+  align-items: center;
+  gap: 0.55em 0.6em;
+}
+/* Meta chips: each fact sits in its own pill with an icon — scannable
+   little data points instead of a run-on muted text strip. */
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.5em 0.95em;
+  border-radius: var(--r-pill);
+  background: var(--c-wash);
+  border: 1px solid var(--c-line);
   font-size: var(--t-xs);
   font-weight: 700;
-  color: var(--c-muted);
+  color: var(--c-fg);
+  line-height: 1;
+}
+.meta-chip svg {
+  color: var(--c-accent);
+  flex: none;
+}
+.meta-chip--hot {
+  color: var(--c-accent);
+  background: color-mix(in srgb, var(--c-accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--c-accent) 35%, transparent);
 }
 .dish__meta .hot {
   color: var(--c-accent);
 }
-.dish__meta button,
 .dish__meta .stepper {
   display: inline-flex;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.45em;
+  padding: 0.3em 0.5em 0.3em 0.9em;
+  border-radius: var(--r-pill);
+  background: var(--c-wash);
+  border: 1px solid var(--c-line);
 }
-.dish__meta button {
+.dish__meta .stepper .mono {
   font-size: var(--t-xs);
   font-weight: 700;
   color: var(--c-muted);
-  padding: 0.35em 0.8em;
-  border-radius: var(--r-pill);
-  background: var(--c-wash);
-  transition: color 0.2s, background-color 0.2s;
+  letter-spacing: 0.02em;
+}
+.dish__meta button {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line-strong);
+  color: var(--c-muted);
+  transition: color 0.2s, border-color 0.2s;
 }
 .dish__meta button:hover {
   color: var(--c-accent);
-  background: color-mix(in srgb, var(--c-accent) 12%, transparent);
-}
-.dish__meta .stepper button {
-  background: var(--c-surface);
-  border: 1px solid var(--c-line-strong);
-}
-.dish__meta .stepper button:hover {
   border-color: var(--c-accent);
-  color: var(--c-accent);
+}
+.dish__meta button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Ingredients + steps */
@@ -1839,27 +1904,57 @@ html:not(.js) .in {
   list-style: none;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 0.4em calc(var(--u) * 3);
+  grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
+  gap: 0.15em calc(var(--u) * 3);
 }
+/* Ingredients as a data list: a right-aligned mono AMOUNT column and a
+   NAME column, so "2 tbsp | Ghee" scans like a table row down the page. */
 .ing {
-  display: flex;
-  gap: 0.7em;
+  display: grid;
+  grid-template-columns: minmax(4.9rem, auto) 1fr;
+  column-gap: 1em;
   align-items: baseline;
-  padding: 0.65em 0.2em;
+  padding: 0.7em 0.45em;
   font-size: var(--t-body);
-  border-bottom: 1px dotted var(--c-line-strong);
+  border-bottom: 1px solid var(--c-line);
   text-align: left;
   width: 100%;
   color: inherit;
+  border-radius: 0.6em;
+  transition: background-color 0.2s;
+}
+.ing--check {
+  grid-template-columns: 1.5rem minmax(4.9rem, auto) 1fr;
+  column-gap: 0.8em;
+}
+.ing:not(.ing--static):hover {
+  background: var(--c-wash);
+}
+.ing__amt {
+  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: var(--t-s);
+  text-align: right;
+  color: var(--c-accent);
+  white-space: nowrap;
+}
+.ing__name {
+  color: var(--c-fg);
+  line-height: 1.5;
+}
+.ing__name em {
+  font-style: normal;
+  color: var(--c-muted);
+  font-size: var(--t-s);
 }
 .ing .box {
-  flex-shrink: 0;
+  grid-row: 1;
+  align-self: center;
   width: 1.2rem;
   height: 1.2rem;
   border: 1.5px solid var(--c-line-strong);
   border-radius: 0.4em;
-  align-self: center;
   display: grid;
   place-items: center;
   color: transparent;
@@ -1869,9 +1964,15 @@ html:not(.js) .in {
 .ing[aria-pressed="true"] {
   color: var(--c-muted);
 }
-.ing[aria-pressed="true"] .label {
+.ing[aria-pressed="true"] .ing__name {
   text-decoration: line-through;
   text-decoration-color: var(--c-line-strong);
+}
+.ing[aria-pressed="true"] .ing__name em {
+  color: var(--c-muted);
+}
+.ing[aria-pressed="true"] .ing__amt {
+  color: var(--c-muted);
 }
 .ing[aria-pressed="true"] .box {
   background: linear-gradient(135deg, var(--g-leaf-fill-a), var(--g-leaf-fill-b));
@@ -1913,7 +2014,7 @@ html:not(.js) .in {
 }
 .step__text {
   font-size: var(--t-body);
-  line-height: 1.55;
+  line-height: 1.65;
   max-width: 62ch;
   align-self: center;
 }
@@ -1951,7 +2052,65 @@ html:not(.js) .in {
   background: linear-gradient(135deg, var(--c-accent-fill), var(--g-cherry));
 }
 
-/* Nutrition: friendly fact tiles */
+/* Nutrition: a real, readable table — label column left, tabular amount
+   column right, hairline rows. (The .facts tiles stay for compact contexts
+   like the saved-recipes rows.) */
+.nutrition {
+  width: 100%;
+  max-width: 28rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: color-mix(in srgb, var(--c-wash) 55%, var(--c-surface));
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+  overflow: clip;
+  font-size: var(--t-s);
+}
+.nutrition th,
+.nutrition td {
+  padding: 0.8em 1.25em;
+}
+.nutrition thead th {
+  text-align: left;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--c-muted);
+  border-bottom: 1px solid var(--c-line-strong);
+}
+.nutrition thead th:last-child {
+  text-align: right;
+}
+.nutrition tbody th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--c-fg);
+}
+.nutrition tbody td {
+  text-align: right;
+  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--c-fg);
+  white-space: nowrap;
+}
+.nutrition tbody td small {
+  color: var(--c-muted);
+  font-size: 0.8em;
+  font-weight: 500;
+}
+.nutrition tbody tr + tr th,
+.nutrition tbody tr + tr td {
+  border-top: 1px solid var(--c-line);
+}
+.nutrition__cal th,
+.nutrition__cal td {
+  color: var(--c-accent);
+  font-weight: 700;
+}
+
+/* Nutrition: friendly fact tiles (compact contexts — saved recipes rows) */
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
@@ -1994,7 +2153,7 @@ html:not(.js) .in {
   flex-wrap: wrap;
   gap: 0.8rem;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding-top: calc(var(--u) * 1.5);
   border-top: 1px solid var(--c-line);
 }
@@ -2005,6 +2164,21 @@ html:not(.js) .in {
 }
 .action-bar .mono {
   color: var(--c-muted);
+}
+/* Phones: the actions own the full width so each button is an easy thumb
+   target instead of a squeezed pill. */
+@media (max-width: 640px) {
+  .action-bar,
+  .action-bar__group {
+    width: 100%;
+  }
+  .action-bar__group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  }
+  .action-bar__group .btn {
+    width: 100%;
+  }
 }
 
 /* Markdown fallback */
@@ -2029,7 +2203,7 @@ html:not(.js) .in {
 .md p,
 .md li {
   color: var(--c-fg);
-  line-height: 1.55;
+  line-height: 1.65;
 }
 .md ul {
   list-style: none;
@@ -2046,27 +2220,98 @@ html:not(.js) .in {
   font-weight: 700;
 }
 
-/* Media badge / video link */
-.media-slot {
+/* Media row — YouTube first, photo as a quiet thumbnail
+   The dish photo is deliberately peripheral: a small 16:9 chip with a play
+   corner-badge that links to the same video. The strong element in this row
+   is the red YouTube CTA, not the image. */
+.media-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.2rem;
+  padding: 0.9rem 1rem;
+  background: var(--c-wash);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-lg);
+}
+.media-row__thumb {
   position: relative;
+  flex: none;
+  display: block;
+  width: 8.6rem;
+  aspect-ratio: 16 / 9;
+  border-radius: calc(var(--radius) - 6px);
+  overflow: clip;
+  border: 1px solid var(--c-line-strong);
+  box-shadow: var(--shadow-soft);
+  background: var(--c-surface);
+}
+.media-row__thumb img,
+.media-row__thumb .media-ph {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.media-row__play {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 0.4rem;
+  display: grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  color: #fff;
+  background: rgb(0 0 0 / 0.62);
+  transition: transform 0.2s, background-color 0.2s;
+}
+.media-row__thumb:hover .media-row__play,
+.media-row__thumb:focus-visible .media-row__play {
+  background: var(--c-yt);
+  transform: scale(1.08);
+}
+.media-row__thumb-loading {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    var(--c-wash) 40%,
+    var(--c-wash-2) 50%,
+    var(--c-wash) 60%
+  );
+  background-size: 200% 100%;
+  animation: media-shimmer 1.4s linear infinite;
+}
+@keyframes media-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .media-row__thumb-loading {
+    animation: none;
+  }
+  .media-row__play {
+    transition: none;
+  }
+}
+.media-row__body {
+  display: grid;
+  gap: 0.5em;
+  align-content: center;
+  min-width: 0;
+}
+.media-row__credit {
+  font-size: var(--t-xs);
+  color: var(--c-muted);
+  text-transform: none;
+  letter-spacing: 0.02em;
 }
 /* the scroll target when a recipe is picked: land with a little air above
    the back-link instead of flush against the viewport top */
 .recipe-anchor {
   scroll-margin-top: 2.2rem;
-}
-.media-slot__credit {
-  position: absolute;
-  left: 0.6rem;
-  bottom: 0.6rem;
-  padding: 0.4em 0.8em;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  color: #fff;
-  background: rgb(43 26 12 / 0.72);
-  border-radius: var(--r-pill);
-  backdrop-filter: blur(4px);
 }
 .media-ph {
   display: grid;

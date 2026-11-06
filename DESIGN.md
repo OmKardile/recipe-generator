@@ -117,10 +117,11 @@ tints and empty-state medallions; running text stays on mango/cocoa.
 │ │ Butter Chicken   North Indian · 45 min · 620 → │                │    hover lifts + real-photo
 │ └────────────────────────────────────────────────┘                │    preview floats by cursor
 ├ dish spread (detail) ────────────────────────────────────────────┤
-│ [ real photo 16:9, radius 30, warm shadow ]                       │
-│ Butter Chicken (Baloo) · meta pills · servings stepper            │
-│ ● Ingredients  ← mango dot titles │ steps in mango circle medallions│
-│ nutrition = friendly fact tiles · actions bar                     │
+│ Butter Chicken (Baloo) · meta chips w/ icons · servings stepper   │ ← text+data first;
+│ [ ▶ YouTube CTA (chili pill) ] [small real-photo thumb]           │   media sits in a slim
+│ ● Ingredients: aligned amount column + name (data list)           │   row, YouTube-led;
+│ steps in mango circle medallions · nutrition = readable table     │   the whole spread is
+│ actions bar (right-aligned; full-width grid on phones)            │   a surface card, r30
 ├ other tiers ─────────────────────────────────────────────────────┤
 │ Recipes: card index + inline thumbs + tags (citrus tint)          │
 │ Plan: 7×4 week grid, rounded slots (grape tint)                   │
@@ -137,8 +138,10 @@ statement footer.
 
 - Focus ring: 3px mango (80% mix), offset 3px, rounded — everywhere, both themes.
 - Selection: mango fill with cocoa text. Scrollbar: rounded toffee thumb.
-- Images: one aspect family per role (16:9 hero, 4:5 preview, 1:1 thumbs), one reveal
-  (clip wipe up), one hover (scale 1.03 inside clipped frame).
+- Images: one aspect family per role (16:9 thumb chip on the dish media row, 4:5
+  preview, 1:1 thumbs), one reveal (clip wipe up), one hover (scale 1.03 inside
+  clipped frame). The dish photo is never the page's headline: YouTube is the
+  preferred medium, the photo stays peripheral.
 - Icons: lucide. The garnish set (Leaf, Citrus, Cherry, Grape, Carrot, Salad, Croissant,
   CookingPot) is the app's signature and stays decorative/aria-hidden; utility icons
   (remove ×, trash, arrows) stay semantic.

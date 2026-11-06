@@ -1,11 +1,17 @@
 "use client";
 
-import { PlayCircle, Youtube, Camera } from "lucide-react";
+import { Play, Youtube } from "lucide-react";
 import MediaImage from "./MediaImage";
 import { youtubeWatchUrl, youtubeSearchUrl, youtubeThumbnailSources } from "@/lib/video";
 
 /**
- * The real-media hero for a recipe.
+ * The quiet media row for a recipe.
+ *
+ * PLACEMENT RULE (user-directed): the photo is NOT the headline. The recipe
+ * title, description and data own the top of the page; media lives in a
+ * slim row beside the text, sized like a video chip — peripheral, out of
+ * the eye's main line. YouTube is the PREFERRED medium, so the video CTA
+ * is the visually strong element here and the photo only backs it up.
  *
  * HARD PRODUCT RULE — REAL MEDIA ONLY:
  *   • The photo is a REAL photograph of this real dish (Wikipedia/Commons →
@@ -31,56 +37,51 @@ export default function RecipeMedia({ dishName, title, youtubeVideoId, media, lo
       ? "Video still · YouTube"
       : "";
 
+  const linkUrl = watchUrl || searchUrl;
+
   return (
-    <div className="media-slot">
+    <div className="media-row">
+      {/* Small, quiet dish thumbnail — links to the same video destination */}
       {isLoading ? (
-        <div
-          className="media-ph dish__photo"
-          role="status"
-          aria-label="Finding a real photo of this dish…"
-        >
-          <Camera size={26} />
-        </div>
+        <span className="media-row__thumb" role="status" aria-label="Finding a real photo of this dish…">
+          <span className="media-row__thumb-loading" />
+        </span>
       ) : (
-        /* dish__photo wraps the picture with the same rounded, bordered
-           frame the share page uses — and gives the credit badge a
-           positioning context ON the photo, not over the button row */
-        <div className="dish__photo">
+        <a
+          href={linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="media-row__thumb"
+          aria-label={`Watch a real video of ${dishName || title} on YouTube`}
+        >
           <MediaImage
             sources={heroSources}
             alt={`Real photo of ${dishName || title}`}
+            variant="thumb"
             eager
           />
-          {credit && <span className="media-slot__credit">{credit}</span>}
-        </div>
+          <span className="media-row__play" aria-hidden="true">
+            <Play size={13} fill="currentColor" />
+          </span>
+        </a>
       )}
 
-      {/* Video layer — verified video, or a search that can never break */}
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.9em", marginTop: "0.9em" }}>
+      {/* The preferred medium: a clear, recognizable YouTube CTA */}
+      <div className="media-row__body">
         <a
-          href={watchUrl || searchUrl}
+          href={linkUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn btn--ghost"
+          className="btn btn--yt"
           data-fill
         >
           <span className="fill" aria-hidden="true" />
-          {watchUrl ? (
-            <>
-              <PlayCircle size={15} />
-              Watch this dish on YouTube
-            </>
-          ) : (
-            <>
-              <Youtube size={15} />
-              Find video recipes on YouTube
-            </>
-          )}
+          {watchUrl ? <Play size={15} fill="currentColor" /> : <Youtube size={15} />}
+          {watchUrl ? "Watch this dish on YouTube" : "Find video recipes on YouTube"}
         </a>
-        <span className="mono" style={{ textTransform: "none", letterSpacing: "0.02em" }}>
-          {watchUrl
-            ? "Real cooking video · server-verified"
-            : "Search results for the real dish name"}
+        <span className="media-row__credit mono">
+          {watchUrl ? "Server-verified cooking video" : "Search for the real dish name"}
+          {credit ? ` · Photo: ${credit}` : ""}
         </span>
       </div>
     </div>

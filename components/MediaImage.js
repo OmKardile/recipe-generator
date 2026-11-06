@@ -12,6 +12,13 @@ import { CookingPot } from "lucide-react";
  * provided — a branded steel placeholder is rendered instead. A broken
  * image icon is never acceptable.
  *
+ * Variants:
+ *   • "wide"  — the full-width 16:9 frame (inline styles keep it robust).
+ *   • "thumb" — a small, CSS-sized preview (.media-row__thumb controls its
+ *     exact size). The dish photo is deliberately NOT the hero of the page;
+ *     YouTube is the preferred media, so the photo only ever shows up as a
+ *     quiet thumbnail.
+ *
  * Plain <img> on purpose: the sources live on arbitrary real-world hosts
  * (upload.wikimedia.org, themealdb.com, i.ytimg.com), which is exactly what
  * the onError fallback chain handles best.
@@ -23,6 +30,7 @@ export default function MediaImage({
   alt,
   className = "",
   eager = false,
+  variant = "wide",
 }) {
   const list = (Array.isArray(sources) ? sources : []).filter(Boolean);
   const [index, setIndex] = useState(0);
@@ -37,16 +45,20 @@ export default function MediaImage({
   }
 
   const failed = index >= list.length;
+  const sizing =
+    variant === "thumb"
+      ? { width: "100%", height: "100%", objectFit: "cover" }
+      : { aspectRatio: "16 / 9", width: "100%", objectFit: "cover" };
 
   if (failed || list.length === 0) {
     return (
       <div
         className={`media-ph ${className}`}
-        style={{ aspectRatio: "16 / 9", width: "100%" }}
+        style={sizing}
         role="img"
         aria-label={alt || "Recipe image unavailable"}
       >
-        <CookingPot size={28} strokeWidth={1.25} />
+        <CookingPot size={variant === "thumb" ? 20 : 28} strokeWidth={1.25} />
       </div>
     );
   }
@@ -60,7 +72,7 @@ export default function MediaImage({
       decoding="async"
       referrerPolicy="no-referrer"
       className={className}
-      style={{ aspectRatio: "16 / 9", width: "100%", objectFit: "cover" }}
+      style={sizing}
     />
   );
 }
