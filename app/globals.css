@@ -252,13 +252,25 @@ p {
 }
 
 /* ── The wallpaper — a picnic gingham under soft peach, lilac and mint
-   washes. Static by design (nothing here needs a reduced-motion guard);
-   the checks are alpha-only so they whisper on both themes. ── */
+   washes. The FAR parallax layer: it drifts with the pointer and sinks on
+   scroll (vars from engine/parallax.js; reduced motion pins it still).
+   The checks are alpha-only so they whisper on both themes. ── */
 .aurora {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  /* The FAR parallax layer: the glow blobs drift against the pointer and
+     sink as the page scrolls (engine/parallax.js writes --px/--py/--sy on
+     <html>). Overscaled so the travel never exposes viewport edges; vars
+     unset (reduced motion / no JS) collapse it to identity. */
+  transform: translate3d(
+      calc(var(--px, 0) * -22px),
+      calc(var(--py, 0) * -14px + var(--sy, 0) * -46px),
+      0
+    )
+    scale(1.2);
+  will-change: transform;
   background:
     radial-gradient(46rem 32rem at 12% -8%, rgb(255 158 56 / 0.16), transparent 62%),
     radial-gradient(40rem 28rem at 92% 4%, rgb(125 91 216 / 0.1), transparent 62%),
@@ -971,6 +983,11 @@ html:not(.js) .in {
   /* headroom where the magnet arc lives (taller on phones) */
   padding-top: clamp(3.2rem, 5.6vw, 4.4rem);
   padding-inline: clamp(0.55rem, 1.4vw, 1.3rem);
+  /* The MID parallax layer: the paper counter-drifts a few px against the
+     magnet field, so the magnets read as floating in front of the paper.
+     Same --px/--py vars the aurora (far) and garnish floats (near) use. */
+  transform: translate3d(calc(var(--px, 0) * -9px), calc(var(--py, 0) * -6px), 0);
+  will-change: transform;
 }
 .hero__paper {
   position: relative;
@@ -2648,6 +2665,8 @@ html:not(.js) .in {
   /* bottom padding reserves the corner for the fixed cooking-timer button,
      which otherwise sits on top of the meta row at the very end of the page */
   padding: calc(var(--u) * 5) var(--gutter) calc(var(--gutter) + 4rem);
+  /* a whisper of the page-wide parallax so the ending never fully freezes */
+  transform: translate3d(calc(var(--px, 0) * 7px), calc(var(--py, 0) * 4px), 0);
 }
 /* a bit of washing-line instead of a hard rule */
 .finale::before {
@@ -2919,4 +2938,17 @@ html:not(.js) .in {
 /* Week rows need grid children flowing into the parent grid */
 .week__row {
   display: contents;
+}
+
+/* ── Reduced-motion guard for the parallax layers ──────────────────────
+   Placed LAST so it wins the cascade over the normal declarations above
+   (same specificity — source order decides). The --px/--py/--sy vars are
+   never written under reduced motion, but pinning the transforms makes the
+   stillness provable, including for no-JS visitors. */
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .hero,
+  .finale {
+    transform: none;
+  }
 }

@@ -103,21 +103,38 @@ export default function Garnish({ variant = "hero", className = "" }) {
     let raf = 0;
     let looping = false;
 
+    /* Two input sources, both always live, separated by the event itself:
+       · pointermove from a real mouse/pen (pointerType) — touch drags are
+         ignored so scrolling on a phone never flings the field
+       · deviceorientation gyro tilt — phones only; drives the same targets
+         so the constellation parallaxes in your hand. Android fires it
+         freely; iOS 13+ needs a permission prompt we deliberately skip
+         (silent no-op there — field still sways + drags).
+       Media queries are NOT used to pick: headless/remote-desktop browsers
+       report hover:none while still delivering perfect mouse events. */
     const onPointer = (e) => {
+      if (e.pointerType === "touch") return;
       tx = (e.clientX / window.innerWidth) * 2 - 1;
       ty = (e.clientY / window.innerHeight) * 2 - 1;
     };
 
+    const onTilt = (e) => {
+      if (e.gamma == null || e.beta == null) return;
+      const clamp11 = (v) => Math.min(1, Math.max(-1, v));
+      tx = clamp11(e.gamma / 26);
+      ty = clamp11((e.beta - 42) / 26);
+    };
+
     const tick = () => {
-      cx += (tx - cx) * 0.075;
-      cy += (ty - cy) * 0.075;
+      cx += (tx - cx) * 0.08;
+      cy += (ty - cy) * 0.08;
       const sy = Math.min(window.scrollY, 1200); // scroll drift, clamped
       for (const el of floats) {
         const d = parseFloat(el.dataset.depth || "1");
         el.__par = {
-          x: cx * d * 34, // px, per depth layer
-          y: cy * d * 22 - sy * d * 0.055,
-          r: cx * d * 6, // gentle rotation with the pointer
+          x: cx * d * 52, // px, per depth layer — the constellation travels
+          y: cy * d * 34 - sy * d * 0.1,
+          r: cx * d * 9, // gentle rotation with the pointer
         };
         apply(el);
       }
@@ -128,12 +145,14 @@ export default function Garnish({ variant = "hero", className = "" }) {
       if (looping || reduced) return;
       looping = true;
       window.addEventListener("pointermove", onPointer, { passive: true });
+      window.addEventListener("deviceorientation", onTilt, { passive: true });
       raf = requestAnimationFrame(tick);
     };
     const stopLoop = () => {
       if (!looping) return;
       looping = false;
       window.removeEventListener("pointermove", onPointer);
+      window.removeEventListener("deviceorientation", onTilt);
       cancelAnimationFrame(raf);
     };
     startLoop();

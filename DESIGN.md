@@ -83,16 +83,25 @@ tints and empty-state medallions; running text stays on mango/cocoa.
 
 - Motion verb "drift and settle": entrances rise 16px and settle (0.7s, expo.out);
   presses scale to 0.96–0.97; hovers lift 1–3px with shadow growth.
-- The constellation: pointer parallax (lerp 0.075, ±34px × depth horizontal, ±22px
-  vertical, ±6deg rotation), scroll rise (×0.055 × depth), CSS sway per icon (5.5–7.6s,
+- Page-wide depth stack (engine/parallax.js): one ticker lerps the pointer into
+  `--px/--py` on <html> plus `--sy` scroll progress. Layers consume the vars in
+  pure CSS, so the parallax survives every tier-tab remount:
+  aurora wallpaper (far: ∓22/14px, sinks 46px on scroll, scale 1.2) → hero paper
+  (mid: counter-drifts ∓9/6px against the magnets) → garnish constellation
+  (near: travels farthest) → finale (whisper, 7/4px).
+- The constellation: pointer parallax (lerp 0.08, ±52px × depth horizontal, ±34px
+  vertical, ±9deg rotation), scroll rise (×0.1 × depth), CSS sway per icon (5.5–7.6s,
   own phase). Parallax writes `transform` on `.garnish__float`; centering uses the
   separate `translate` property; sway animates the inner `.garnish__bob` — three
   systems that compose instead of fighting.
 - The mango flood on `[data-fill]` buttons (GSAP, from pointer entry) is unchanged
   behaviorally, reskinned to a mango gradient with cocoa text.
-- Reduced motion: constellation parallax never starts, sway freezes (icons stay
-  colorful), no Lenis, no reveals, flood snaps to filled, hovers keep a visible state.
-- Touch: pointer parallax simply never fires; sway + scroll drift remain.
+- Reduced motion: the depth driver never starts (vars unset, layers pinned),
+  constellation parallax never starts, sway freezes (icons stay colorful), no
+  Lenis, no reveals, flood snaps to filled, hovers keep a visible state.
+- Touch: gyro tilt (deviceorientation) drives the same targets — the wallpaper,
+  paper and constellation all parallax in the hand on Android; iOS (permission
+  prompt skipped) degrades to sway + scroll drift.
 
 ### Composition plan
 

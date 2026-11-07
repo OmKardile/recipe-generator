@@ -1,6 +1,7 @@
 /**
  * Global motion for this site: registered once from Engine before boot.
  * - loader: mono counter, lid-lift exit (authored per DESIGN.md)
+ * - parallax: the --px/--py/--sy depth driver (engine/parallax.js)
  * - data-fill buttons: turmeric fill floods from the pointer's entry point
  *   (delegated, so it also covers buttons rendered later)
  * - data-index rows with [data-preview]: the REAL photo of the dish floats
@@ -10,11 +11,16 @@
 import { gsap } from "gsap";
 import { onPage } from "./index";
 import { ease, prefersReducedMotion, isTouch } from "./env";
+import { initParallax } from "./parallax";
 
 export function setupMotion() {
   // Loader counter: plain percentage in mono numerals.
   // Loader exit is authored in CSS + default timeline (lid lift).
   // (setLoaderFormat/setLoaderExit are engine APIs; defaults fit this design.)
+
+  // The page-wide depth driver — starts its own ticker work and gates
+  // reduced motion internally, so it runs even before the early return.
+  initParallax();
 
   if (prefersReducedMotion()) return;
 
